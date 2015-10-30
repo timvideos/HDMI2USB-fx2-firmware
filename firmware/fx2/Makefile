@@ -44,7 +44,7 @@ USE_16K := 1
 # Must only be hex numbers
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
-CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c
+CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors_hdmi2usb_alt.c
 AS_SRCS := descriptors_hdmi2usb.a51
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 AS_OBJS := $(AS_SRCS:%.a51=%.rel)
@@ -53,7 +53,7 @@ CC := sdcc
 AS8051 := sdas8051
 AS := $(AS8051)
 
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 $(FLAGS)
+CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC $(FLAGS)
 
 ifeq ($(USE_16K),1)
 	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -Wl"-b DSCR_AREA=0x2e00" -Wl"-b INT2JT=0x3f00"
@@ -123,6 +123,17 @@ date.inc:
 	@echo VID=0x$(VID) >> $@
 	@echo PID=0x$(PID) >> $@
 	@echo DID=0x$(DID) >> $@
+
+date.h:
+	$(Q_GEN)
+	@echo "// This is an auto-generated file. Please modify the Makefile instead " > $@
+	@echo "#define DATE 0x$(FIRMWARE_VERSION)" > $@
+	@echo "#define VID 0x$(VID)" >> $@
+	@echo "#define PID 0x$(PID)" >> $@
+	@echo "#define DID 0x$(DID)" >> $@
+
+check-descriptors:
+	gcc -I../../third_party/fx2lib/include descriptors_hdmi2usb_alt.c
 
 descriptors_hdmi2usb.a51: date.inc
 
