@@ -106,6 +106,10 @@ BOOL handleUVCCommand(BYTE cmd)
 BYTE   Configuration;      // Current configuration
 BYTE   AlternateSetting = 0;   // Alternate settings
 
+BOOL handle_get_descriptor() {
+    return FALSE;
+}
+
 BYTE handle_get_configuration()
 {
     return Configuration;
