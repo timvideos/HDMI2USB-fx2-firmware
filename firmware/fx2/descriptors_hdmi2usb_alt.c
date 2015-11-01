@@ -1,5 +1,7 @@
 
 #include "date.h"
+#include "uvclocal.h"
+
 #include <linux/ch9.h>
 #include <linux/ch9-extra.h>
 #include <linux/video.h>
@@ -98,33 +100,7 @@ struct usb_descriptor {
 //	struct usb_section fullspeed;
 };
 
-//        .db 0x2A,0x2C,0x0A,0x00          ;/* Default frame interval */
-// 666666
-#define MJPEG_FRAME_INTERVAL \
-	0x0A2C2A
-
-//        .db 0x00,0x20,0x1C,0x00          ;/* Maximum video or still frame size in bytes */ 
-// 1843200
-#define FRAME_SIZE_1280x720 \
-	0x1C2000
-
-//        .db 0x54,0x58,0x14,0x00          ;/* Default frame interval */ 
-// 1333332
-#define YUY2_FRAME_INTERVAL \
-	0x145854
-
-//        .db 0x00,0x00,0x18,0x00          ;/* Maximum video or still frame size in bytes */
-// 1572864
-#define FRAME_SIZE_1024x768 \
-	0x180000
-
-#define UNKNOWN_DESC_TYPE_24 \
-	0x24
-
-//        .db 0x00,0x00,0x00,0x0E          ;/* Min bit rate bits/s */ 
-// 234881024
-#define BIT_RATE \
-	0xE000000
+#define UNKNOWN_DESC_TYPE_24 0x24
 
 __xdata struct usb_descriptor descriptor = {
 	.device = {
@@ -310,9 +286,9 @@ __xdata struct usb_descriptor descriptor = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1024x768,
-							.dwDefaultFrameInterval	= MJPEG_FRAME_INTERVAL,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_15FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { MJPEG_FRAME_INTERVAL }, // Frame interval 1?
+							.dwFrameInterval	= { FRAME_INTERVAL_15FPS }, // Frame interval 1?
 						}, {
 							// Class specific VS frame descriptor - 2
 							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1), 
@@ -325,9 +301,9 @@ __xdata struct usb_descriptor descriptor = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1280x720,
-							.dwDefaultFrameInterval	= MJPEG_FRAME_INTERVAL,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_15FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { MJPEG_FRAME_INTERVAL },
+							.dwFrameInterval	= { FRAME_INTERVAL_15FPS },
 						},
 					},
 					// VS Color Matching Descriptor Descriptor
@@ -368,9 +344,9 @@ __xdata struct usb_descriptor descriptor = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1024x768,
-							.dwDefaultFrameInterval	= YUY2_FRAME_INTERVAL,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_7FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { YUY2_FRAME_INTERVAL }, // Frame interval 3?
+							.dwFrameInterval	= { FRAME_INTERVAL_7FPS }, // Frame interval 3?
 						}, {
 							// Frame descriptors 2
 							.bLength		= UVC_DT_FRAME_UNCOMPRESSED_SIZE(1), 
@@ -383,9 +359,9 @@ __xdata struct usb_descriptor descriptor = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1280x720,
-							.dwDefaultFrameInterval	= YUY2_FRAME_INTERVAL,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_7FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { YUY2_FRAME_INTERVAL },
+							.dwFrameInterval	= { FRAME_INTERVAL_7FPS },
 						},
 					},
 					.color = {
