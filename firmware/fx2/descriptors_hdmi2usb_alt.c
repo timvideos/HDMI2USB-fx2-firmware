@@ -144,6 +144,7 @@ __xdata struct usb_descriptor descriptor = {
 				.iFunction		= USB_STRING_INDEX(0),
 			},
 			.videocontrol = {
+
 				/* Standard video control interface descriptor */
 				.interface = {
 					.bLength		= USB_DT_INTERFACE_SIZE,
@@ -170,7 +171,21 @@ __xdata struct usb_descriptor descriptor = {
 					// control interface
 					.baInterfaceNr		= { 1 },
 				},
-				/* Input (camera) terminal descriptor */
+
+				// FIXME: Add a "Selector Unit" which allows
+				// selecting between HDMI inputs.
+				// The Selector Unit (SU) selects from n input
+				// data streams and routes them unaltered to
+				// the single output stream.
+
+				// FIXME: Add "Encoding Unit" for MJPEG control.
+				// The Encoding Unit controls attributes of the
+				// encoder that encodes the video being
+				// streamed through it.
+
+				// camera -> processing -> extension -> output
+
+				/* Camera (input) terminal descriptor */
 				.camera = {
 					.bLength		= UVC_DT_CAMERA_TERMINAL_SIZE(0),
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
@@ -186,18 +201,24 @@ __xdata struct usb_descriptor descriptor = {
 					.bmControls		= { 0, 0, 0 },
 				},
 				/* Processing unit descriptor */
+				/* The Processing Unit (PU) controls image
+				 * attributes of the video being streamed
+				 * through it. */
 				.processing = {
 					.bLength		= UVC_DT_PROCESSING_UNIT_SIZE(3),
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
 					.bDescriptorSubType	= UVC_VC_PROCESSING_UNIT,
-					.bUnitID		= 2, //UVC_PU_POWER_LINE_FREQUENCY_CONTROL,
+					.bUnitID		= 2,
 					.bSourceID		= 1 /* descriptor.highspeed.uvc.videocontrol.camera.bTerminalID */,
 					.wMaxMultiplier		= 0,
 					.bControlSize		= ARRAY_SIZE(descriptor.highspeed.uvc.videocontrol.processing.bmControls),
 					.bmControls		= { 0, 0, 0 },
 					.iProcessing		= USB_STRING_INDEX_NONE,
+					// .bmVideoStandards?
 				},
+
 				/* Extension unit descriptor */
+				// FIXME: Why does this exist!?
 				.extension = {
 					.bLength		= UVC_DT_EXTENSION_UNIT_SIZE(1, 3),
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
@@ -211,7 +232,11 @@ __xdata struct usb_descriptor descriptor = {
 					.bmControls		= { 0, 0, 0 },
 					.iExtension		= USB_STRING_INDEX_NONE,
 				},
+
 				/* Output terminal descriptor */
+				// The Output Terminal (OT) is used as an
+				// interface between Units inside the video
+				// function and the "outside world".
 				.output = {
 					.bLength		= UVC_DT_OUTPUT_TERMINAL_SIZE,
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
