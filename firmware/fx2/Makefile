@@ -116,7 +116,7 @@ $(TARGET).hex: $(CC_OBJS) $(AS_OBJS)
 progOffsets.h: prog.rel
 	$(Q_GEN)cat prog.lst | ./lstParse.py > progOffsets.h
 
-date.inc:
+date.inc: Makefile
 	$(Q_GEN)
 	@echo "; This is an auto-generated file. Please modify the Makefile instead " > $@
 	@echo DATE=0x$(FIRMWARE_VERSION) > $@
@@ -124,13 +124,16 @@ date.inc:
 	@echo PID=0x$(PID) >> $@
 	@echo DID=0x$(DID) >> $@
 
-date.h:
+date.h: Makefile
 	$(Q_GEN)
 	@echo "// This is an auto-generated file. Please modify the Makefile instead " > $@
-	@echo "#define DATE 0x$(FIRMWARE_VERSION)" > $@
+	@echo "#ifndef _DATE_H_" >> $@
+	@echo "#define _DATE_H_" >> $@
+	@echo "#define DATE 0x$(FIRMWARE_VERSION)" >> $@
 	@echo "#define VID 0x$(VID)" >> $@
 	@echo "#define PID 0x$(PID)" >> $@
 	@echo "#define DID 0x$(DID)" >> $@
+	@echo "#endif // _DATE_H_" >> $@
 
 check-descriptors:
 	gcc -I../../third_party/fx2lib/include descriptors_hdmi2usb_alt.c
