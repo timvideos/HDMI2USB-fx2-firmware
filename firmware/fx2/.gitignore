@@ -4,6 +4,7 @@
 *.rst
 *.sym
 date.inc
+date.h
 descriptors.a51
 hdmi2usb.hex
 hdmi2usb.lk
