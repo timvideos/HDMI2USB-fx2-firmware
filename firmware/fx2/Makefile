@@ -154,7 +154,7 @@ check: check_int2jt
 
 clean:
 	$(Q_RM)$(RM) *.iic *.asm *.lnk *.lst *.map *.mem *.rel *.rst *.sym \
-		*.lk progOffsets.h firmware.hex date.inc
+		*.lk progOffsets.h firmware.hex date.inc date.h
 	cd $(FX2LIBDIR) && make clean
 
 distclean: clean
