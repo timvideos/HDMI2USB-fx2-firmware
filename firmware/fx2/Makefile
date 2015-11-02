@@ -138,6 +138,8 @@ date.h: Makefile
 check-descriptors:
 	gcc -I../../third_party/fx2lib/include descriptors_hdmi2usb_alt.c
 
+descriptors_hdmi2usb_alt.c: date.h
+
 descriptors_hdmi2usb.a51: date.inc
 
 livePatch.c: progOffsets.h
