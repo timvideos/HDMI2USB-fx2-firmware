@@ -39,7 +39,7 @@ USE_16K := 1
 # Must only be hex numbers
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
-CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors_hdmi2usb_alt.c
+CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors.c descriptors_strings.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
@@ -110,10 +110,17 @@ date.h: Makefile
 	@echo "#define DID 0x$(DID)" >> $@
 	@echo "#endif // _DATE_H_" >> $@
 
-check-descriptors:
-	gcc -I../../third_party/fx2lib/include descriptors_hdmi2usb_alt.c
+descriptors_strings.h: descriptors_string_table.py descriptors.strings
+	@python descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
 
-descriptors_hdmi2usb_alt.c: date.h
+descriptors_strings.c: descriptors_strings.h
+	@python descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.c
+
+descriptors.c: date.h descriptors_strings.h
+
+check-descriptors: descriptors.c descriptors_strings.c
+	gcc -I../../third_party/fx2lib/include descriptors.c
+	gcc -I../../third_party/fx2lib/include descriptors_strings.c
 
 check_int2jt: $(TARGET).hex
 	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \

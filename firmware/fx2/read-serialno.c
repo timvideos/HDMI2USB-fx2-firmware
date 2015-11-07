@@ -16,6 +16,7 @@
  */
 
 #include <i2c.h>
+#include <descriptors_strings.h>
 
 // Convert a byte into the ASCII hex equivalent.
 char hex(BYTE value) {
@@ -29,10 +30,10 @@ char hex(BYTE value) {
 }
 
 // Patch the serial number in the device descriptor table.
-extern __xdata char dev_serial[];
+extern __xdata struct usb_descriptor_strings descriptor_strings;
 void patch_serial_number(BYTE index, BYTE value) {
-	dev_serial[index*4] = hex(value >> 4);
-	dev_serial[index*4+2] = hex(value & 0xf);
+	descriptors_strings.string2.wData[index*2] = hex(value >> 4);
+	descriptors_strings.string2.wData[index*2+1] = hex(value & 0xf);
 }
 
 #define PROM_ADDRESS 0x51
@@ -44,8 +45,7 @@ void patch_usb_serial_number_with_eeprom_macaddress() {
 	BYTE tempbyte = 0;
 	BYTE i = 0;
 
-	dev_serial[0] = 'f';
-	//pSerial[2] = ((WORD)'e') << 8;
+	descriptors_strings.string2.wData[0] = 'f';
 
 	for (i=0; i < PROM_ID_SIZE; i++) {
         	eeprom_read(PROM_ADDRESS, PROM_ID_OFFSET+i, 1, &tempbyte);

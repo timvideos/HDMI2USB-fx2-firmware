@@ -27,7 +27,6 @@
 #include "uvc.h"
 #include "read-serialno.h"
 
-extern const uint8 dev_strings[];
 void TD_Init(void);
 void TD_Poll(void);
 
@@ -58,31 +57,6 @@ void mainInit(void) {
 	TD_Init();
 	
 	uart_init();
-
-#ifdef DEBUG
-	usartInit();
-	{
-		const uint8 *s = dev_strings;
-		uint8 len;
-		s = s + *s;
-		len = (*s)/2 - 1;
-		s += 2;
-		while ( len ) {
-			usartSendByte(*s);
-			s += 2;
-			len--;
-		}
-		usartSendByte(' ');
-		len = (*s)/2 - 1;
-		s += 2;
-		while ( len ) {
-			usartSendByte(*s);
-			s += 2;
-			len--;
-		}
-		usartSendByte('\r');
-	}
-#endif
 }
 
 // Called repeatedly while the device is idle
