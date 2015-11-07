@@ -26,11 +26,6 @@
 # To build a firmware suitable for loading from EEPROM:
 #   make FLAGS="-DEEPROM"
 #
-#
-# This Makefile assumes a recent version of SDCC. If you're still using an older
-# version with the asx8051 assembler, build like this:
-#   make AS8051=asx8051
-#
 TARGET := hdmi2usb
 FX2LIBDIR := ../../third_party/fx2lib
 LIBS := $(FX2LIBDIR)/lib/fx2.lib
@@ -45,14 +40,9 @@ USE_16K := 1
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
 CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors_hdmi2usb_alt.c
-AS_SRCS := descriptors_hdmi2usb.a51
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
-AS_OBJS := $(AS_SRCS:%.a51=%.rel)
 
 CC := sdcc
-AS8051 := sdas8051
-AS := $(AS8051)
-
 CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC $(FLAGS)
 
 ifeq ($(USE_16K),1)
@@ -79,7 +69,6 @@ endif
 # Use make V=1 for a verbose build.
 ifndef V
 	Q_CC=@echo      '      CC ' $@;
-	Q_AS=@echo      '      AS ' $@;
 	Q_LINK=@echo    '    LINK ' $@;
 	Q_RM=@echo      '   CLEAN ';
 	Q_OBJCOPY=@echo ' OBJCOPY ' $@;
@@ -90,7 +79,7 @@ endif
 
 all: $(TARGET).hex
 
-$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib
+$(CC_SRCS): $(FX2LIBDIR)/lib/fx2.lib
 
 $(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
 	cd $(dir $@) && make -j1
@@ -104,22 +93,11 @@ $(FX2LIBDIR)/.git:
 	git submodule init $@
 	git submodule update --recursive $@
 
-$(TARGET).hex: $(CC_OBJS) $(AS_OBJS)
+$(TARGET).hex: $(CC_OBJS)
 	$(Q_LINK)$(CC) $(CFLAGS) -o $@ $+ $(LIBS)
 
 %.rel: %.c
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $?
-
-%.rel: %.a51
-	$(Q_AS)$(AS) -logs $?
-
-date.inc: Makefile
-	$(Q_GEN)
-	@echo "; This is an auto-generated file. Please modify the Makefile instead " > $@
-	@echo DATE=0x$(FIRMWARE_VERSION) > $@
-	@echo VID=0x$(VID) >> $@
-	@echo PID=0x$(PID) >> $@
-	@echo DID=0x$(DID) >> $@
 
 date.h: Makefile
 	$(Q_GEN)
@@ -136,8 +114,6 @@ check-descriptors:
 	gcc -I../../third_party/fx2lib/include descriptors_hdmi2usb_alt.c
 
 descriptors_hdmi2usb_alt.c: date.h
-
-descriptors_hdmi2usb.a51: date.inc
 
 check_int2jt: $(TARGET).hex
 	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \
