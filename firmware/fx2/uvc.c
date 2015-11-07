@@ -54,6 +54,11 @@ union uvc_streaming_control_array {
 };
 
 
+// FIXME: Figure out how to make this __at(0xE6B8) be __at(&SETUPDAT)
+__xdata __at(0xE6B8) volatile struct uvc_control_request uvc_ctrl_request;
+// FIXME: Figure out how to make this __at(0xXXX) be __at(&EP0BUF)
+//__xdata __at(0xE740) volatile struct uvc_??? uvc_clear_feature;
+
 BOOL handleUVCCommand(BYTE cmd)
 {
 	int i;
@@ -61,12 +66,14 @@ BOOL handleUVCCommand(BYTE cmd)
 	switch(cmd) {
 	case CLEAR_FEATURE:
 		// FIXME: WTF is 0x21 !?
-		if (SETUPDAT[0] != 0x21)
+		if (uvc_ctrl_request.bmRequestType != 0x21)
 			return FALSE;
 
+		// Write the CLEAR_FEATURE size into EP0?
 		EP0BCH = 0;
 		EP0BCL = UVC_XXX_SIZE;
 		SYNCDELAY;
+		// Wait?
 		while (EP0CS & bmEPBUSY);
 		while (EP0BCL != UVC_XXX_SIZE);
 
@@ -85,11 +92,14 @@ BOOL handleUVCCommand(BYTE cmd)
 	case UVC_GET_CUR:
 	case UVC_GET_MIN:
 	case UVC_GET_MAX:
+		// Disable the autoptr size??
 		SUDPTRCTL = 0x01;
 
+		// Copy the valuesArray into EP0BUF
 		for (i = 0; i < UVC_XXX_SIZE; i++)
 			EP0BUF[i] = valuesArray.array[i];
 
+		// Set the size
 		EP0BCH = 0x00;
 		SYNCDELAY;
 		EP0BCL = UVC_XXX_SIZE;
@@ -101,10 +111,17 @@ BOOL handleUVCCommand(BYTE cmd)
 		// case UVC_GET_LEN:
 		// case UVC_GET_INFO:
 
-		// case UVC_GET_DEF:
-		// FIXME: Missing this case causes the following errors
-		// uvcvideo: UVC non compliance - GET_DEF(PROBE) not supported. Enabling workaround.
-		// Unhandled Vendor Command: 87
+	// The device indicates hardware default values for Unit, Terminal and
+	// Interface Controls through their GET_DEF values. These values may be
+	// used by the host to restore a control to its default setting.
+	// FIXME: Missing this case causes the following errors
+	// uvcvideo: UVC non compliance - GET_DEF(PROBE) not supported. Enabling workaround.
+	// Unhandled Vendor Command: 87
+//	case UVC_GET_DEF:
+	
+// SETUPDAT[0] == bmRequestType?
+// 
+
 
 	default:
 		return FALSE;
