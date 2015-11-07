@@ -113,9 +113,6 @@ $(TARGET).hex: $(CC_OBJS) $(AS_OBJS)
 %.rel: %.a51
 	$(Q_AS)$(AS) -logs $?
 
-progOffsets.h: prog.rel
-	$(Q_GEN)cat prog.lst | ./lstParse.py > progOffsets.h
-
 date.inc: Makefile
 	$(Q_GEN)
 	@echo "; This is an auto-generated file. Please modify the Makefile instead " > $@
@@ -141,8 +138,6 @@ check-descriptors:
 descriptors_hdmi2usb_alt.c: date.h
 
 descriptors_hdmi2usb.a51: date.inc
-
-livePatch.c: progOffsets.h
 
 check_int2jt: $(TARGET).hex
 	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \
