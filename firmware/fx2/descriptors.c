@@ -430,5 +430,6 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 		.bNumConfigurations = 1,
 		.bRESERVED = 0,
 	},
+	.fullspeed = 0x0,
 #include "descriptors_strings.inc"
 };
