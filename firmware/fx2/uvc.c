@@ -26,7 +26,7 @@
 
 // FIXME: These are actually stored in the descriptor table!
 const DWORD fps[] = {
-	FRAME_INTERVAL_15FPS,
+	FRAME_INTERVAL_30FPS,
 	FRAME_INTERVAL_7FPS,
 };
 const DWORD frameSize[] = {

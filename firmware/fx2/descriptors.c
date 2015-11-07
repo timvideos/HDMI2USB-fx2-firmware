@@ -215,9 +215,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1024x768,
-							.dwDefaultFrameInterval	= FRAME_INTERVAL_15FPS,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_30FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { FRAME_INTERVAL_15FPS }, // Frame interval 1?
+							.dwFrameInterval	= { FRAME_INTERVAL_30FPS }, // Frame interval 1?
 						}, {
 							// Class specific VS frame descriptor - 2
 							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1), 
@@ -230,9 +230,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 							.dwMinBitRate		= BIT_RATE,
 							.dwMaxBitRate		= BIT_RATE,
 							.dwMaxVideoFrameBufferSize = FRAME_SIZE_1280x720,
-							.dwDefaultFrameInterval	= FRAME_INTERVAL_15FPS,
+							.dwDefaultFrameInterval	= FRAME_INTERVAL_30FPS,
 							.bFrameIntervalType	= 1,
-							.dwFrameInterval	= { FRAME_INTERVAL_15FPS },
+							.dwFrameInterval	= { FRAME_INTERVAL_30FPS },
 						},
 					},
 					// VS Color Matching Descriptor Descriptor
