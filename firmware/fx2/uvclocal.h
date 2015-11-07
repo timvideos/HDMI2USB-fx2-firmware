@@ -4,8 +4,8 @@
 #define FRAME_INTERVAL_60FPS 166667	// 60.0fps ==  166666.6 ns
 #define FRAME_INTERVAL_50FPS 200000	// 50.0fps ==  200000.0 ns
 #define FRAME_INTERVAL_30FPS 333333	// 30.0fps ==  333333.3 ns
-#define FRAME_INTERVAL_15FPS 666667	// 15.0fps ==  666666.6 ns
-#define FRAME_INTERVAL_7FPS 1333333	//  7.5fps == 1333333.3 ns
+#define FRAME_INTERVAL_15FPS 666666	// 15.0fps ==  666666.6 ns
+#define FRAME_INTERVAL_7FPS 1333334	//  7.5fps == 1333333.3 ns
 
 //        .db 0x00,0x20,0x1C,0x00          ;/* Maximum video or still frame size in bytes */ 
 // 1843200

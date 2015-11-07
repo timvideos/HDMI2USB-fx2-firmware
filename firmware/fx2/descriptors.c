@@ -91,7 +91,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 
 				/* Camera (input) terminal descriptor */
 				.camera = {
-					.bLength		= UVC_DT_CAMERA_TERMINAL_SIZE(0),
+					.bLength		= UVC_DT_CAMERA_TERMINAL_SIZE(3),
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
 					.bDescriptorSubType	= UVC_VC_INPUT_TERMINAL,
 					.bTerminalID		= 1,
