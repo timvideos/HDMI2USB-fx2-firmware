@@ -29,37 +29,33 @@ struct usb_descriptors_strings {
 	print """\
 };
 
-__xdata struct usb_descriptors_strings descriptors_strings;
-
 #endif // DESCRIPTORS_STRING_TABLE_H_
 """
 
 if sys.argv[1] == "--cfile":
-	print """
-#include "descriptors_strings.h"
-
-__xdata struct usb_descriptors_strings descriptors_strings = {
-	// English language header
-	.language = {
-		.bLength = sizeof(struct usb_string_lang),
-		.bDescriptorType = USB_DT_STRING,
-		.wData = { 0x0409 }, // 0x0409 is English
-	},"""
+	print """\
+	.strings = {
+		// English language header
+		.language = {
+			.bLength = sizeof(struct usb_string_lang),
+			.bDescriptorType = USB_DT_STRING,
+			.wData = { 0x0409 }, // 0x0409 is English
+		},"""
 	for i, string in enumerate(strings):
 		d = ["((__le16)('%s'))" % s for s in string]
 
 		print """\
-	// "%(s)s"
-	.string%(i)i = {
-		.bLength = sizeof(struct usb_string_%(i)i),
-		.bDescriptorType = USB_DT_STRING,
-		.wData = {%(d)s},
-	},""" % {
+		// "%(s)s"
+		.string%(i)i = {
+			.bLength = sizeof(struct usb_string_%(i)i),
+			.bDescriptorType = USB_DT_STRING,
+			.wData = {%(d)s},
+		},""" % {
 		's': string,
 		'i': i,
 		'l': len(string),
 		'd': ", ".join(d),
 		}
 	print """\
-};
+	},
 """

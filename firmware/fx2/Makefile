@@ -39,16 +39,16 @@ USE_16K := 1
 # Must only be hex numbers
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
-CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors.c descriptors_strings.c
+CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC $(FLAGS)
+CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
 
 ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -Wl"-b DSCR_AREA=0x2e00" -Wl"-b INT2JT=0x3f00"
+	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -Wl"-b INT2JT=0x3f00"
 else
-	CFLAGS += --code-size 0x1e00 --xram-size 0x0200 -Wl"-b DSCR_AREA=0x1e00" -Wl"-b INT2JT=0x1f00"
+	CFLAGS += --code-size 0x1e00 --xram-size 0x0200 -DDSCR_AREA=0x1e00 -Wl"-b INT2JT=0x1f00"
 endif
 
 ifeq (${BOARD},atlys)
@@ -67,6 +67,7 @@ endif
 
 
 # Use make V=1 for a verbose build.
+V=1
 ifndef V
 	Q_CC=@echo      '      CC ' $@;
 	Q_LINK=@echo    '    LINK ' $@;
@@ -93,8 +94,8 @@ $(FX2LIBDIR)/.git:
 	git submodule init $@
 	git submodule update --recursive $@
 
-$(TARGET).hex: $(CC_OBJS)
-	$(Q_LINK)$(CC) $(CFLAGS) -o $@ $+ $(LIBS)
+$(TARGET).hex: date.h descriptors_strings.h $(CC_OBJS)
+	$(Q_LINK)$(CC) $(CFLAGS) --disable-warning 119 -o $@ $+ $(LIBS)
 
 %.rel: %.c
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $?
@@ -111,16 +112,16 @@ date.h: Makefile
 	@echo "#endif // _DATE_H_" >> $@
 
 descriptors_strings.h: descriptors_string_table.py descriptors.strings
-	@python descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
+	@python2 descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
 
-descriptors_strings.c: descriptors_strings.h
-	@python descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.c
+descriptors_strings.inc: descriptors_string_table.py descriptors.strings
+	@python2 descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
 
-descriptors.c: date.h descriptors_strings.h
+descriptors.h: date.h descriptors_strings.h
+descriptors.c: descriptors_strings.inc
 
-check-descriptors: descriptors.c descriptors_strings.c
+check-descriptors: descriptors.c
 	gcc -I../../third_party/fx2lib/include descriptors.c
-	gcc -I../../third_party/fx2lib/include descriptors_strings.c
 
 check_int2jt: $(TARGET).hex
 	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \
@@ -134,7 +135,7 @@ check: check_int2jt
 
 clean:
 	$(Q_RM)$(RM) *.iic *.asm *.lnk *.lst *.map *.mem *.rel *.rst *.sym \
-		*.lk progOffsets.h firmware.hex date.inc date.h
+		*.lk firmware.hex date.h descriptors_strings.h descriptors_strings.c
 	cd $(FX2LIBDIR) && make clean
 
 distclean: clean

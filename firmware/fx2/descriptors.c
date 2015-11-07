@@ -1,108 +1,12 @@
 
-#include "date.h"
-#include "uvclocal.h"
-
-#include <linux/ch9.h>
-#include <linux/ch9-extra.h>
-#include <linux/video.h>
-#include <linux/video-extra.h>
-#include <linux/uvcvideo.h>
-
-#include <linux/cdc.h>
-#include <linux/cdc-extra.h>
-
-DECLARE_UVC_HEADER_DESCRIPTOR(1);
-DECLARE_UVC_HEADER_DESCRIPTOR(2);
-
-struct usb_section {
-	struct usb_config_descriptor config;
-	/* ;;;;;;;;;;;;;;;;;;;;;;;;;; UVC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; */
-	struct usb_uvc {
-                /* Interface association descriptor */
-		struct usb_interface_assoc_descriptor assoc_interface;
-		struct usb_control {
-                        /* Standard video control interface descriptor */
-			struct usb_interface_descriptor interface;
-                        /* Class specific VC interface header descriptor */
-			struct UVC_HEADER_DESCRIPTOR(1) header;
-			/* Input (camera) terminal descriptor */
-			struct uvc_camera_terminal_descriptor camera;
-			/* Processing unit descriptor */
-			DECLARE_UVC_PROCESSING_UNIT_DESCRIPTOR(3) processing;
-			/* Extension unit descriptor */
-			DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) extension;
-			/* Output terminal descriptor */
-			struct uvc_output_terminal_descriptor output;
-		} videocontrol;
-		struct usb_stream {
-			/* Standard video streaming interface descriptor (alternate setting 0) */
-			struct usb_interface_descriptor interface;
-			/* Class-specific video streaming input header descriptor */
-			DECLARE_UVC_INPUT_HEADER_DESCRIPTOR(2, 1) header;
-			/* ;;;;;;;;;;;;;; MJPEG ;;;;;;;;;;;;; */
-			struct usb_stream_mjpeg {
-				/* Class specific VS format descriptor */
-				struct uvc_format_mjpeg format;
-				/* Class specific VS frame descriptor 1 + 2 */
-				DECLARE_UVC_FRAME_MJPEG(1) frames[2];
-				/* VS Color Matching Descriptor Descriptor */
-				struct uvc_color_matching_descriptor color;
-			} mjpeg_stream;
-			/* ;;;;;;;;;;;;;;;;;;;; YUY2 ;;;;;;;;;;;;;;;;;;;;;;;; */
-			struct usb_stream_yuy2 {
-				/* Class specific VS format descriptor */
-				struct uvc_format_uncompressed format;
-				/* Frame descriptors 1 + 2 */
-				DECLARE_UVC_FRAME_UNCOMPRESSED(1) frames[2];
-				/* VS Color Matching Descriptor Descriptor */
-				struct uvc_color_matching_descriptor color;
-			} yuy2_stream;
-			/* Standard video streaming interface descriptor (alternate setting 1) */
-			struct usb_interface_descriptor interface_alt;
-		} videostream;
-		/* Endpoint descriptor for streaming video data */
-		struct usb_endpoint_descriptor endpoints[1];
-	} uvc;
-	/* ;;;;;;;;;;;;;;;;;;;;;;;;;; CDC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; */
-	struct usb_cdc {
-		struct usb_interface_assoc_descriptor assoc_interface;
-
-		struct usb_cdc_interface1 {
-			struct usb_interface_descriptor interface;
-			/* Header Functional Descriptor */
-			struct usb_cdc_header_desc header;
-			/* Union Functional Descriptor */
-			struct usb_cdc_union_desc union_;
-			/* CM Functional Descriptor */
-			struct usb_cdc_call_mgmt_descriptor cm;
-			/* ACM Functional Descriptor */
-			struct usb_cdc_acm_descriptor acm;
-			/* EP1 Descriptor */
-			struct usb_endpoint_descriptor endpoints[1];
-		} interface1;
-
-		struct usb_cdc_interface2 {
-			/* Virtual COM Port Data Interface Descriptor */
-			struct usb_interface_descriptor interface;
-			/* EP2OUT Descriptor + EP4 Descriptor */
-			struct usb_endpoint_descriptor endpoints[2];
-		} interface2;
-	} cdc;
-};
+#include "descriptors.h"
 
 #define ARRAY_SIZE(x) \
 	(sizeof(x)/sizeof((x)[0]))
 
-struct usb_descriptor {
-	struct usb_device_descriptor device;
-	struct usb_section highspeed;
-	struct usb_qualifier_descriptor qualifier;
-//	struct usb_section fullspeed;
-};
-
 #define UNKNOWN_DESC_TYPE_24 0x24
 
-__xdata struct usb_descriptor descriptor = {
+__code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 	.device = {
 		.bLength		= USB_DT_DEVICE_SIZE,
 		.bDescriptorType	= USB_DT_DEVICE,
@@ -123,7 +27,7 @@ __xdata struct usb_descriptor descriptor = {
 		.config = {
 			.bLength		= USB_DT_CONFIG_SIZE,
 			.bDescriptorType	= USB_DT_CONFIG,
-			.wTotalLength		= sizeof(descriptor.highspeed),
+			.wTotalLength		= sizeof(descriptors.highspeed),
 			.bNumInterfaces		= 4,
 			.bConfigurationValue	= 1,
 			.iConfiguration		= USB_STRING_INDEX_NONE,
@@ -164,7 +68,7 @@ __xdata struct usb_descriptor descriptor = {
 					.bDescriptorSubType	= UVC_VC_HEADER,
 					.bcdUVC			= UVC_BCD_V10,
 					/* Total size of class specific descriptors (till output terminal) */
-					.wTotalLength		= sizeof(descriptor.highspeed.uvc.videocontrol) - sizeof(descriptor.highspeed.uvc.videocontrol.interface),
+					.wTotalLength		= sizeof(descriptors.highspeed.uvc.videocontrol) - sizeof(descriptors.highspeed.uvc.videocontrol.interface),
 					.dwClockFrequency	= 48000000, // 48MHz?
 					.bInCollection		= 1, // Number of streaming interfaces
 					// Video streaming interface 1 belongs to this video
@@ -197,7 +101,7 @@ __xdata struct usb_descriptor descriptor = {
 					.wObjectiveFocalLengthMin = 0,	// No optical support
 					.wObjectiveFocalLengthMax = 0,	// No optical support
 					.wOcularFocalLength 	= 0,	// No optical support
-					.bControlSize		= ARRAY_SIZE(descriptor.highspeed.uvc.videocontrol.camera.bmControls),
+					.bControlSize		= ARRAY_SIZE(descriptors.highspeed.uvc.videocontrol.camera.bmControls),
 					.bmControls		= { 0, 0, 0 },
 				},
 				/* Processing unit descriptor */
@@ -209,9 +113,9 @@ __xdata struct usb_descriptor descriptor = {
 					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
 					.bDescriptorSubType	= UVC_VC_PROCESSING_UNIT,
 					.bUnitID		= 2,
-					.bSourceID		= 1 /* descriptor.highspeed.uvc.videocontrol.camera.bTerminalID */,
+					.bSourceID		= 1 /* descriptors.highspeed.uvc.videocontrol.camera.bTerminalID */,
 					.wMaxMultiplier		= 0,
-					.bControlSize		= ARRAY_SIZE(descriptor.highspeed.uvc.videocontrol.processing.bmControls),
+					.bControlSize		= ARRAY_SIZE(descriptors.highspeed.uvc.videocontrol.processing.bmControls),
 					.bmControls		= { 0, 0, 0 },
 					.iProcessing		= USB_STRING_INDEX_NONE,
 					// .bmVideoStandards?
@@ -227,8 +131,8 @@ __xdata struct usb_descriptor descriptor = {
 					.guidExtensionCode	= UVC_GUID_UNDEFINED,
 					.bNumControls		= 0,
 					.bNrInPins		= 1,
-					.baSourceID		= { 2 /* descriptor.highspeed.uvc.videocontrol.processing.bUnitID */ },
-					.bControlSize		= ARRAY_SIZE(descriptor.highspeed.uvc.videocontrol.extension.bmControls),
+					.baSourceID		= { 2 /* descriptors.highspeed.uvc.videocontrol.processing.bUnitID */ },
+					.bControlSize		= ARRAY_SIZE(descriptors.highspeed.uvc.videocontrol.extension.bmControls),
 					.bmControls		= { 0, 0, 0 },
 					.iExtension		= USB_STRING_INDEX_NONE,
 				},
@@ -244,7 +148,7 @@ __xdata struct usb_descriptor descriptor = {
 					.bTerminalID		= 4,
 					.wTerminalType		= UVC_TT_STREAMING,
 					.bAssocTerminal		= 0, // No associated terminal
-					.bSourceID		= 3 /* descriptor.highspeed.uvc.videocontrol.extension.bUnitID */,
+					.bSourceID		= 3 /* descriptors.highspeed.uvc.videocontrol.extension.bUnitID */,
 					.iTerminal		= USB_STRING_INDEX_NONE,
 				},
 			},
@@ -271,16 +175,16 @@ __xdata struct usb_descriptor descriptor = {
 					.bNumFormats		= 2,
 					// FIXME: Restructure so wTotalLength is easier to calculate...
 					.wTotalLength		= 
-						sizeof(descriptor.highspeed.uvc.videostream)
-						- sizeof(descriptor.highspeed.uvc.videostream.interface)
-						- sizeof(descriptor.highspeed.uvc.videostream.interface_alt),
+						sizeof(descriptors.highspeed.uvc.videostream)
+						- sizeof(descriptors.highspeed.uvc.videostream.interface)
+						- sizeof(descriptors.highspeed.uvc.videostream.interface_alt),
 					.bEndpointAddress	= USB_ENDPOINT_NUMBER(6) | USB_DIR_IN, /* EP address for BULK video data */
 					.bmInfo			= 0, // No dynamic format change supported?
-					.bTerminalLink		= 4 /* descriptor.highspeed.uvc.videocontrol.output.bTerminalID */,
+					.bTerminalLink		= 4 /* descriptors.highspeed.uvc.videocontrol.output.bTerminalID */,
 					.bStillCaptureMethod	= 1, //
 					.bTriggerSupport	= 1, // Hardware trigger supported for still image?
 					.bTriggerUsage		= 0, // Hardware to initiate still image capture
-					.bControlSize		= ARRAY_SIZE(descriptor.highspeed.uvc.videostream.header.bmaControls),
+					.bControlSize		= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.header.bmaControls),
 					.bmaControls		= { { 0, 0 } },
 				},
 				.mjpeg_stream = {
@@ -290,7 +194,7 @@ __xdata struct usb_descriptor descriptor = {
 						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
 						.bDescriptorSubType	= UVC_VS_FORMAT_MJPEG,
 						.bFormatIndex		= 1,
-						.bNumFrameDescriptors	= ARRAY_SIZE(descriptor.highspeed.uvc.videostream.mjpeg_stream.frames),
+						.bNumFrameDescriptors	= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.mjpeg_stream.frames),
 						.bmFlags		= 1, // Uses fixed size samples
 						.bDefaultFrameIndex	= 1,
 						.bAspectRatioX		= 0, // Not used
@@ -347,7 +251,7 @@ __xdata struct usb_descriptor descriptor = {
 						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
 						.bDescriptorSubType	= UVC_VS_FORMAT_UNCOMPRESSED,
 						.bFormatIndex		= 2,
-						.bNumFrameDescriptors	= ARRAY_SIZE(descriptor.highspeed.uvc.videostream.yuy2_stream.frames),
+						.bNumFrameDescriptors	= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.yuy2_stream.frames),
 						.guidFormat		= UVC_GUID_FORMAT_YUY2,
 						.bBitsPerPixel		= 16,
 						.bDefaultFrameIndex	= 1,
@@ -526,4 +430,5 @@ __xdata struct usb_descriptor descriptor = {
 		.bNumConfigurations = 1,
 		.bRESERVED = 0,
 	},
+#include "descriptors_strings.inc"
 };
