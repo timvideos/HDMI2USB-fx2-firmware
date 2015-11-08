@@ -61,6 +61,8 @@ __xdata __at(0xE6B8) volatile struct uvc_control_request uvc_ctrl_request;
 
 BOOL handleUVCCommand(BYTE cmd)
 {
+	// assert cmd == uvc_ctrl_request.bRequest
+
 	int i;
 
 	switch(cmd) {
@@ -89,6 +91,122 @@ BOOL handleUVCCommand(BYTE cmd)
 		EP0BCL = 0; // ACK
 		return TRUE;
 
+
+	// 4.2 VideoControl Requests
+	// 4.2.1 Interface Control Requests
+
+		// 4.2.1.1 Power Mode Control	
+		UVC_VC_VIDEO_POWER_MODE_CONTROL	
+
+		// 4.2.1.2 Request Error Code Control
+		UVC_VC_REQUEST_ERROR_CODE_CONTROL
+
+	// 4.2.2 Unit and Terminal Control Requests
+
+		// 4.2.2.1 Camera Terminal Control Requests
+			// We don't implement most of the camera controls, not being a camera.
+			// 4.2.2.1.1 Scanning Mode Control
+			UVC_CT_SCANNING_MODE_CONTROL
+
+			// Exposure related controls
+			// 4.2.2.1.2 Auto-Exposure Mode Control
+			// UVC_CT_AE_MODE_CONTROL
+			// 4.2.2.1.3 Auto-Exposure Priority Control
+			// UVC_CT_AE_PRIORITY_CONTROL
+			// 4.2.2.1.4 Exposure Time (Absolute) Control
+			// UVC_CT_EXPOSURE_TIME_ABSOLUTE_CONTROL
+			// 4.2.2.1.5 Exposure Time (Relative) Control
+			// UVC_CT_EXPOSURE_TIME_RELATIVE_CONTROL
+
+			// Focus related controls
+			// 4.2.2.1.6 Focus (Absolute) Control
+			// 4.2.2.1.7 Focus (Relative) Control
+			// 4.2.2.1.8 Focus, Simple Range
+			// 4.2.2.1.9 Focus, Auto Control
+			// Iris related controls
+			// 4.2.2.1.10 Iris (Absolute) Control
+			// 4.2.2.1.11 Iris (Relative) Control
+			// Pan, Tilt and Zoom Controls
+			// 4.2.2.1.12 Zoom (Absolute) Control
+			// 4.2.2.1.13 Zoom (Relative) Control
+			// 4.2.2.1.14 PanTilt (Absolute) Control
+			// 4.2.2.1.15 PanTilt (Relative) Control
+			// 4.2.2.1.16 Roll (Absolute) Control
+			// 4.2.2.1.17 Roll (Relative) Control
+
+			// 4.2.2.1.18 Privacy Control
+
+			// 4.2.2.1.19 Digital Window Control
+			// FIXME: Could Digital Window control be useful?
+
+			// 4.2.2.1.20 Digital Region of Interest (ROI) Control
+
+
+		// 4.2.2.2 Selector Unit Control Requests
+			// SU_INPUT_SELECT_CONTROL
+
+		// 4.2.2.3 Processing Unit Control Requests
+			// 4.2.2.3.1 Backlight Compensation Control
+			// 4.2.2.3.2 Brightness Control
+			// 4.2.2.3.3 Contrast Control
+			// 4.2.2.3.4 Contrast, Auto Control
+			// 4.2.2.3.5 Gain Control
+
+			// 4.2.2.3.6 Power Line Frequency Control
+
+			// 4.2.2.3.7 Hue Control
+			// 4.2.2.3.8 Hue, Auto Control
+			// 4.2.2.3.9 Saturation Control
+			// 4.2.2.3.10 Sharpness Control
+			// 4.2.2.3.11 Gamma Control
+			// 4.2.2.3.12 White Balance Temperature Control
+			// 4.2.2.3.13 White Balance Temperature, Auto Control
+			// 4.2.2.3.14 White Balance Component Control
+			// 4.2.2.3.15 White Balance Component, Auto Control
+			// 4.2.2.3.16 Digital Multiplier Control -- DEPRECATED
+			// 4.2.2.3.17 Digital Multiplier Limit Control
+			// 4.2.2.3.18 Analog Video Standard Control
+
+			// 4.2.2.3.19 Analog Video Lock Status Control
+
+		// 4.2.2.4 Encoding Units
+			// Doesn't seem to be supported under Linux?
+			// Complicated!?
+
+		// 4.2.2.5 Extension Unit Control Requests
+
+	// 4.3 VideoStreaming Requests
+	// 4.3.1 Interface Control Requests
+
+		// 4.3.1.1 Video Probe and Commit Controls
+		// UVC_VS_PROBE_CONTROL
+		// UVC_VS_COMMIT_CONTROL
+
+		// 4.3.1.2 Video Still Probe Control and Still Commit Control
+		// VS_STILL_PROBE_CONTROL
+		// VS_STILL_COMMIT_CONTROL
+
+		// 4.3.1.3 Synch Delay Control
+		// 4.3.1.4 Still Image Trigger Control
+		
+
+
+	// Which Unit is this targeted at
+	switch(uvc_ctrl_request.wIndex) {
+	case ALL_UNIT_ID:
+	case CAMERA_UNIT_ID:
+	case PROCESSING_UNIT_ID:
+	case EXTENSION_UNIT_ID:
+	case OUTPUT_UNIT_ID:
+
+
+
+		return TRUE;
+	default:
+		return FALSE;	
+	}
+
+
 	case UVC_GET_CUR:
 	case UVC_GET_MIN:
 	case UVC_GET_MAX:
@@ -114,10 +232,10 @@ BOOL handleUVCCommand(BYTE cmd)
 	// The device indicates hardware default values for Unit, Terminal and
 	// Interface Controls through their GET_DEF values. These values may be
 	// used by the host to restore a control to its default setting.
-	// FIXME: Missing this case causes the following errors
-	// uvcvideo: UVC non compliance - GET_DEF(PROBE) not supported. Enabling workaround.
-	// Unhandled Vendor Command: 87
-//	case UVC_GET_DEF:
+	case UVC_GET_DEF:
+		// if (uvc_ctrl_request.bmRequestType != 0b10100001) return FALSE;
+
+		//if (uvc_ctrl_request.wValue
 	
 // SETUPDAT[0] == bmRequestType?
 // 
