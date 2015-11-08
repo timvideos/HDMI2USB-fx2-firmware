@@ -42,7 +42,13 @@ struct uvc_status_packet_from_stream_interface {
 
 // Video Control / Video Streaming Requests
 
+
+
 struct uvc_control_request {
+	// D7 == Get 1 or Set 0
+	// D6..5 == 01 -> Class specific request
+	// D4..0 == 00001 -> Video Control/Video Streaming Interfaces or Video Function
+	// D4..0 == 00010 -> Vide Data endpoint (of Video Streaming Interface)
 	BYTE bmRequestType;
 	BYTE bRequest;
 
@@ -53,13 +59,30 @@ struct uvc_control_request {
 	// (GET_###_ALL), wValue is not needed and must be set to 0. If the
 	// request specifies an unknown or unsupported CS to that Unit or
 	// Terminal, the control pipe must indicate a protocol STALL.
+
+	// wValue == Control Selector in high byte
 	WORD wValue;
 
-	// Unit or Terminal ID and Interface
-	WORD wIndex;
+	// Unit/Terminal ID and Interface
+	// --or--
+	// Endpoint
+	//WORD wIndex;
+	BYTE bEntityId;
+	BYTE bEndpoint;
 
 	// Length of parameter block
 	WORD wLength;
+};
+
+// interface control request
+// wValue == Control Selector in the high byte, low byte must be zero
+// wIndex == ???
+
+// Power Mode Control
+// VC_VIDEO_POWER_MODE_CONTROL
+// SET_CUR, GET_CUR, GET_INFO
+struct uvc_video_power_mode_control {
+	
 };
 
 /*
@@ -69,21 +92,6 @@ stream parameter negotiation.
 //#define UVC_SET_CUR                                     (0x01)
 
 // GET
-#define UVC_CONTROL_GET_SUPPORTS_GET			(1 << 0)
-#define UVC_CONTROL_GET_SUPPORTS_SET			(1 << 1)
-#define UVC_CONTROL_GET_DISABLED_AUTO			(1 << 2)
-#define UVC_CONTROL_GET_AUTOUPDATE			(1 << 3)
-#define UVC_CONTROL_GET_ASYNC				(1 << 4)
-#define UVC_CONTROL_GET_DISABLED_INCOMPAT		(1 << 5)
-
-struct uvc_control_request_get {
-	BYTE	supportsGet	: 1;
-	BYTE	supportsSet	: 1;
-	BYTE	disabledAuto	: 1; // Disabled due to automatic mode
-	BYTE	autoupdate	: 1;
-	BYTE	async		: 1;
-	BYTE	disabledIncompat: 1; // Disabled due to incompatibility
-};
 
 
 enum uvc_get_values {
@@ -137,6 +145,24 @@ set to zero (0) (see section 4.1.2, “Get Request”).
 */
 #define UVC_GET_INFO                                    (UVC_GET_XXX_ONE|UVC_INFO)
 #define UVC_GET_INFO_ALL                                (UVC_GET_XXX_ALL|UVC_INFO)
+
+// UVC_GET_INFO
+// wLength == 1
+#define UVC_GET_INFO_SUPPORTS_GET			(1 << 0)
+#define UVC_GET_INFO_SUPPORTS_SET			(1 << 1)
+#define UVC_GET_INFO_DISABLED_AUTO			(1 << 2)
+#define UVC_GET_INFO_AUTOUPDATE				(1 << 3)
+#define UVC_GET_INFO_ASYNC				(1 << 4)
+#define UVC_GET_INFO_DISABLED_INCOMPAT			(1 << 5)
+struct uvc_control_request_get_info_data {
+	BYTE	supportsGet	: 1;
+	BYTE	supportsSet	: 1;
+	BYTE	disabledAuto	: 1; // Disabled due to automatic mode
+	BYTE	autoupdate	: 1;
+	BYTE	async		: 1;
+	BYTE	disabledIncompat: 1; // Disabled due to incompatibility
+};
+
 
 /* 
 Returns the default value for the negotiated fields.
