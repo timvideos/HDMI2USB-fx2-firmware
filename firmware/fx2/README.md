@@ -26,7 +26,7 @@ Fedora:
 
 `make`
 
-# Flasing
+# Flashing
 
 Use fx2loader from the libfpgalink project:
 
