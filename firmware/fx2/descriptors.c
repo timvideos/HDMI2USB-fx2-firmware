@@ -197,9 +197,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 						.bNumFrameDescriptors	= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.mjpeg_stream.frames),
 						.bmFlags		= 1, // Uses fixed size samples
 						.bDefaultFrameIndex	= 1,
-						.bAspectRatioX		= 0, // Not used
-						.bAspectRatioY		= 0, // Not used
-						.bmInterfaceFlags	= 0, // Not used,
+						.bAspectRatioX		= 0, // Only used for interlaced
+						.bAspectRatioY		= 0, // Only used for interlaced
+						.bmInterfaceFlags	= 0, // Not interlaced
 						.bCopyProtect		= 0, // Duplication unrestricted
 					},
 					.frames = {
