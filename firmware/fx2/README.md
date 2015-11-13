@@ -155,18 +155,21 @@ Use fx2loader from the libfpgalink project:
 `fx2loader -v 0925:3881 firmware.hex ram`
 
 
-## Existing HDMI2USB USB endpoint usage
+## Planned HDMI2USB USB endpoint usage
 
-FIXME: Check this is correct!!!
+TODO:
 
 | Endpoint | Direction | Transfer type | Used? | Comments                              |
 | -------- | --------- | ------------- | ----- | --------------------------------------|
 |     0    |     -     | CONTROL       | No    | USB Reserved                          |
-|     1    |    IN     | INT           | Yes   | CDC Polling/Int?                      |
-|     2    |    OUT    | BULK          | Yes   | Used for UART TX                      |
-|     4    |    IN     | BULK          | Yes   | Used for UART RX                      |
-|     6    |    IN     | BULK          | Yes   | Used for sending UVC camera data      |
-|     8    |     -     | -             | No    | Unused, can be freed                  |
+|     1    |    IN     | BULK          | Yes   | CDC UART RX                           |
+|     1    |    OUT    | BULK          | Yes   | CDC UART TX                           |
+|     2    |    IN     | INT           | Yes   | CDC Control                           |
+|     4    |    IN     | INT           | Yes   | Primary UVC Camera status             |
+|     6    |    IN     | ISO or BULK   | Yes   | Primary UVC Camera data               |
+|     8    |    IN     | BULK          | Yes   | Preview UVC Camera data               |
+
+Endpoint 8 can be disabled to make EP6, 1024 bytes, double buffered.
 
 
 ## What Cypress FX2LP supports
