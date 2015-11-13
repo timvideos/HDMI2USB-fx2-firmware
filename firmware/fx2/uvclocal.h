@@ -19,10 +19,18 @@
 // 234881024
 #define BIT_RATE 0xE000000
 
-#define ALL_UNIT_ID 0
-#define CAMERA_UNIT_ID 1
-#define PROCESSING_UNIT_ID 2
-#define EXTENSION_UNIT_ID 3
-#define OUTPUT_UNIT_ID 4
+#define ALL_UNIT_ID		0
+#define CAMERA_UNIT_ID		1
+#define PROCESSING_UNIT_ID	2
+#define EXTENSION_UNIT_ID	3
+#define OUTPUT_UNIT_ID		4
+
+#define UNIT_INPUT_PATTERN	0xff
+#define UNIT_INPUT_HDMI_0	0xff
+#define UNIT_INPUT_HDMI_1	0xff
+
+#define UNIT_SELECTOR_ENCODER	0xff
+#define UNIT_SELECTOR_OUTPUT_0	0xff
+#define UNIT_SELECTOR_OUTPUT_1	0xff
 
 #endif
