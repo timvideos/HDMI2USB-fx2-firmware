@@ -56,7 +56,7 @@ BOOL cdc_handle_command(BYTE cmd) {
 			MAKEWORD(line_coding[1], line_coding[0]));
 
 		if (!cdcuser_set_line_rate(baud_rate))
-			; //EP0STALL();
+			; //STALLEP0();
 
 		return TRUE;
 
