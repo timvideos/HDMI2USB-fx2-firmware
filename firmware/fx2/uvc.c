@@ -138,8 +138,8 @@ __code const struct uvc_vs_control_data_v11 stream_config_step = {
 	.bFrameIndex		= 1,
 };
 
-struct uvc_vs_control_data_v11 stream_config_probed;
-struct uvc_vs_control_data_v11 stream_config_commit;
+__xdata struct uvc_vs_control_data_v11 stream_config_probed;
+__xdata struct uvc_vs_control_data_v11 stream_config_commit;
 
 // FIXME: Look at the descriptors?
 const WORD uvc_bcd_version = UVC_BCD_V11;
