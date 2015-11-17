@@ -146,6 +146,9 @@ const WORD uvc_bcd_version = UVC_BCD_V11;
 
 /**
  * Copy any structure field from src into dst if dst value is zero.
+ *
+ * FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
+ * the FX2 would be very useful for doing this.
  */
 BOOL uvc_vs_control_data_populate(const struct uvc_vs_control_data_v15* src, struct uvc_vs_control_data_v15* dst) {
 	if (uvc_bcd_version != UVC_BCD_V10 && 
