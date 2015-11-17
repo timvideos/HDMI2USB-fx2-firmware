@@ -11,6 +11,10 @@
 #include "uvclocal.h"
 #include "descriptors.h"
 
+// sdcc
+#include <string.h>
+
+// fx2lib
 #include <fx2regs.h>
 #include <fx2macros.h>
 #include <setupdat.h>
@@ -94,29 +98,25 @@ const DWORD frameSize[] = {
 	FRAME_SIZE_1280x720, // HDMI
 };
 
-__xdata union uvc_streaming_control_array {
-	struct uvc_vs_control_data_v11 control;
-	BYTE array[sizeof(struct uvc_vs_control_data_v11)];
-} valuesArray = {
-	.control = {
-		.bmHint			= UVC_PROBE_BMHINT_dwFrameInterval,
-		.bFormatIndex		= 1,
-		.bFrameIndex		= 1,
-		.dwFrameInterval	= FRAME_INTERVAL_30FPS, /* in 100ns */
-		.wKeyFrameRate		= 0,
-		.wPFrameRate		= 0,
-		.wCompQuality		= 0,
-		.wCompWindowSize	= 0,
-		.wDelay			= 5, /* in ms */
-		.dwMaxVideoFrameSize	= FRAME_SIZE_1024x768, // in bytes
-		.dwMaxPayloadTransferSize = 1024, // in bytes
-	},
-};
+//FIXME: The typedef doesn't seem to pick up the __xdata/__code definitions!?
+//typedef (__code const struct uvc_vs_control_data_v15) const_control_data_t;
+//typedef ((__code const struct uvc_vs_control_data_v15) * const) const_control_fulldata_ptr_t;
+//typedef (__xdata struct uvc_vs_control_data_v15) control_data_t;
+//typedef ((__xdata struct uvc_vs_control_data_v15) * const) control_fulldata_ptr_t;
+#define const_control_data_t \
+	__code const struct uvc_vs_control_data_v15
+#define const_control_fulldata_ptr_t \
+	__code const struct uvc_vs_control_data_v15 * const
+#define control_data_t \
+	__xdata struct uvc_vs_control_data_v15
+#define control_fulldata_ptr_t \
+	__xdata struct uvc_vs_control_data_v15 * const
 
 #define DEFAULT_bFormatIndex 1
 #define DEFAULT_bFrameIndex 1
 
-__code const struct uvc_vs_control_data_v11 stream_config_default = { // For UVC_GET_DEF
+// Default, min and max configurations
+const_control_data_t stream_config_default = { // For UVC_GET_DEF
 	.bFormatIndex		= DEFAULT_bFormatIndex,
 	.bFrameIndex		= DEFAULT_bFrameIndex,
 	.dwFrameInterval	= FRAME_INTERVAL_30FPS, //UVC_DESCRIPTOR.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwFrameInterval[DEFAULT_bFrameIndex],
@@ -128,18 +128,14 @@ __code const struct uvc_vs_control_data_v11 stream_config_default = { // For UVC
 	.bMaxVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
 };
 #define stream_config_max	stream_config_default
-__code const struct uvc_vs_control_data_v11 stream_config_min = {
+const_control_data_t stream_config_min = {
 	.bFormatIndex		= 1,
 	.bFrameIndex		= 1,
 };
-
-__code const struct uvc_vs_control_data_v11 stream_config_step = {
+const_control_data_t stream_config_step = {
 	.bFormatIndex		= 1,
 	.bFrameIndex		= 1,
 };
-
-__xdata struct uvc_vs_control_data_v11 stream_config_probed;
-__xdata struct uvc_vs_control_data_v11 stream_config_commit;
 
 // FIXME: Look at the descriptors?
 const WORD uvc_bcd_version = UVC_BCD_V11;
@@ -150,11 +146,12 @@ const WORD uvc_bcd_version = UVC_BCD_V11;
  * FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
  * the FX2 would be very useful for doing this.
  */
-BOOL uvc_vs_control_data_populate(const struct uvc_vs_control_data_v15* src, struct uvc_vs_control_data_v15* dst) {
+
+void uvc_vs_control_data_populate(control_fulldata_ptr_t src, control_fulldata_ptr_t dst) {
 	if (uvc_bcd_version != UVC_BCD_V10 && 
 		uvc_bcd_version != UVC_BCD_V11 &&
 		uvc_bcd_version != UVC_BCD_V15)
-		return FALSE;
+		return;
 
 	if (dst->bFormatIndex == 0) {
 		dst->bFormatIndex = src->bFormatIndex;
@@ -190,7 +187,7 @@ BOOL uvc_vs_control_data_populate(const struct uvc_vs_control_data_v15* src, str
 	// UVC1.0 ends here
 	if (uvc_bcd_version != UVC_BCD_V11 && 
 		uvc_bcd_version != UVC_BCD_V15)
-		return FALSE;
+		return;
 
 	if (dst->dwClockFrequency == 0) {
 		dst->dwClockFrequency = src->dwClockFrequency;
@@ -210,7 +207,7 @@ BOOL uvc_vs_control_data_populate(const struct uvc_vs_control_data_v15* src, str
 
 	// UVC1.1 ends here
 	if (uvc_bcd_version != UVC_BCD_V15)
-		return TRUE;
+		return;
 
 	if (dst->bUsage == 0) {
 		dst->bUsage = src->bUsage;
@@ -230,13 +227,13 @@ BOOL uvc_vs_control_data_populate(const struct uvc_vs_control_data_v15* src, str
 	if (dst->bmLayoutPerStream == 0) {
 		dst->bmLayoutPerStream = src->bmLayoutPerStream;
 	}
-
-	return TRUE;
 }
 
 // FIXME: Figure out how to make this __at(0xE6B8) be __at(&SETUPDAT)
 __xdata __at(0xE6B8) volatile struct uvc_control_request uvc_ctrl_request;
 // FIXME: Figure out how to make this __at(0xXXX) be __at(&EP0BUF)
+__xdata __at(0xE740) volatile struct uvc_vs_control_data_v15 ep0buffer;
+
 //__xdata __at(0xE740) volatile struct uvc_??? uvc_clear_feature;
 
 #define UVC_DESCRIPTOR descriptors.highspeed.uvc
@@ -276,82 +273,24 @@ BOOL handleUVCCommand(BYTE cmd)
 	// if ((uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_DIR) == UVC_REQUEST_TYPE_SET)
 	//	assert uvc_ctrl_request.bRequest == UVC_SET_CUR || uvc_ctrl_request.bRequest == UVC_SET_CUR_ALL
 
+	BOOL r = FALSE;
 	switch (uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_MASK) {
 
 	// 4.2 VideoControl Requests
 	case UVC_REQUEST_TYPE_CONTROL:
-		// Should be sending to the control interface
-		if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videocontrol.interface.bInterfaceNumber)
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
-
-		// Check sending to a valid UVC interface
-		//if (uvc_ctrl_request.wIndex.bInterface > UVC_DESCRIPTOR.assoc_interface.bFirstInterface &&
-		//	uvc_ctrl_request.wIndex.bInterface < UVC_DESCRIPTOR.assoc_interface.bFirstInterface + UVC_DESCRIPTOR.assoc_interface.bInterfaceCount)
-
-		switch (uvc_ctrl_request.wIndex.bUnitId) {
-		case UNIT_ID_NONE:
-			return uvc_interface_control_request();
-
-		case UNIT_ID_CAMERA:
-			return uvc_camera_control_request();
-
-		case UNIT_ID_PROCESSING:
-			return uvc_processing_control_request();
-
-		case UNIT_ID_EXTENSION:
-			return uvc_extension_control_request();
-
-		case UNIT_ID_OUTPUT:
-			// Output terminals don't have any controls.
-			return uvc_output_control_request();
-
-		// For the future
-		/*
-		case UNIT_ID_SELECTOR_4_ENCODER:
-			return uvc_selector_control_request();
-		case UNIT_ID_ENCODER:
-			return uvc_encoder_control_request();
-		*/
-		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
-		}
+		r = uvc_control_request();
+		break;
 
 	// 4.3 VideoStreaming Requests
 	case UVC_REQUEST_TYPE_STREAM:
-		// assert wIndex.bEntityId == 0;
-
-		// Should be sending to the videostream interface
-		if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videostream.interface.bInterfaceNumber)
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
-		
-		// 4.3.1 Interface Control Requests
-		switch (uvc_ctrl_request.wValue.bControl) {
-
-		// 4.3.1.1 Video Probe and Commit Controls
-		case UVC_VS_PROBE_CONTROL:
-			return uvc_stream_probe_request();
-		case UVC_VS_COMMIT_CONTROL:
-			return uvc_stream_commit_request();
-		
-		// 4.3.1.2 Video Still Probe Control and Still Commit Control
-		// VS_STILL_PROBE_CONTROL
-		// VS_STILL_COMMIT_CONTROL
-		// 4.3.1.3 Synch Delay Control
-		// 4.3.1.4 Still Image Trigger Control
-		// 4.3.1.5 Generate Key Frame Control
-		// 4.3.1.6 Update Frame Segment Control
-
-		// 4.3.1.7 Stream Error Code Control
-		case UVC_VS_STREAM_ERROR_CODE_CONTROL:
-			return uvc_stream_commit_request();
-		
-		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
-		}
-
-	default:
-		return FALSE;
+		r = uvc_stream_request();
+		break;
 	}
+
+	if (r)
+		uvc_control_clear_error();
+
+	return r;
 }
 
 
@@ -370,8 +309,49 @@ BOOL uvc_control_return_byte(BYTE data) {
 	return TRUE;
 }
 
-// 4.2.1 Interface Control Requests
+
+// 4.2 VideoControl Requests
 // ==========================================
+inline BOOL uvc_control_request() {
+	// Should be sending to the control interface
+	if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videocontrol.interface.bInterfaceNumber)
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+
+	// Check sending to a valid UVC interface
+	//if (uvc_ctrl_request.wIndex.bInterface > UVC_DESCRIPTOR.assoc_interface.bFirstInterface &&
+	//	uvc_ctrl_request.wIndex.bInterface < UVC_DESCRIPTOR.assoc_interface.bFirstInterface + UVC_DESCRIPTOR.assoc_interface.bInterfaceCount)
+
+	switch (uvc_ctrl_request.wIndex.bUnitId) {
+	case UNIT_ID_NONE:
+		return uvc_interface_control_request();
+
+	case UNIT_ID_CAMERA:
+		return uvc_camera_control_request();
+
+	case UNIT_ID_PROCESSING:
+		return uvc_processing_control_request();
+
+	case UNIT_ID_EXTENSION:
+		return uvc_extension_control_request();
+
+	case UNIT_ID_OUTPUT:
+		// Output terminals don't have any controls.
+		return uvc_output_control_request();
+
+	// For the future
+	/*
+	case UNIT_ID_SELECTOR_4_ENCODER:
+		return uvc_selector_control_request();
+	case UNIT_ID_ENCODER:
+		return uvc_encoder_control_request();
+	*/
+	default:
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	}
+}
+
+// 4.2.1 Interface Control Requests
+// ------------------------------------------
 inline BOOL uvc_interface_control_request() {
 	// assert uvc_ctrl_request.wLength == 1
 	if (uvc_ctrl_request.wIndex.bUnitId != 0)
@@ -425,16 +405,25 @@ inline BOOL uvc_interface_control_request() {
 	}
 }
 
-inline BOOL uvc_control_set_error(enum bmRequestStreamErrorCodeType code) {
+enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
+
+inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
 	// Set the error value
+	uvc_control_error_last = 0;
 
 	// Stall the endpoint
+	STALLEP0();
+
 	return TRUE;
+}
+
+inline void uvc_control_clear_error() {
+	uvc_control_error_last = CONTROL_ERROR_CODE_NONE;
 }
 
 
 // 4.2.2 Unit and Terminal Control Requests
-// ==========================================
+// ------------------------------------------
 // 4.2.2.1 Camera Terminal Control Requests
 // We don't implement most of the camera controls, not being a camera.
 inline BOOL uvc_camera_control_request() {
@@ -513,6 +502,7 @@ inline BOOL uvc_camera_control_request() {
 }
 
 // 4.2.2.2 Selector Unit Control Requests
+// ------------------------------------------
 inline BOOL uvc_selector_control_request() {
 	// assert uvc_ctrl_request.wLength == 1
 
@@ -556,6 +546,7 @@ inline BOOL uvc_selector_control_request() {
 }
 
 // 4.2.2.3 Processing Unit Control Requests
+// ------------------------------------------
 // We don't implement most of the processing unit controls, not being a
 // camera.
 inline BOOL uvc_processing_control_request() {
@@ -644,6 +635,7 @@ inline BOOL uvc_processing_control_request() {
 }
 
 // 4.2.2.4 Encoding Units
+// ------------------------------------------
 // Doesn't seem to be supported under Linux?
 // Complicated!?
 inline BOOL uvc_encoding_control_request() {
@@ -664,6 +656,7 @@ inline BOOL uvc_extension_control_request() {
 }
 
 // 4.2.2.?? Output Terminal Control Requests
+// ------------------------------------------
 // Output Terminal's don't have any control.
 inline BOOL uvc_output_control_request() {
 	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_OUTPUT)
@@ -672,26 +665,90 @@ inline BOOL uvc_output_control_request() {
 	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
 }
 
-// 4.3.1 Interface Control Requests
+
+// 4.3 VideoStreaming Requests
 // ==========================================
+inline BOOL uvc_stream_request() {
+	// assert UVC_REQUEST_TYPE_STREAM:
+	// assert wIndex.bEntityId == 0;
+
+	// Should be sending to the videostream interface
+	if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videostream.interface.bInterfaceNumber)
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	
+	// 4.3.1 Interface Control Requests
+	switch (uvc_ctrl_request.wValue.bControl) {
+
+	// 4.3.1.1 Video Probe and Commit Controls
+	case UVC_VS_PROBE_CONTROL:
+		return uvc_stream_probe_request();
+	case UVC_VS_COMMIT_CONTROL:
+		return uvc_stream_commit_request();
+	
+	// 4.3.1.2 Video Still Probe Control and Still Commit Control
+	// VS_STILL_PROBE_CONTROL
+	// VS_STILL_COMMIT_CONTROL
+	// 4.3.1.3 Synch Delay Control
+	// 4.3.1.4 Still Image Trigger Control
+	// 4.3.1.5 Generate Key Frame Control
+	// 4.3.1.6 Update Frame Segment Control
+
+	// 4.3.1.7 Stream Error Code Control
+	case UVC_VS_STREAM_ERROR_CODE_CONTROL:
+		return uvc_stream_commit_request();
+	
+	default:
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+	}
+}
+
+void writeep0_auto_code(const_control_fulldata_ptr_t src, WORD len) {
+	// Turn off "auto read length mode"
+    SUDPTRCTL |= bmSUDAV;
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src);
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	EP0BCL = LSB(len); // Transfer starts with this write.
+}
+void writeep0_auto_xdata(control_fulldata_ptr_t src, WORD len) {
+	// Turn off "auto read length mode"
+    SUDPTRCTL |= bmSUDAV;
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src);
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	EP0BCL = LSB(len); // Transfer starts with this write.
+}
+
+// 4.3.1 Interface Control Requests
+// ------------------------------------------
 // 4.3.1.1 Video Probe control
+control_data_t stream_config_probed;
 inline BOOL uvc_stream_probe_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
 
 	switch (uvc_ctrl_request.bRequest) {
 	case UVC_SET_CUR:
+		// assert MAKEWORD(EP0BCH, EP0BCL) == sizeof(stream_config_probed)
+		uvc_vs_control_data_populate(&ep0buffer, &stream_config_probed);
 		return TRUE;
 
 	case UVC_GET_MIN:
+		writeep0_auto_code(&stream_config_min, sizeof(stream_config_min));
 		return TRUE;
 	case UVC_GET_MAX:
+		writeep0_auto_code(&stream_config_max, sizeof(stream_config_min));
 		return TRUE;
 	// Get "number of steps"
 	case UVC_GET_RES:
+		writeep0_auto_code(&stream_config_step, sizeof(stream_config_min));
 		return TRUE;
 	// Get "default value"
 	case UVC_GET_DEF:
-
+		writeep0_auto_code(&stream_config_default, sizeof(stream_config_min));
 		return TRUE;
 
 	case UVC_GET_LEN:
@@ -714,6 +771,7 @@ inline BOOL uvc_stream_probe_request() {
 	// UVC_GET_CUR state is undefined. This request shall stall in case of
 	// negotiation failure.
 	case UVC_GET_CUR:
+		writeep0_auto_xdata(&stream_config_probed, sizeof(stream_config_probed));
 		return TRUE;
 
 	// Queries the capabilities and status of the Control. The value
@@ -734,12 +792,15 @@ inline BOOL uvc_stream_probe_request() {
 }
 
 // 4.3.1.1 Video Commit control
+// ------------------------------------------
+control_data_t stream_config_commit;
 inline BOOL uvc_stream_commit_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_COMMIT_CONTROL
 
 	switch (uvc_ctrl_request.bRequest) {
 	// Sets the device state. This sets the active device state.
 	case UVC_SET_CUR:
+
 		return TRUE;
 
 	case UVC_GET_LEN:
@@ -768,6 +829,9 @@ inline BOOL uvc_stream_commit_request() {
 }
 
 // 4.3.1.7 Stream Error Code Control
+// ------------------------------------------
+enum bmRequestStreamErrorCodeType uvc_stream_error_last = 0;
+
 inline BOOL uvc_stream_error_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VC_REQUEST_ERROR_CODE_CONTROL
 	// 4.2.1.2 Request Error Code Control
@@ -790,7 +854,14 @@ inline BOOL uvc_stream_error_request() {
 
 inline BOOL uvc_stream_set_error(enum bmRequestStreamErrorCodeType code) {
 	// Set the error value
+	uvc_stream_error_last = code;
 
 	// Stall the endpoint
+	STALLEP0();
+
 	return TRUE;
+}
+
+inline void uvc_stream_clear_error() {
+	uvc_stream_error_last = STREAM_ERROR_CODE_NONE;
 }

@@ -85,7 +85,10 @@ BOOL uvc_control_return_byte(BYTE data);
 
 // 4.2 VideoControl Requests
 // =======================================================================
+inline BOOL uvc_control_request();
+
 // 4.2.1 Interface Control Requests
+// -----------------------------------------------------------------------
 inline BOOL uvc_interface_control_request();
 
 // 4.2.1.1 Power Mode Control
@@ -125,11 +128,8 @@ enum bmRequestControlErrorCodeType {
 	CONTROL_ERROR_CODE_UNKNOWN = 0xFF,
 };
 
-struct uvc_vc_data_error_code_control {
-	enum bmRequestControlErrorCodeType bmRequestErrorCode;
-};
-
 inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType);
+inline void uvc_control_clear_error();
 
 // 4.2.2 Unit and Terminal Control Requests
 // 4.2.2.1 Camera Terminal Control Requests
@@ -196,9 +196,10 @@ inline BOOL uvc_extension_control_request();
 inline BOOL uvc_output_control_request();
 
 // 4.3 VideoStreaming Requests
-// 4.3.1 Interface Control Requests
 // =======================================================================
+inline BOOL uvc_stream_request();
 
+// 4.3.1 Interface Control Requests
 // 4.3.1.1. Video Probe and Commit Controls
 // -----------------------------------------------------------------------
 // UVC_VS_PROBE_CONTROL
@@ -337,6 +338,7 @@ enum bmRequestStreamErrorCodeType {
 };
 
 inline BOOL uvc_stream_set_error(enum bmRequestStreamErrorCodeType);
+inline void uvc_stream_clear_error();
 
 // =======================================================================
 
