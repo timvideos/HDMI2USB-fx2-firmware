@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 
 strings = [x.strip() for x in sys.stdin.readlines()]
 
 if sys.argv[1] == "--header":
-	print """\
+	print("""\
 // This is an auto-generated file!
 #include <linux/ch9.h>
 #include <linux/ch9-extra.h>
@@ -18,33 +18,33 @@ struct usb_descriptors_strings {
 		__u8 bLength;
 		__u8 bDescriptorType;
 		__le16 wData[1];
-	} language;"""
+	} language;""")
 	for i, string in enumerate(strings):
-		print """\
+		print("""\
 	struct usb_string_%(i)i {
 		__u8 bLength;
 		__u8 bDescriptorType;
 		__le16 wData[%(l)i];
-	} string%(i)i;""" % {'l': len(string), 'i': i}
-	print """\
+	} string%(i)i;""" % {'l': len(string), 'i': i})
+	print("""\
 };
 
 #endif // DESCRIPTORS_STRING_TABLE_H_
-"""
+""")
 
 if sys.argv[1] == "--cfile":
-	print """\
+	print("""\
 	.strings = {
 		// English language header
 		.language = {
 			.bLength = sizeof(struct usb_string_lang),
 			.bDescriptorType = USB_DT_STRING,
 			.wData = { 0x0409 }, // 0x0409 is English
-		},"""
+		},""")
 	for i, string in enumerate(strings):
 		d = ["((__le16)('%s'))" % s for s in string]
 
-		print """\
+		print("""\
 		// "%(s)s"
 		.string%(i)i = {
 			.bLength = sizeof(struct usb_string_%(i)i),
@@ -55,7 +55,7 @@ if sys.argv[1] == "--cfile":
 		'i': i,
 		'l': len(string),
 		'd': ", ".join(d),
-		}
-	print """\
+		})
+	print("""\
 	},
-"""
+""")
