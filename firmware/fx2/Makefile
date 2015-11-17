@@ -43,7 +43,7 @@ CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
+CFLAGS += -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
 
 ifeq ($(USE_16K),1)
 	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -Wl"-b INT2JT=0x3f00"

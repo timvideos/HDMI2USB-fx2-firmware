@@ -84,157 +84,62 @@ BOOL handle_get_descriptor() {
 // ==================================================================
 // ==================================================================
 
-
-//#define UVC_XXX_SIZE 26
-#define UVC_XXX_SIZE (sizeof(struct uvc_vs_control_data_v11))
-
-// FIXME: These are actually stored in the descriptor table!
-const DWORD fps[] = {
-	FRAME_INTERVAL_30FPS,
-	FRAME_INTERVAL_7FPS,
-};
-const DWORD frameSize[] = {
-	FRAME_SIZE_1024x768, // DVI
-	FRAME_SIZE_1280x720, // HDMI
-};
-
 //FIXME: The typedef doesn't seem to pick up the __xdata/__code definitions!?
 //typedef (__code const struct uvc_vs_control_data_v15) const_control_data_t;
-//typedef ((__code const struct uvc_vs_control_data_v15) * const) const_control_fulldata_ptr_t;
+//typedef ((__code const struct uvc_vs_control_data_v15) * const) const_control_data_ptr_t;
 //typedef (__xdata struct uvc_vs_control_data_v15) control_data_t;
-//typedef ((__xdata struct uvc_vs_control_data_v15) * const) control_fulldata_ptr_t;
+//typedef ((__xdata struct uvc_vs_control_data_v15) * const) control_data_ptr_t;
 #define const_control_data_t \
 	__code const struct uvc_vs_control_data_v15
-#define const_control_fulldata_ptr_t \
+#define const_control_data_ptr_t \
 	__code const struct uvc_vs_control_data_v15 * const
 #define control_data_t \
 	__xdata struct uvc_vs_control_data_v15
-#define control_fulldata_ptr_t \
+#define control_data_ptr_t \
 	__xdata struct uvc_vs_control_data_v15 * const
 
-#define DEFAULT_bFormatIndex 1
-#define DEFAULT_bFrameIndex 1
 
-// Default, min and max configurations
-const_control_data_t stream_config_default = { // For UVC_GET_DEF
-	.bFormatIndex		= DEFAULT_bFormatIndex,
-	.bFrameIndex		= DEFAULT_bFrameIndex,
-	.dwFrameInterval	= FRAME_INTERVAL_30FPS, //UVC_DESCRIPTOR.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwFrameInterval[DEFAULT_bFrameIndex],
-	.wDelay				= 5,
-	.dwMaxVideoFrameSize = FRAME_SIZE_1024x768, //UVC_DESCRIPTORS.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwMaxVideoFrameBufferSize,
-	.dwMaxPayloadTransferSize = 1024,
-	.bPreferedVersion	= UVC_PROBE_PAYLOAD_MJPEG_V11,
-	.bMinVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
-	.bMaxVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
-};
-#define stream_config_max	stream_config_default
-const_control_data_t stream_config_min = {
-	.bFormatIndex		= 1,
-	.bFrameIndex		= 1,
-};
-const_control_data_t stream_config_step = {
-	.bFormatIndex		= 1,
-	.bFrameIndex		= 1,
-};
+// FIXME: Move these somewhere.
+inline void writeep0_byte(BYTE byte) {
+	EP0BUF[0] = byte;
+	// Set how much to transfer
+	EP0BCH = 0;
+	EP0BCL = 1; // Transfer starts with this write.
+}
+
+inline void writeep0_auto_code(const_control_data_ptr_t src, WORD len) {
+	// Turn off "auto read length mode"
+    SUDPTRCTL |= bmSDPAUTO;
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src);
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	EP0BCL = LSB(len); // Transfer starts with this write.
+}
+inline void writeep0_auto_xdata(control_data_ptr_t src, WORD len) {
+	// Turn off "auto read length mode"
+    SUDPTRCTL |= bmSUDAV;
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src);
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	EP0BCL = LSB(len); // Transfer starts with this write.
+}
+
+// ==================================================================
+// ==================================================================
+
 
 // FIXME: Look at the descriptors?
 const WORD uvc_bcd_version = UVC_BCD_V11;
 
-/**
- * Copy any structure field from src into dst if dst value is zero.
- *
- * FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
- * the FX2 would be very useful for doing this.
- */
-
-void uvc_vs_control_data_populate(control_fulldata_ptr_t src, control_fulldata_ptr_t dst) {
-	if (uvc_bcd_version != UVC_BCD_V10 && 
-		uvc_bcd_version != UVC_BCD_V11 &&
-		uvc_bcd_version != UVC_BCD_V15)
-		return;
-
-	if (dst->bFormatIndex == 0) {
-		dst->bFormatIndex = src->bFormatIndex;
-	}
-	if (dst->bFrameIndex == 0) {
-		dst->bFrameIndex = src->bFrameIndex;
-	}
-	if (dst->dwFrameInterval == 0) {
-		dst->dwFrameInterval = src->dwFrameInterval;
-	}
-	if (dst->wKeyFrameRate == 0) {
-		dst->wKeyFrameRate = src->wKeyFrameRate;
-	}
-	if (dst->wPFrameRate == 0) {
-		dst->wPFrameRate = src->wPFrameRate;
-	}
-	if (dst->wCompQuality == 0) {
-		dst->wCompQuality = src->wCompQuality;
-	}
-	if (dst->wCompWindowSize == 0) {
-		dst->wCompWindowSize = src->wCompWindowSize;
-	}
-	if (dst->wDelay == 0) {
-		dst->wDelay = src->wDelay;
-	}
-	if (dst->dwMaxVideoFrameSize == 0) {
-		dst->dwMaxVideoFrameSize = src->dwMaxVideoFrameSize;
-	}
-	if (dst->dwMaxPayloadTransferSize == 0) {
-		dst->dwMaxPayloadTransferSize = src->dwMaxPayloadTransferSize;
-	}
-
-	// UVC1.0 ends here
-	if (uvc_bcd_version != UVC_BCD_V11 && 
-		uvc_bcd_version != UVC_BCD_V15)
-		return;
-
-	if (dst->dwClockFrequency == 0) {
-		dst->dwClockFrequency = src->dwClockFrequency;
-	}
-	if (dst->bmFramingInfo == 0) {
-		dst->bmFramingInfo = src->bmFramingInfo;
-	}
-	if (dst->bPreferedVersion == 0) {
-		dst->bPreferedVersion = src->bPreferedVersion;
-	}
-	if (dst->bMinVersion == 0) {
-		dst->bMinVersion = src->bMinVersion;
-	}
-	if (dst->bMaxVersion == 0) {
-		dst->bMaxVersion = src->bMaxVersion;
-	}
-
-	// UVC1.1 ends here
-	if (uvc_bcd_version != UVC_BCD_V15)
-		return;
-
-	if (dst->bUsage == 0) {
-		dst->bUsage = src->bUsage;
-	}
-	if (dst->bBitDepthLuma == 0) {
-		dst->bBitDepthLuma = src->bBitDepthLuma;
-	}
-	if (dst->bmSettings == 0) {
-		dst->bmSettings = src->bmSettings;
-	}
-	if (dst->bMaxNumberOfRefFramesPlus1 == 0) {
-		dst->bMaxNumberOfRefFramesPlus1 = src->bMaxNumberOfRefFramesPlus1;
-	}
-	if (dst->bmRateControlModes == 0) {
-		dst->bmRateControlModes = src->bmRateControlModes;
-	}
-	if (dst->bmLayoutPerStream == 0) {
-		dst->bmLayoutPerStream = src->bmLayoutPerStream;
-	}
-}
 
 // FIXME: Figure out how to make this __at(0xE6B8) be __at(&SETUPDAT)
 __xdata __at(0xE6B8) volatile struct uvc_control_request uvc_ctrl_request;
 // FIXME: Figure out how to make this __at(0xXXX) be __at(&EP0BUF)
 __xdata __at(0xE740) volatile struct uvc_vs_control_data_v15 ep0buffer;
-
-//__xdata __at(0xE740) volatile struct uvc_??? uvc_clear_feature;
 
 #define UVC_DESCRIPTOR descriptors.highspeed.uvc
 
@@ -293,22 +198,19 @@ BOOL handleUVCCommand(BYTE cmd)
 	return r;
 }
 
-
+// Return a response to a GET_INFO request
 // capabilities = UVC_CONTROL_CAP_XXX | UVC_CONTROL_CAP_XXX
-BOOL uvc_control_get_info(BYTE control, BYTE capabilities) {
+inline BOOL uvc_control_get_info(BYTE control, BYTE capabilities) {
 	// assert uvc_ctrl_request.wLength == 1
-
-	// Do something...
-
+	uvc_control_return_byte(capabilities);
 	return TRUE;
 }
 
-BOOL uvc_control_return_byte(BYTE data) {
+inline BOOL uvc_control_return_byte(BYTE data) {
 	// Send the single byte response....
-
+	writeep0_byte(data);
 	return TRUE;
 }
-
 
 // 4.2 VideoControl Requests
 // ==========================================
@@ -352,6 +254,8 @@ inline BOOL uvc_control_request() {
 
 // 4.2.1 Interface Control Requests
 // ------------------------------------------
+enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
+
 inline BOOL uvc_interface_control_request() {
 	// assert uvc_ctrl_request.wLength == 1
 	if (uvc_ctrl_request.wIndex.bUnitId != 0)
@@ -367,10 +271,7 @@ inline BOOL uvc_interface_control_request() {
 			return TRUE;
 
 		case UVC_GET_CUR:
-			// FIXME: Implement
-			// RETURN UVC_VC_POWER_MODE_CONTROL_POWERED_AC | UVC_VC_POWER_MODE_CONTROL_DATA_MODE_FULL_POWER
-			// struct uvc_vc_data_power_mode_control;
-			return TRUE;
+			return uvc_control_return_byte(UVC_VC_POWER_MODE_CONTROL_POWERED_AC | UVC_VC_POWER_MODE_CONTROL_DATA_MODE_FULL_POWER);
 
 		case UVC_GET_INFO:
 			return uvc_control_get_info(
@@ -386,9 +287,7 @@ inline BOOL uvc_interface_control_request() {
 	case UVC_VC_REQUEST_ERROR_CODE_CONTROL:
 		switch (uvc_ctrl_request.bRequest) {
 		case UVC_GET_CUR:
-			// FIXME: Implement
-			// struct uvc_vc_data_error_code_control
-			return TRUE;
+			return uvc_control_return_byte(uvc_control_error_last);
 
 		case UVC_GET_INFO:
 			return uvc_control_get_info(
@@ -404,8 +303,6 @@ inline BOOL uvc_interface_control_request() {
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
 	}
 }
-
-enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
 
 inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
 	// Set the error value
@@ -589,8 +486,7 @@ inline BOOL uvc_processing_control_request() {
 
 		case UVC_GET_CUR:
 			// FIXME: Implement
-			// return uvc_control_return_byte();
-			return TRUE;
+			return uvc_control_return_byte(UVC_PU_POWER_LINE_FREQUENCY_CONTROL_50HZ);
 
 		case UVC_GET_INFO:
 			// UVC_CONTROL_CAP_AUTOUPDATE
@@ -614,8 +510,7 @@ inline BOOL uvc_processing_control_request() {
 		switch (uvc_ctrl_request.bRequest) {
 		case UVC_GET_CUR:
 			// FIXME: Implement
-			// return uvc_control_return_byte();
-			return TRUE;
+			return uvc_control_return_byte(UVC_PU_ANALOG_LOCK_STATUS_CONTROL_SIGNAL);
 
 		case UVC_GET_INFO:
 			// UVC_CONTROL_CAP_AUTOUPDATE
@@ -702,77 +597,98 @@ inline BOOL uvc_stream_request() {
 	}
 }
 
-void writeep0_auto_code(const_control_fulldata_ptr_t src, WORD len) {
-	// Turn off "auto read length mode"
-    SUDPTRCTL |= bmSUDAV;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SUDPTRL = LSB((WORD)src);
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	EP0BCL = LSB(len); // Transfer starts with this write.
-}
-void writeep0_auto_xdata(control_fulldata_ptr_t src, WORD len) {
-	// Turn off "auto read length mode"
-    SUDPTRCTL |= bmSUDAV;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SUDPTRL = LSB((WORD)src);
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	EP0BCL = LSB(len); // Transfer starts with this write.
-}
-
 // 4.3.1 Interface Control Requests
 // ------------------------------------------
-// 4.3.1.1 Video Probe control
+// 4.3.1.1 Video Probe and Commit control
+
+BOOL uvc_stream_common_request(control_data_ptr_t dst);
+void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst);
+
 control_data_t stream_config_probed;
 inline BOOL uvc_stream_probe_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
+	return uvc_stream_common_request(&stream_config_probed);
+}
+control_data_t stream_config_committed;
+inline BOOL uvc_stream_commit_request() {
+	// assert uvc_ctrl_request.bRequest == UVC_VS_COMMIT_CONTROL
+	return uvc_stream_common_request(&stream_config_committed);
+}
+
+#define DEFAULT_bFormatIndex 1
+#define DEFAULT_bFrameIndex 1
+
+// Default, min, max and step configurations
+const_control_data_t stream_config_default = {
+	.bFormatIndex		= DEFAULT_bFormatIndex,
+	.bFrameIndex		= DEFAULT_bFrameIndex,
+	.dwFrameInterval	= FRAME_INTERVAL_30FPS, //UVC_DESCRIPTOR.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwFrameInterval[DEFAULT_bFrameIndex],
+	.wDelay				= 5,
+	.dwMaxVideoFrameSize = FRAME_SIZE_1024x768, //UVC_DESCRIPTORS.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwMaxVideoFrameBufferSize,
+	.dwMaxPayloadTransferSize = 1024,
+	.bPreferedVersion	= UVC_PROBE_PAYLOAD_MJPEG_V11,
+	.bMinVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
+	.bMaxVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
+};
+#define stream_config_max	stream_config_default
+const_control_data_t stream_config_min = {
+	.bFormatIndex		= 1,
+	.bFrameIndex		= 1,
+};
+const_control_data_t stream_config_step = {
+	.bFormatIndex		= 1,
+	.bFrameIndex		= 1,
+};
+
+
+inline BYTE uvc_control_size() {
+	switch (uvc_bcd_version) {
+	case UVC_BCD_V10:
+		return sizeof(struct uvc_vs_control_data_v10);
+	case UVC_BCD_V11:
+		return sizeof(struct uvc_vs_control_data_v11);
+	case UVC_BCD_V15:
+		return sizeof(struct uvc_vs_control_data_v15);
+	default:
+		return 0;
+	}
+}
+
+BOOL uvc_stream_common_request(control_data_ptr_t dst) {
+	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
+	BYTE size = uvc_control_size();
 
 	switch (uvc_ctrl_request.bRequest) {
+
 	case UVC_SET_CUR:
-		// assert MAKEWORD(EP0BCH, EP0BCL) == sizeof(stream_config_probed)
-		uvc_vs_control_data_populate(&ep0buffer, &stream_config_probed);
+		// assert MAKEWORD(EP0BCH, EP0BCL) == size
+		uvc_vs_control_data_populate(&ep0buffer, dst);
+		return TRUE;
+
+	// Get current
+	// Returns the current state of the streaming interface.
+	case UVC_GET_CUR:
+		writeep0_auto_xdata(dst, size);
 		return TRUE;
 
 	case UVC_GET_MIN:
-		writeep0_auto_code(&stream_config_min, sizeof(stream_config_min));
+		writeep0_auto_code(&stream_config_min, size);
 		return TRUE;
 	case UVC_GET_MAX:
-		writeep0_auto_code(&stream_config_max, sizeof(stream_config_min));
+		writeep0_auto_code(&stream_config_max, size);
 		return TRUE;
 	// Get "number of steps"
 	case UVC_GET_RES:
-		writeep0_auto_code(&stream_config_step, sizeof(stream_config_min));
+		writeep0_auto_code(&stream_config_step, size);
 		return TRUE;
 	// Get "default value"
 	case UVC_GET_DEF:
-		writeep0_auto_code(&stream_config_default, sizeof(stream_config_min));
+		writeep0_auto_code(&stream_config_default, size);
 		return TRUE;
 
 	case UVC_GET_LEN:
 		// assert uvc_ctrl_request.wLength == 1
-		switch (uvc_bcd_version) {
-		case UVC_BCD_V10:
-			return uvc_control_return_byte(sizeof(struct uvc_vs_control_data_v10));
-		case UVC_BCD_V11:
-			return uvc_control_return_byte(sizeof(struct uvc_vs_control_data_v11));
-		case UVC_BCD_V15:
-			return uvc_control_return_byte(sizeof(struct uvc_vs_control_data_v15));
-		default:
-			return FALSE;
-		}
-
-	// Get current
-	// Returns the current state of the streaming interface. All
-	// supported fields set to zero will be returned with an acceptable
-	// negotiated value. Prior to the initial UVC_SET_CUR operation, the
-	// UVC_GET_CUR state is undefined. This request shall stall in case of
-	// negotiation failure.
-	case UVC_GET_CUR:
-		writeep0_auto_xdata(&stream_config_probed, sizeof(stream_config_probed));
-		return TRUE;
+		return uvc_control_return_byte(size);
 
 	// Queries the capabilities and status of the Control. The value
 	// returned for this request shall have bits D0 and D1 each set to
@@ -791,42 +707,157 @@ inline BOOL uvc_stream_probe_request() {
 	}
 }
 
-// 4.3.1.1 Video Commit control
-// ------------------------------------------
-control_data_t stream_config_commit;
-inline BOOL uvc_stream_commit_request() {
-	// assert uvc_ctrl_request.bRequest == UVC_VS_COMMIT_CONTROL
+/**
+ * Copy any structure field from src into dst if dst value is zero.
+ *
+ * FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
+ * the FX2 would be very useful for doing this.
 
-	switch (uvc_ctrl_request.bRequest) {
-	// Sets the device state. This sets the active device state.
-	case UVC_SET_CUR:
+D0: dwFrameInterval
+D1: wKeyFrameRate
+D2: wPFrameRate
+D3: wCompQuality
+D4: wCompWindowSize
 
-		return TRUE;
+Unsupported fields shall be set to zero by the device. 
 
-	case UVC_GET_LEN:
-		return TRUE;
+Fields left for streaming parameters negotiation shall be set to zero by the host. 
 
-	// Get current
-	// Returns the current state of the streaming interface.
-	case UVC_GET_CUR:
-		return TRUE;
+For example, after a SET_CUR request initializing the FormatIndex and
+FrameIndex, the device will return the new negotiated field values for the
+supported fields when retrieving the Probe control GET_CUR attribute.
 
-	// Queries the capabilities and status of the Control. The value
-	// returned for this request shall have bits D0 and D1 each set to
-	// one (1), and the remaining bits set to zero (0) (see section
-	// 4.1.2, “Get Request”).
-	case UVC_GET_INFO:
-		// UVC_CONTROL_CAP_AUTOUPDATE
-		// UVC_CONTROL_CAP_ASYNCHRONOUS
-		return uvc_control_get_info(
-			UVC_VS_COMMIT_CONTROL,
-			UVC_CONTROL_CAP_GET | UVC_CONTROL_CAP_SET);
+In order to avoid negotiation loops, the device shall always return streaming parameters with
+decreasing data rate requirements. 
 
-	// Unsupported request type
-	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+Unsupported streaming parameters shall be reset by the streaming interface to
+supported values according to the negotiation loop avoidance rules. 
+
+This convention allows the host to cycle through supported values of a field.
+
+
+ */
+void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst) {
+	if (uvc_bcd_version != UVC_BCD_V10 && 
+		uvc_bcd_version != UVC_BCD_V11 &&
+		uvc_bcd_version != UVC_BCD_V15)
+		return;
+
+	// This field is set by the host.
+	if (dst->bFormatIndex == 0) {
+		dst->bFormatIndex = src->bFormatIndex;
+	}
+
+	// This field is set by the host.
+	if (dst->bFrameIndex == 0) {
+		dst->bFrameIndex = src->bFrameIndex;
+	}
+
+	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+	if (dst->dwFrameInterval == 0) {
+		dst->dwFrameInterval = src->dwFrameInterval;
+	}
+
+	// Use of this control is at the discretion of the device, and is indicated in the VS Input or Output Header descriptor.
+	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+	if (dst->wKeyFrameRate == 0) {
+		dst->wKeyFrameRate = src->wKeyFrameRate;
+	}
+
+	// Use of this control is at the discretion of the device, and is indicated in the VS Input or Output Header descriptor.
+	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+	if (dst->wPFrameRate == 0) {
+		dst->wPFrameRate = src->wPFrameRate;
+	}
+
+	// The resolution reported by this control will determine the number of discrete quality settings that it can support.
+	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+	if (dst->wCompQuality == 0) {
+		dst->wCompQuality = src->wCompQuality;
+	}
+
+	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+	if (dst->wCompWindowSize == 0) {
+		dst->wCompWindowSize = src->wCompWindowSize;
+	}
+
+	// When used in conjunction with an IN endpoint, this field is set by the device and read only from the host.
+	// When used in conjunction with an OUT endpoint, this field is set by the host and read only from the device.
+	if (dst->wDelay == 0) {
+		dst->wDelay = src->wDelay;
+	}
+
+	// For frame-based formats, this field indicates the maximum size of a single video frame.
+	// When used in conjunction with an IN endpoint, this field is set by the device and read only from the host.
+	// When used in conjunction with an OUT endpoint, this field is set by the host and read only from the device.
+	if (dst->dwMaxVideoFrameSize == 0) {
+		dst->dwMaxVideoFrameSize = src->dwMaxVideoFrameSize;
+	}
+
+	// This field is set by the device and read only from the host. Some host implementations restrict the maximum value permitted for this field.
+	if (dst->dwMaxPayloadTransferSize == 0) {
+		dst->dwMaxPayloadTransferSize = src->dwMaxPayloadTransferSize;
+	}
+
+	// UVC1.0 ends here
+	if (uvc_bcd_version != UVC_BCD_V11 && 
+		uvc_bcd_version != UVC_BCD_V15)
+		return;
+
+	// This parameter is set by the device and read only from the host.
+	if (dst->dwClockFrequency == 0) {
+		dst->dwClockFrequency = src->dwClockFrequency;
+	}
+
+	// Ignored for frame based formats (MJPEG + Uncompressed)
+	if (dst->bmFramingInfo == 0) {
+		dst->bmFramingInfo = src->bmFramingInfo;
+	}
+
+/*
+The host initializes bPreferedVersion and the following bMinVersion and bMaxVersion fields to zero on the first Probe Set. 
+Upon Probe Get, the device shall return its preferred version, plus the minimum and maximum versions supported by the device (see bMinVersion and bMaxVersion below).
+*/
+	if (dst->bPreferedVersion == 0) {
+		dst->bPreferedVersion = src->bPreferedVersion;
+	}
+	if (dst->bMinVersion == 0) {
+		dst->bMinVersion = src->bMinVersion;
+	}
+	if (dst->bMaxVersion == 0) {
+		dst->bMaxVersion = src->bMaxVersion;
+	}
+
+	// UVC1.1 ends here
+	if (uvc_bcd_version != UVC_BCD_V15)
+		return;
+
+	if (dst->bUsage == 0) {
+		dst->bUsage = src->bUsage;
+	}
+	if (dst->bBitDepthLuma == 0) {
+		dst->bBitDepthLuma = src->bBitDepthLuma;
+	}
+	if (dst->bmSettings == 0) {
+		dst->bmSettings = src->bmSettings;
+	}
+	if (dst->bMaxNumberOfRefFramesPlus1 == 0) {
+		dst->bMaxNumberOfRefFramesPlus1 = src->bMaxNumberOfRefFramesPlus1;
+	}
+	if (dst->bmRateControlModes == 0) {
+		dst->bmRateControlModes = src->bmRateControlModes;
+	}
+	if (dst->bmLayoutPerStream == 0) {
+		dst->bmLayoutPerStream = src->bmLayoutPerStream;
 	}
 }
+
+
 
 // 4.3.1.7 Stream Error Code Control
 // ------------------------------------------
