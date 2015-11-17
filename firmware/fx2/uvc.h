@@ -1,6 +1,9 @@
 #ifndef UVC_H
 #define UVC_H
 
+#include <linux/video.h>
+#include <linux/video-extra.h>
+
 #include <fx2types.h>
 
 //----------------------------------------------------------------------------
@@ -41,8 +44,6 @@ struct uvc_status_packet_from_stream_interface {
 
 
 // Video Control / Video Streaming Requests
-
-
 #define UVC_REQUEST_TYPE_MASK		0x0f
 #define UVC_REQUEST_TYPE_CONTROL	(1 << 0)	// 4.2 VideoControl Requests
 #define UVC_REQUEST_TYPE_STREAM		(1 << 1)	// 4.3 VideoStreaming Requests
@@ -79,17 +80,13 @@ struct uvc_control_request {
 	WORD wLength;
 };
 
-// interface control request
-// wValue == Control Selector in the high byte, low byte must be zero
-// wIndex == ???
-
-// Power Mode Control
-// VC_VIDEO_POWER_MODE_CONTROL
-
+BOOL uvc_control_get_info(BYTE control, BYTE capabilities);
+BOOL uvc_control_return_byte(BYTE data);
 
 // 4.2 VideoControl Requests
 // =======================================================================
 // 4.2.1 Interface Control Requests
+inline BOOL uvc_interface_control_request();
 
 // 4.2.1.1 Power Mode Control
 // -----------------------------------------------------------------------
@@ -115,26 +112,30 @@ struct uvc_vc_data_power_mode_control {
 // UVC_VC_REQUEST_ERROR_CODE_CONTROL
 // Supports: GET_CUR, GET_INFO
 // wLength: 1 byte
-enum {
-	ERROR_CODE_NONE = 0,
-	ERROR_CODE_NOT_READY,
-	ERROR_CODE_WRONG_STATE,
-	ERROR_CODE_POWER,
-	ERROR_CODE_OUT_OF_RANGE,
-	ERROR_CODE_INVALID_UNIT,
-	ERROR_CODE_INVALID_CONTROL,
-	ERROR_CODE_INVALID_REQUEST,
-	ERROR_CODE_INVALID_VALUE,
-	ERROR_CODE_UNKNOWN = 0xFF,
-} bmRequestControlErrorCodeType;
-struct uvc_vc_data_error_code_control {
-	bmRequestControlErrorCodeType bmRequestErrorCode;
+enum bmRequestControlErrorCodeType {
+	CONTROL_ERROR_CODE_NONE = 0,
+	CONTROL_ERROR_CODE_NOT_READY,
+	CONTROL_ERROR_CODE_WRONG_STATE,
+	CONTROL_ERROR_CODE_POWER,
+	CONTROL_ERROR_CODE_OUT_OF_RANGE,
+	CONTROL_ERROR_CODE_INVALID_UNIT,
+	CONTROL_ERROR_CODE_INVALID_CONTROL,
+	CONTROL_ERROR_CODE_INVALID_REQUEST,
+	CONTROL_ERROR_CODE_INVALID_VALUE,
+	CONTROL_ERROR_CODE_UNKNOWN = 0xFF,
 };
+
+struct uvc_vc_data_error_code_control {
+	enum bmRequestControlErrorCodeType bmRequestErrorCode;
+};
+
+inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType);
 
 // 4.2.2 Unit and Terminal Control Requests
 // 4.2.2.1 Camera Terminal Control Requests
 // -----------------------------------------------------------------------
 // We don't implement most of the camera controls, not being a camera.
+inline BOOL uvc_camera_control_request();
 
 // 4.2.2.1.1 Scanning Mode Control
 // -----------------------------------------------------------------------
@@ -152,11 +153,13 @@ struct uvc_vc_data_scanning_mode_control {
 // UVC_SU_INPUT_SELECT_CONTROL
 // Supports: SET_CUR, GET_CUR, GET_MIN, GET_MAX, GET_RES, GET_INFO
 // wLength: 1 byte
+inline BOOL uvc_selector_control_request();
 
 // 4.2.2.3 Processing Unit Control Requests
 // -----------------------------------------------------------------------
 // We don't implement most of the processing unit controls, not being a
 // camera.
+inline BOOL uvc_processing_control_request();
 
 // 4.2.2.3.6 Power Line Frequency Control
 // -----------------------------------------------------------------------
@@ -179,11 +182,18 @@ struct uvc_vc_data_scanning_mode_control {
 // 4.2.2.4 Encoding Units
 // -----------------------------------------------------------------------
 // Doesn't seem to be supported under Linux? Complicated!?
+inline BOOL uvc_encoding_control_request();
 
 // 4.2.2.5 Extension Unit Control Requests
 // -----------------------------------------------------------------------
 // Not sure what to do here...
 // GET_LEN will have a wLength == 2!?
+inline BOOL uvc_extension_control_request();
+
+// 4.2.2.?? Output Terminal Control Requests
+// -----------------------------------------------------------------------
+// Output Terminal's don't have any control.
+inline BOOL uvc_output_control_request();
 
 // 4.3 VideoStreaming Requests
 // 4.3.1 Interface Control Requests
@@ -196,7 +206,8 @@ struct uvc_vc_data_scanning_mode_control {
 // UVC_VS_COMMIT_CONTROL
 // Supports: SET_CUR, GET_CUR, GET_LEN, GET_INFO
 // wLength: sizeof(uvc_vs_control_data) bytes
-
+inline BOOL uvc_stream_probe_request();
+inline BOOL uvc_stream_commit_request();
 
 #define UVC_PROBE_BMHINT_wCompWindowSize	(1 << 4)
 #define UVC_PROBE_BMHINT_wCompQuality		(1 << 3)
@@ -255,7 +266,7 @@ struct uvc_vs_control_data_v11 {
 #define UVC_PROBE_PAYLOAD_MJPEG_V11		1
 #define UVC_PROBE_PAYLOAD_MJPEG_V15		5
 
-struct uvc_vs_control_data_15 {
+struct uvc_vs_control_data_v15 {
 	WORD  bmHint;
 
 	BYTE  bFormatIndex;		// Index to descriptor values, 1 == first value
@@ -292,28 +303,40 @@ struct uvc_vs_control_data_15 {
 // 26 bytes for UVC1.0
 // 34 bytes for UVC1.1 and above...
 // 48 bytes for UVC1.5
-BUILD_BUG_ON(sizeof(uvc_vs_control_data_v10) != 26); // 0x1a
-BUILD_BUG_ON(sizeof(uvc_vs_control_data_v11) != 34); // 0x22
-BUILD_BUG_ON(sizeof(uvc_vs_control_data_v15) != 48); // 0x30
+//BUILD_BUG_ON(sizeof(struct uvc_vs_control_data_v10) != 26); // 0x1a
+//BUILD_BUG_ON(sizeof(struct uvc_vs_control_data_v11) != 34); // 0x22
+//BUILD_BUG_ON(sizeof(struct uvc_vs_control_data_v15) != 48); // 0x30
 
+// 4.3.1.2 Video Still Probe Control and Still Commit Control
+// VS_STILL_PROBE_CONTROL
+// VS_STILL_COMMIT_CONTROL
+
+// 4.3.1.3 Synch Delay Control
+// 4.3.1.4 Still Image Trigger Control
+// 4.3.1.5 Generate Key Frame Control
+// 4.3.1.6 Update Frame Segment Control
 
 // 4.3.1.7 Stream Error Code Control
 // -----------------------------------------------------------------------
 // UVC_VS_STREAM_ERROR_CODE_CONTROL
 // Supports: GET_CUR, GET_INFO
 // wLength: 1 byte
-#define UVC_VS_STREAM_ERROR_CODE_CONTROL_
-enum {
-	ERROR_CODE_NONE = 0,
-	ERROR_CODE_PROTECTED_CONTENT,
-	ERROR_CODE_INPUT_UNDERRUN,
-	ERROR_CODE_DISCONTINUITY,
-	ERROR_CODE_OUTPUT_UNDERRUN,
-	ERROR_CODE_OUTPUT_OVERRUN,
-	ERROR_CODE_FORMAT_CHANGE,
-	ERROR_CODE_STILL_CAPTURE_ERROR,
-	ERROR_CODE_UNKNOWN,
-} bmRequestStreamErrorCodeType;
+//#define UVC_VS_STREAM_ERROR_CODE_CONTROL_
+inline BOOL uvc_stream_error_request();
+
+enum bmRequestStreamErrorCodeType {
+	STREAM_ERROR_CODE_NONE = 0,
+	STREAM_ERROR_CODE_PROTECTED_CONTENT,
+	STREAM_ERROR_CODE_INPUT_UNDERRUN,
+	STREAM_ERROR_CODE_DISCONTINUITY,
+	STREAM_ERROR_CODE_OUTPUT_UNDERRUN,
+	STREAM_ERROR_CODE_OUTPUT_OVERRUN,
+	STREAM_ERROR_CODE_FORMAT_CHANGE,
+	STREAM_ERROR_CODE_STILL_CAPTURE_ERROR,
+	STREAM_ERROR_CODE_UNKNOWN,
+};
+
+inline BOOL uvc_stream_set_error(enum bmRequestStreamErrorCodeType);
 
 // =======================================================================
 
