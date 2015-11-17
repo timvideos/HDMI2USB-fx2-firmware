@@ -15,6 +15,7 @@
 #include <linux/cdc-extra.h>
 
 #ifndef DESCRIPTORS_H_
+#define DESCRIPTORS_H_
 
 DECLARE_UVC_HEADER_DESCRIPTOR(1);
 DECLARE_UVC_HEADER_DESCRIPTOR(2);
