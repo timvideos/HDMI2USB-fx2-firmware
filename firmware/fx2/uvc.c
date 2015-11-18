@@ -13,6 +13,7 @@
 
 // sdcc
 #include <string.h>
+#include <stdio.h>
 
 // fx2lib
 #include <fx2regs.h>
@@ -101,6 +102,8 @@ BOOL handle_get_descriptor() {
 
 // FIXME: Move these somewhere.
 inline void writeep0_byte(BYTE byte) {
+	printf("bwriteep0\n");
+	SUDPTRCTL = 0; // bmSDPAUTO;
 	EP0BUF[0] = byte;
 	// Set how much to transfer
 	EP0BCH = 0;
@@ -108,24 +111,26 @@ inline void writeep0_byte(BYTE byte) {
 }
 
 inline void writeep0_auto_code(const_control_data_ptr_t src, WORD len) {
+	printf("cwriteep0\n");
 	// Turn off "auto read length mode"
-    SUDPTRCTL |= bmSDPAUTO;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SUDPTRL = LSB((WORD)src);
+	SUDPTRCTL = 0; // bmSDPAUTO;
 	// Set how much to transfer
 	EP0BCH = MSB(len);
-	EP0BCL = LSB(len); // Transfer starts with this write.
+	EP0BCL = LSB(len);
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src); // Transfer starts with this write.
 }
 inline void writeep0_auto_xdata(control_data_ptr_t src, WORD len) {
+	printf("xwriteep0\n");
 	// Turn off "auto read length mode"
-    SUDPTRCTL |= bmSUDAV;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SUDPTRL = LSB((WORD)src);
+	SUDPTRCTL = 0; // bmSDPAUTO;
 	// Set how much to transfer
 	EP0BCH = MSB(len);
 	EP0BCL = LSB(len); // Transfer starts with this write.
+	// Set the pointer to the data
+	SUDPTRH = MSB((WORD)src);
+	SUDPTRL = LSB((WORD)src);
 }
 
 // ==================================================================
@@ -143,11 +148,12 @@ __xdata __at(0xE740) volatile struct uvc_vs_control_data_v15 ep0buffer;
 
 #define UVC_DESCRIPTOR descriptors.highspeed.uvc
 
+#define UVC_XXX_SIZE (sizeof(struct uvc_streaming_control))
+
 BOOL handleUVCCommand(BYTE cmd)
 {
+	BOOL r = FALSE;
 	// assert cmd == uvc_ctrl_request.bRequest
-	int i;
-	/*
 	switch(cmd) {
 	case CLEAR_FEATURE:
 		// FIXME: WTF is 0x21 !?
@@ -162,33 +168,23 @@ BOOL handleUVCCommand(BYTE cmd)
 		while (EP0CS & bmEPBUSY);
 		while (EP0BCL != UVC_XXX_SIZE);
 
-		// fps
-		valuesArray.control.bFormatIndex = EP0BUF[2];
-		valuesArray.control.dwFrameInterval = fps[valuesArray.control.bFrameIndex-1];
-
-		// frame size
-		valuesArray.control.bFrameIndex = EP0BUF[3];
-		valuesArray.control.dwMaxVideoFrameSize = frameSize[valuesArray.control.bFormatIndex-1];
-
 		EP0BCH = 0; // ACK
 		EP0BCL = 0; // ACK
 		return TRUE;
-	} */
+	}
 
 	// if ((uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_DIR) == UVC_REQUEST_TYPE_SET)
 	//	assert uvc_ctrl_request.bRequest == UVC_SET_CUR || uvc_ctrl_request.bRequest == UVC_SET_CUR_ALL
-
-	BOOL r = FALSE;
 	switch (uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_MASK) {
 
 	// 4.2 VideoControl Requests
 	case UVC_REQUEST_TYPE_CONTROL:
-		r = uvc_control_request();
+		//r = uvc_control_request();
 		break;
 
 	// 4.3 VideoStreaming Requests
 	case UVC_REQUEST_TYPE_STREAM:
-		r = uvc_stream_request();
+		//r = uvc_stream_request();
 		break;
 	}
 
@@ -211,6 +207,24 @@ inline BOOL uvc_control_return_byte(BYTE data) {
 	writeep0_byte(data);
 	return TRUE;
 }
+
+enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
+inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
+	// Set the error value
+	uvc_control_error_last = 0;
+
+	// Stall the endpoint
+	STALLEP0();
+
+	return TRUE;
+}
+
+inline void uvc_control_clear_error() {
+	uvc_control_error_last = CONTROL_ERROR_CODE_NONE;
+}
+
+
+/*
 
 // 4.2 VideoControl Requests
 // ==========================================
@@ -241,12 +255,10 @@ inline BOOL uvc_control_request() {
 		return uvc_output_control_request();
 
 	// For the future
-	/*
-	case UNIT_ID_SELECTOR_4_ENCODER:
-		return uvc_selector_control_request();
-	case UNIT_ID_ENCODER:
-		return uvc_encoder_control_request();
-	*/
+	//case UNIT_ID_SELECTOR_4_ENCODER:
+	//	return uvc_selector_control_request();
+	//case UNIT_ID_ENCODER:
+	//	return uvc_encoder_control_request();
 	default:
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
 	}
@@ -254,7 +266,6 @@ inline BOOL uvc_control_request() {
 
 // 4.2.1 Interface Control Requests
 // ------------------------------------------
-enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
 
 inline BOOL uvc_interface_control_request() {
 	// assert uvc_ctrl_request.wLength == 1
@@ -303,21 +314,6 @@ inline BOOL uvc_interface_control_request() {
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
 	}
 }
-
-inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
-	// Set the error value
-	uvc_control_error_last = 0;
-
-	// Stall the endpoint
-	STALLEP0();
-
-	return TRUE;
-}
-
-inline void uvc_control_clear_error() {
-	uvc_control_error_last = CONTROL_ERROR_CODE_NONE;
-}
-
 
 // 4.2.2 Unit and Terminal Control Requests
 // ------------------------------------------
@@ -707,36 +703,32 @@ BOOL uvc_stream_common_request(control_data_ptr_t dst) {
 	}
 }
 
-/**
- * Copy any structure field from src into dst if dst value is zero.
- *
- * FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
- * the FX2 would be very useful for doing this.
-
-D0: dwFrameInterval
-D1: wKeyFrameRate
-D2: wPFrameRate
-D3: wCompQuality
-D4: wCompWindowSize
-
-Unsupported fields shall be set to zero by the device. 
-
-Fields left for streaming parameters negotiation shall be set to zero by the host. 
-
-For example, after a SET_CUR request initializing the FormatIndex and
-FrameIndex, the device will return the new negotiated field values for the
-supported fields when retrieving the Probe control GET_CUR attribute.
-
-In order to avoid negotiation loops, the device shall always return streaming parameters with
-decreasing data rate requirements. 
-
-Unsupported streaming parameters shall be reset by the streaming interface to
-supported values according to the negotiation loop avoidance rules. 
-
-This convention allows the host to cycle through supported values of a field.
-
-
- */
+// Copy any structure field from src into dst if dst value is zero.
+// 
+// FIXME: sdcc generates pretty crappy code for this. The dual auto pointers on
+// the FX2 would be very useful for doing this.
+// 
+// D0: dwFrameInterval
+// D1: wKeyFrameRate
+// D2: wPFrameRate
+// D3: wCompQuality
+// D4: wCompWindowSize
+// 
+// Unsupported fields shall be set to zero by the device. 
+// 
+// Fields left for streaming parameters negotiation shall be set to zero by the host. 
+// 
+// For example, after a SET_CUR request initializing the FormatIndex and
+// FrameIndex, the device will return the new negotiated field values for the
+// supported fields when retrieving the Probe control GET_CUR attribute.
+// 
+// In order to avoid negotiation loops, the device shall always return streaming parameters with
+// decreasing data rate requirements. 
+// 
+// Unsupported streaming parameters shall be reset by the streaming interface to
+// supported values according to the negotiation loop avoidance rules. 
+// 
+// This convention allows the host to cycle through supported values of a field.
 void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst) {
 	if (uvc_bcd_version != UVC_BCD_V10 && 
 		uvc_bcd_version != UVC_BCD_V11 &&
@@ -819,10 +811,8 @@ void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst
 		dst->bmFramingInfo = src->bmFramingInfo;
 	}
 
-/*
-The host initializes bPreferedVersion and the following bMinVersion and bMaxVersion fields to zero on the first Probe Set. 
-Upon Probe Get, the device shall return its preferred version, plus the minimum and maximum versions supported by the device (see bMinVersion and bMaxVersion below).
-*/
+	// The host initializes bPreferedVersion and the following bMinVersion and bMaxVersion fields to zero on the first Probe Set. 
+	// Upon Probe Get, the device shall return its preferred version, plus the minimum and maximum versions supported by the device (see bMinVersion and bMaxVersion below).
 	if (dst->bPreferedVersion == 0) {
 		dst->bPreferedVersion = src->bPreferedVersion;
 	}
@@ -856,8 +846,6 @@ Upon Probe Get, the device shall return its preferred version, plus the minimum 
 		dst->bmLayoutPerStream = src->bmLayoutPerStream;
 	}
 }
-
-
 
 // 4.3.1.7 Stream Error Code Control
 // ------------------------------------------
@@ -896,3 +884,4 @@ inline BOOL uvc_stream_set_error(enum bmRequestStreamErrorCodeType code) {
 inline void uvc_stream_clear_error() {
 	uvc_stream_error_last = STREAM_ERROR_CODE_NONE;
 }
+*/

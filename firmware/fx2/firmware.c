@@ -55,22 +55,22 @@ void main() {
 
  main_init();
 
- printf("1\n\r");
+ printf("1\n");
 
  // set up interrupts.
  USE_USB_INTS();
  
- printf("2\n\r");
+ printf("2\n");
  ENABLE_SUDAV();
  ENABLE_USBRESET();
  ENABLE_HISPEED(); 
  ENABLE_SUSPEND();
  ENABLE_RESUME();
 
- printf("3\n\r");
+ printf("3\n");
  EA=1;
 
- printf("4\n\r");
+ printf("4\n");
 // iic files (c2 load) don't need to renumerate/delay
 // trm 3.6
 #ifndef NORENUM
@@ -79,8 +79,8 @@ void main() {
  USBCS &= ~bmDISCON;
 #endif
  
- printf("5\n\r");
  while(TRUE) {
+     printf("*\n");
 
      main_loop();
      if (dosud) {
@@ -88,70 +88,41 @@ void main() {
        handle_setupdata();
      }
 
-#ifdef SUSPEND_ENABLED
-     if (dosuspend) {
-        dosuspend=FALSE;
-        do {
-           printf ( "I'm going to Suspend.\n" );
-           WAKEUPCS |= bmWU|bmWU2; // make sure ext wakeups are cleared
-           SUSPEND=1;
-           PCON |= 1;
-           __asm
-           nop
-           nop
-           nop
-           nop
-           nop
-           nop
-           nop
-           __endasm;
-        } while ( !remote_wakeup_allowed && REMOTE_WAKEUP()); 
-        printf ( "I'm going to wake up.\n");
-
-        // resume
-        // trm 6.4
-        if ( REMOTE_WAKEUP() ) {
-            delay(5);
-            USBCS |= bmSIGRESUME;
-            delay(15);
-            USBCS &= ~bmSIGRESUME;
-        }
-
-     }
-#endif
  } // end while
 
 } // end main
 
 void resume_isr() __interrupt RESUME_ISR {
- printf("e\n\r");
+ printf("e\n");
  CLEAR_RESUME();
 }
   
 void sudav_isr() __interrupt SUDAV_ISR {
- printf("s\n\r");
+ printf("s\n");
  dosud=TRUE;
  CLEAR_SUDAV();
 }
 void usbreset_isr() __interrupt USBRESET_ISR {
- printf("r\n\r");
+ printf("r\n");
  handle_hispeed(FALSE);
  CLEAR_USBRESET();
 }
 void hispeed_isr() __interrupt HISPEED_ISR {
- printf("h\n\r");
+ printf("h\n");
  handle_hispeed(TRUE);
  CLEAR_HISPEED();
 }
 
 void suspend_isr() __interrupt SUSPEND_ISR {
- printf(".\n\r");
+ printf("^\n");
  dosuspend=TRUE;
  CLEAR_SUSPEND();
 }
 
+void ISR_USART0(void) __interrupt TI_0_ISR __critical {
+ printf("u\n");
+}
 /*
-void ISR_USART0(void) __interrupt 4 __critical {
 	if (RI) {
 		RI=0;
 		if (!cdc_can_send()) {

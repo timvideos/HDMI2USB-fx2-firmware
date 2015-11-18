@@ -6,6 +6,12 @@
 
 #include <fx2types.h>
 
+BYTE handle_get_configuration();
+BOOL handle_set_configuration(BYTE cfg);
+BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc);
+BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc);
+BOOL handle_get_descriptor();
+
 //----------------------------------------------------------------------------
 //	UVC definitions
 //----------------------------------------------------------------------------

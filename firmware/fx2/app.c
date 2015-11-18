@@ -70,7 +70,7 @@ void mainInit(void) {
 //
 void mainLoop(void) {
 	printf(".\n\r");
-	TD_Poll();
+	//TD_Poll();
 	cdc_receive_poll();
 }
 
