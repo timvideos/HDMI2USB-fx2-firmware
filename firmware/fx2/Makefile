@@ -46,7 +46,7 @@ CC := sdcc
 CFLAGS += -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
 
 ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -Wl"-b INT2JT=0x3f00"
+	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -Wl"-b INT2JT=0x3f00" --no-xinit-opt --no-xinit-opt --debug
 else
 	CFLAGS += --code-size 0x1e00 --xram-size 0x0200 -DDSCR_AREA=0x1e00 -Wl"-b INT2JT=0x1f00"
 endif

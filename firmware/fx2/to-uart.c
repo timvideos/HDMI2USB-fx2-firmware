@@ -19,7 +19,7 @@
 
 #include <fx2regs.h>
 #include <fx2macros.h>
-#include <serial.h>
+//#include <serial.h>
 #include <delay.h>
 #include <autovector.h>
 #include <lights.h>
@@ -36,7 +36,7 @@
 BOOL cdcuser_set_line_rate(DWORD baud_rate) {
         if (baud_rate > 115200 || baud_rate < 2400)
             baud_rate = 115200;
-	sio0_init(baud_rate);
+//	sio0_init(baud_rate);
 	return TRUE;
 }
 

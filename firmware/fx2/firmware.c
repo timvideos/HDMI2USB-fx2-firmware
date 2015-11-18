@@ -55,17 +55,22 @@ void main() {
 
  main_init();
 
+ printf("1\n\r");
+
  // set up interrupts.
  USE_USB_INTS();
  
+ printf("2\n\r");
  ENABLE_SUDAV();
  ENABLE_USBRESET();
  ENABLE_HISPEED(); 
  ENABLE_SUSPEND();
  ENABLE_RESUME();
 
+ printf("3\n\r");
  EA=1;
 
+ printf("4\n\r");
 // iic files (c2 load) don't need to renumerate/delay
 // trm 3.6
 #ifndef NORENUM
@@ -74,6 +79,7 @@ void main() {
  USBCS &= ~bmDISCON;
 #endif
  
+ printf("5\n\r");
  while(TRUE) {
 
      main_loop();
@@ -118,28 +124,33 @@ void main() {
 } // end main
 
 void resume_isr() __interrupt RESUME_ISR {
+ printf("e\n\r");
  CLEAR_RESUME();
 }
   
 void sudav_isr() __interrupt SUDAV_ISR {
+ printf("s\n\r");
  dosud=TRUE;
  CLEAR_SUDAV();
 }
 void usbreset_isr() __interrupt USBRESET_ISR {
+ printf("r\n\r");
  handle_hispeed(FALSE);
  CLEAR_USBRESET();
 }
 void hispeed_isr() __interrupt HISPEED_ISR {
+ printf("h\n\r");
  handle_hispeed(TRUE);
  CLEAR_HISPEED();
 }
 
 void suspend_isr() __interrupt SUSPEND_ISR {
+ printf(".\n\r");
  dosuspend=TRUE;
  CLEAR_SUSPEND();
 }
 
-
+/*
 void ISR_USART0(void) __interrupt 4 __critical {
 	if (RI) {
 		RI=0;
@@ -157,4 +168,4 @@ void ISR_USART0(void) __interrupt 4 __critical {
 //		transmit();
 	}
 }
-
+*/
