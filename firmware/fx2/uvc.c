@@ -34,7 +34,7 @@ const DWORD frameSize[] = {
 	FRAME_SIZE_1280x720, // HDMI
 };
 
-union uvc_streaming_control_array {
+__xdata union uvc_streaming_control_array {
 	struct uvc_streaming_control control;
 	BYTE array[sizeof(struct uvc_streaming_control)];
 } valuesArray = {
@@ -42,13 +42,13 @@ union uvc_streaming_control_array {
 		.bmHint			= UVC_PROBE_BMHINT_dwFrameInterval,
 		.bFormatIndex		= 1,
 		.bFrameIndex		= 1,
-		.dwFrameInterval	= fps[0], /* in 100ns */
+		.dwFrameInterval	= FRAME_INTERVAL_30FPS, /* in 100ns */
 		.wKeyFrameRate		= 0,
 		.wPFrameRate		= 0,
 		.wCompQuality		= 0,
 		.wCompWindowSize	= 0,
 		.wDelay			= 5, /* in ms */
-		.dwMaxVideoFrameSize	= frameSize[0], // in bytes
+		.dwMaxVideoFrameSize	= FRAME_SIZE_1024x768, // in bytes
 		.dwMaxPayloadTransferSize = 1024, // in bytes
 	},
 };

@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <fx2regs.h>
 #include <fx2macros.h>
 #include <eputils.h>
@@ -26,6 +27,9 @@
 #include "cdc.h"
 #include "uvc.h"
 #include "read-serialno.h"
+#include "softserial.h"
+
+#include <stdio.h>
 
 void TD_Init(void);
 void TD_Poll(void);
@@ -37,6 +41,8 @@ void mainInit(void) {
 #ifdef BOARD_opsis
 	patch_usb_serial_number_with_eeprom_macaddress();
 #endif
+	soft_sio0_init(0);
+	printf("Init start\n");
 
 	// This is only necessary for cases where you want to load firmware into the RAM of an FX2 that
 	// has already loaded firmware from an EEPROM. It should definitely be removed for firmwares
@@ -57,6 +63,7 @@ void mainInit(void) {
 	TD_Init();
 	
 	uart_init();
+	printf("Init Finish\n");
 }
 
 // Called repeatedly while the device is idle

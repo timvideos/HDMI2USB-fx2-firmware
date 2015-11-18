@@ -3,7 +3,7 @@
 #include "debug.h"
 
 #ifdef DEBUG
-__sbit __at 0xB3 USART; //0xB7 USART; // Port D7
+__sbit __at 0xB7 USART; //0xB7 USART; // Port D7
 #define BAUD 32
 
 void usartInit(void) {

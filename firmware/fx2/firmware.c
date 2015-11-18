@@ -44,6 +44,8 @@ extern void main_init();
 
 
 void main() {
+ printf("\n\n----\n\n");
+ EA=0;
 
 #ifdef DEBUG
  SETCPUFREQ(CLK_48M); // required for sio0_init 
@@ -75,7 +77,6 @@ void main() {
  while(TRUE) {
 
      main_loop();
-
      if (dosud) {
        dosud=FALSE;
        handle_setupdata();

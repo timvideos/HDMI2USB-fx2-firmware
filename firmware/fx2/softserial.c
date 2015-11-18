@@ -5,7 +5,7 @@ void soft_sio0_init( WORD baud_rate ) {
 	usartInit();
 }
 
-void soft_putchar(char c) {
+void putchar(char c) {
 	switch (c) {
 	case '\r':
 	case '\n':
@@ -17,6 +17,6 @@ void soft_putchar(char c) {
 	}
 }
 
-char soft_getchar(void) {
+char getchar(void) {
         return '0';
 }
