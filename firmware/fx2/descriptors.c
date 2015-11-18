@@ -4,8 +4,6 @@
 #define ARRAY_SIZE(x) \
 	(sizeof(x)/sizeof((x)[0]))
 
-#define UNKNOWN_DESC_TYPE_24 0x24
-
 __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 	.device = {
 		.bLength		= USB_DT_DEVICE_SIZE,
@@ -64,7 +62,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				/* Class specific VC interface header descriptor */
 				.header = {
 					.bLength		= UVC_DT_HEADER_SIZE(1),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_HEADER,
 					.bcdUVC			= UVC_BCD_V10,
 					/* Total size of class specific descriptors (till output terminal) */
@@ -92,7 +90,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				/* Camera (input) terminal descriptor */
 				.camera = {
 					.bLength		= UVC_DT_CAMERA_TERMINAL_SIZE(3),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_INPUT_TERMINAL,
 					.bTerminalID		= UNIT_ID_CAMERA,
 					.wTerminalType		= UVC_ITT_CAMERA,
@@ -110,7 +108,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				 * through it. */
 				.processing = {
 					.bLength		= UVC_DT_PROCESSING_UNIT_SIZE(3),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_PROCESSING_UNIT,
 					.bUnitID		= UNIT_ID_PROCESSING,
 					.bSourceID		= UNIT_ID_CAMERA /* descriptors.highspeed.uvc.videocontrol.camera.bTerminalID */,
@@ -125,7 +123,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				// FIXME: Why does this exist!?
 				.extension = {
 					.bLength		= UVC_DT_EXTENSION_UNIT_SIZE(1, 3),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24, 
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_EXTENSION_UNIT,
 					.bUnitID		= UNIT_ID_EXTENSION,
 					.guidExtensionCode	= UVC_GUID_UNDEFINED,
@@ -143,7 +141,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				// function and the "outside world".
 				.output = {
 					.bLength		= UVC_DT_OUTPUT_TERMINAL_SIZE,
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_OUTPUT_TERMINAL,
 					.bTerminalID		= UNIT_ID_OUTPUT,
 					.wTerminalType		= UVC_TT_STREAMING,
@@ -170,11 +168,11 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				/* Class-specific video streaming input header descriptor */
 				.header = {
 					.bLength		= UVC_DT_INPUT_HEADER_SIZE(1, 2),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VS_INPUT_HEADER,
 					.bNumFormats		= 2,
 					// FIXME: Restructure so wTotalLength is easier to calculate...
-					.wTotalLength		= 
+					.wTotalLength		=
 						sizeof(descriptors.highspeed.uvc.videostream)
 						- sizeof(descriptors.highspeed.uvc.videostream.interface)
 						- sizeof(descriptors.highspeed.uvc.videostream.interface_alt),
@@ -190,8 +188,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				.mjpeg_stream = {
 					.format = {
 						// ??? - UVC_GUID_FORMAT_MJPEG
-						.bLength		= UVC_DT_FORMAT_MJPEG_SIZE, 
-						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+						.bLength		= UVC_DT_FORMAT_MJPEG_SIZE,
+						.bDescriptorType	= USB_DT_CS_INTERFACE,
 						.bDescriptorSubType	= UVC_VS_FORMAT_MJPEG,
 						.bFormatIndex		= 1,
 						.bNumFrameDescriptors	= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.mjpeg_stream.frames),
@@ -205,8 +203,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 					.frames = {
 						{
 							// Class specific VS frame descriptor - 1
-							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1), 
-							.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1),
+							.bDescriptorType	= USB_DT_CS_INTERFACE,
 							.bDescriptorSubType	= UVC_VS_FRAME_MJPEG,
 							.bFrameIndex		= 1,
 							.bmCapabilities		= 0x02, // Still image capture not supported?
@@ -220,8 +218,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 							.dwFrameInterval	= { FRAME_INTERVAL_30FPS }, // Frame interval 1?
 						}, {
 							// Class specific VS frame descriptor - 2
-							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1), 
-							.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+							.bLength		= UVC_DT_FRAME_MJPEG_SIZE(1),
+							.bDescriptorType	= USB_DT_CS_INTERFACE,
 							.bDescriptorSubType	= UVC_VS_FRAME_MJPEG,
 							.bFrameIndex		= 2,
 							.bmCapabilities		= 0x02, // Still image capture not supported?
@@ -238,7 +236,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 					// VS Color Matching Descriptor Descriptor
 					.color = {
 						.bLength		= UVC_DT_COLOR_MATCHING_SIZE,
-						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+						.bDescriptorType	= USB_DT_CS_INTERFACE,
 						.bDescriptorSubType	= UVC_VS_COLORFORMAT, // Color matching?
 						.bColorPrimaries	= 1,	// BT.709, sRGB
 						.bTransferCharacteristics = 1, 	// BT.709
@@ -248,7 +246,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				.yuy2_stream = {
 					.format = {
 						.bLength		= UVC_DT_FORMAT_UNCOMPRESSED_SIZE,
-						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+						.bDescriptorType	= USB_DT_CS_INTERFACE,
 						.bDescriptorSubType	= UVC_VS_FORMAT_UNCOMPRESSED,
 						.bFormatIndex		= 2,
 						.bNumFrameDescriptors	= ARRAY_SIZE(descriptors.highspeed.uvc.videostream.yuy2_stream.frames),
@@ -263,8 +261,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 					.frames = {
 						{
 							// Frame descriptors 1
-							.bLength		= UVC_DT_FRAME_UNCOMPRESSED_SIZE(1), 
-							.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+							.bLength		= UVC_DT_FRAME_UNCOMPRESSED_SIZE(1),
+							.bDescriptorType	= USB_DT_CS_INTERFACE,
 							.bDescriptorSubType	= UVC_VS_FRAME_UNCOMPRESSED,
 							.bFrameIndex		= 1,
 							.bmCapabilities		= 0x02, // Still image capture not supported?
@@ -278,8 +276,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 							.dwFrameInterval	= { FRAME_INTERVAL_7FPS }, // Frame interval 3?
 						}, {
 							// Frame descriptors 2
-							.bLength		= UVC_DT_FRAME_UNCOMPRESSED_SIZE(1), 
-							.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+							.bLength		= UVC_DT_FRAME_UNCOMPRESSED_SIZE(1),
+							.bDescriptorType	= USB_DT_CS_INTERFACE,
 							.bDescriptorSubType	= UVC_VS_FRAME_UNCOMPRESSED,
 							.bFrameIndex		= 2,
 							.bmCapabilities		= 0x02, // Still image capture not supported?
@@ -295,7 +293,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 					},
 					.color = {
 						.bLength		= UVC_DT_COLOR_MATCHING_SIZE,
-						.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+						.bDescriptorType	= USB_DT_CS_INTERFACE,
 						.bDescriptorSubType	= UVC_VS_COLORFORMAT,
 						.bColorPrimaries	= 1,	// BT.709, sRGB
 						.bTransferCharacteristics = 1, 	// BT.709
@@ -352,27 +350,27 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				},
 				.header = {
 					.bLength		= sizeof(struct usb_cdc_header_desc),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= USB_CDC_HEADER_TYPE,
 					.bcdCDC			= CDC_BCD_V11,
 				},
 				.union_ = {
 					.bLength		= sizeof(struct usb_cdc_union_desc),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= USB_CDC_UNION_TYPE,
 					.bMasterInterface0	= 2,
 					.bSlaveInterface0	= 3,			
 				},
 				.cm = {
 					.bLength		= sizeof(struct usb_cdc_call_mgmt_descriptor),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= USB_CDC_CALL_MANAGEMENT_TYPE,
 					.bmCapabilities		= 0,
 					.bDataInterface		= 3,
 				},
 				.acm = {
 					.bLength		= sizeof(struct usb_cdc_acm_descriptor),
-					.bDescriptorType	= UNKNOWN_DESC_TYPE_24,
+					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= USB_CDC_ACM_TYPE,
 					.bmCapabilities		= USB_CDC_CAP_LINE,
 				},
