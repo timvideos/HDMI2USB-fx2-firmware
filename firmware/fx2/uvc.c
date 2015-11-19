@@ -79,7 +79,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc)
 }
 
 BOOL handle_get_descriptor() {
-	return FALSE;
+       return FALSE;
 }
 
 // ==================================================================
@@ -153,9 +153,12 @@ __xdata __at(0xE740) volatile struct uvc_vs_control_data_v15 ep0buffer;
 BOOL handleUVCCommand(BYTE cmd)
 {
 	BOOL r = FALSE;
+
 	// assert cmd == uvc_ctrl_request.bRequest
 	switch(cmd) {
 	case CLEAR_FEATURE:
+		printf("UVC ClearFeature\n");
+
 		// FIXME: WTF is 0x21 !?
 		if (uvc_ctrl_request.bmRequestType != 0x21)
 			return FALSE;
@@ -179,12 +182,12 @@ BOOL handleUVCCommand(BYTE cmd)
 
 	// 4.2 VideoControl Requests
 	case UVC_REQUEST_TYPE_CONTROL:
-		//r = uvc_control_request();
+		r = uvc_control_request();
 		break;
 
 	// 4.3 VideoStreaming Requests
 	case UVC_REQUEST_TYPE_STREAM:
-		//r = uvc_stream_request();
+		r = uvc_stream_request();
 		break;
 	}
 
@@ -210,6 +213,7 @@ inline BOOL uvc_control_return_byte(BYTE data) {
 
 enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
 inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
+	printf("uvc_control_set_error code:%d\n", code);
 	// Set the error value
 	uvc_control_error_last = 0;
 
@@ -220,15 +224,15 @@ inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
 }
 
 inline void uvc_control_clear_error() {
+	printf("uvc_control_clear_error lcode:%d\n", uvc_control_error_last);
 	uvc_control_error_last = CONTROL_ERROR_CODE_NONE;
 }
 
 
-/*
-
 // 4.2 VideoControl Requests
 // ==========================================
 inline BOOL uvc_control_request() {
+	printf("uvc_control_request bInterface:%d bUnitId:%d\n", uvc_ctrl_request.wIndex.bInterface, uvc_ctrl_request.wIndex.bUnitId);
 	// Should be sending to the control interface
 	if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videocontrol.interface.bInterfaceNumber)
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
@@ -268,6 +272,7 @@ inline BOOL uvc_control_request() {
 // ------------------------------------------
 
 inline BOOL uvc_interface_control_request() {
+	printf("uvc_interface_control_request UnitId:%d\n", uvc_ctrl_request.wIndex.bUnitId);
 	// assert uvc_ctrl_request.wLength == 1
 	if (uvc_ctrl_request.wIndex.bUnitId != 0)
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
@@ -320,6 +325,7 @@ inline BOOL uvc_interface_control_request() {
 // 4.2.2.1 Camera Terminal Control Requests
 // We don't implement most of the camera controls, not being a camera.
 inline BOOL uvc_camera_control_request() {
+	printf("uvc_camera_control_request bControl:%d\n", uvc_ctrl_request.wValue.bControl);
 	// assert uvc_ctrl_request.wLength == 1
 	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_CAMERA)
 		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
@@ -884,4 +890,3 @@ inline BOOL uvc_stream_set_error(enum bmRequestStreamErrorCodeType code) {
 inline void uvc_stream_clear_error() {
 	uvc_stream_error_last = STREAM_ERROR_CODE_NONE;
 }
-*/

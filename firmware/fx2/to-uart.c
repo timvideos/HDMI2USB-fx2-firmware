@@ -42,9 +42,13 @@ BOOL cdcuser_set_line_rate(DWORD baud_rate) {
 
 void cdcuser_receive_data(BYTE* data, WORD length) {
         WORD i;
+	return;
+	// assert(!TI);
         for (i=0; i < length ; ++i) {
 		SBUF0 = data[i];
-		while(TI);
+		// Wait for data to transmit out;
+		while(!TI);
+		TI = 0;
 	}
 }
 
@@ -65,7 +69,7 @@ void uart_init() {
 	// clear the cdc_queued_bytes
 	cdc_queued_bytes = 0;
 
-	ES0 = 1; /* enable serial interrupts */
+	ES0 = 0; /* enable serial interrupts */
 	PS0 = 0; /* set serial interrupts to low priority */
 
 	TI = 1; /* clear transmit interrupt */

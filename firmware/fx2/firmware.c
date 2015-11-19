@@ -80,8 +80,6 @@ void main() {
 #endif
  
  while(TRUE) {
-     printf("*\n");
-
      main_loop();
      if (dosud) {
        dosud=FALSE;
@@ -93,34 +91,30 @@ void main() {
 } // end main
 
 void resume_isr() __interrupt RESUME_ISR {
- printf("e\n");
  CLEAR_RESUME();
 }
   
 void sudav_isr() __interrupt SUDAV_ISR {
- printf("s\n");
  dosud=TRUE;
  CLEAR_SUDAV();
 }
 void usbreset_isr() __interrupt USBRESET_ISR {
- printf("r\n");
  handle_hispeed(FALSE);
  CLEAR_USBRESET();
 }
 void hispeed_isr() __interrupt HISPEED_ISR {
- printf("h\n");
  handle_hispeed(TRUE);
  CLEAR_HISPEED();
 }
 
 void suspend_isr() __interrupt SUSPEND_ISR {
- printf("^\n");
  dosuspend=TRUE;
  CLEAR_SUSPEND();
 }
 
 void ISR_USART0(void) __interrupt TI_0_ISR __critical {
- printf("u\n");
+ TI = 0;
+ RI = 0;
 }
 /*
 	if (RI) {
