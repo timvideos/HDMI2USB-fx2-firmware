@@ -48,18 +48,19 @@ struct uvc_status_packet_from_stream_interface {
 	BYTE bValue[UVC_BUTTONS];	// Buttons press status, 0 == released, 1 == pressed
 };
 
-
-// Video Control / Video Streaming Requests
-#define UVC_REQUEST_TYPE_MASK		0x0f
-#define UVC_REQUEST_TYPE_CONTROL	(1 << 0)	// 4.2 VideoControl Requests
-#define UVC_REQUEST_TYPE_STREAM		(1 << 1)	// 4.3 VideoStreaming Requests
-
 struct uvc_control_request {
 	// D7 == Get 1 or Set 0
 	// D6..5 == 01 -> Class specific request
 	// D4..0 == 00001 -> Video Control/Video Streaming Interfaces or Video Function
 	// D4..0 == 00010 -> Video Data endpoint (of Video Streaming Interface)
+#define UVC_REQUEST_TYPE_MASK				0x60
+#define UVC_REQUEST_TYPE_CLASS				0x20
+#define UVC_REQUEST_RECIPIENT_MASK			0x1f
+#define UVC_REQUEST_RECIPIENT_INTERFACE		(1 << 0)	// Directed to an interface
+#define UVC_REQUEST_RECIPIENT_ENDPOINT		(1 << 1)	// Directed to an endpoint
 	BYTE bmRequestType;
+
+	// Request type - A.8. Video Class-Specific Request Codes section.
 	BYTE bRequest;
 
 	// The wValue field specifies the Control Selector (CS) in the high
@@ -70,16 +71,16 @@ struct uvc_control_request {
 	// request specifies an unknown or unsupported CS to that Unit or
 	// Terminal, the control pipe must indicate a protocol STALL.
 
-	// wValue == Control Selector in high byte
-	union {
-		BYTE bControl;
+	// WORD wValue;
+	struct {
 		BYTE bZero;
+		BYTE bControl;
 	} wValue;
 
 	//WORD wIndex;
 	struct {
-		BYTE bUnitId;
 		BYTE bInterface;
+		BYTE bUnitId;
 	} wIndex;
 
 	// Length of parameter block
@@ -269,10 +270,10 @@ struct uvc_vs_control_data_v11 {
 	BYTE  bMaxVersion;		// ???
 };
 
+/*
 #define UVC_PROBE_PAYLOAD_MJPEG_V10		0
 #define UVC_PROBE_PAYLOAD_MJPEG_V11		1
 #define UVC_PROBE_PAYLOAD_MJPEG_V15		5
-
 struct uvc_vs_control_data_v15 {
 	WORD  bmHint;
 
@@ -305,7 +306,7 @@ struct uvc_vs_control_data_v15 {
 	BYTE  bmRateControlModes;
 	BYTE  bmLayoutPerStream;
 };
-
+*/
 // size = stream->dev->uvc_version >= 0x0110 ? 34 : 26;
 // 26 bytes for UVC1.0
 // 34 bytes for UVC1.1 and above...

@@ -15,6 +15,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DEBUG_UVC_SETUPDAT
+#ifdef DEBUG_UVC_SETUPDAT
+#include <stdio.h>
+#else
+#define printf(...)
+#define NULL (void*)0;
+#endif
+
 // fx2lib
 #include <fx2regs.h>
 #include <fx2macros.h>
@@ -104,38 +112,82 @@ BOOL handle_get_descriptor() {
 inline void writeep0_byte(BYTE byte) {
 	printf("bwriteep0\n");
 	SUDPTRCTL = 0; // bmSDPAUTO;
+	SYNCDELAY;
 	EP0BUF[0] = byte;
+	SYNCDELAY;
 	// Set how much to transfer
 	EP0BCH = 0;
+	SYNCDELAY;
 	EP0BCL = 1; // Transfer starts with this write.
+	SYNCDELAY;
 }
-
 inline void writeep0_auto_code(const_control_data_ptr_t src, WORD len) {
-	printf("cwriteep0\n");
+	printf("cwriteep0 %d\n", len);
 	// Turn off "auto read length mode"
 	SUDPTRCTL = 0; // bmSDPAUTO;
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	EP0BCL = LSB(len);
+	SYNCDELAY;
 	// Set the pointer to the data
 	SUDPTRH = MSB((WORD)src);
-	SUDPTRL = LSB((WORD)src); // Transfer starts with this write.
+	SYNCDELAY;
+	SUDPTRL = LSB((WORD)src); 
+	SYNCDELAY;
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	SYNCDELAY;
+	EP0BCL = LSB(len); // Transfer starts with this write.
+	SYNCDELAY;
 }
 inline void writeep0_auto_xdata(control_data_ptr_t src, WORD len) {
-	printf("xwriteep0\n");
+	printf("xwriteep0 %p %d\n", src, len);
 	// Turn off "auto read length mode"
 	SUDPTRCTL = 0; // bmSDPAUTO;
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	EP0BCL = LSB(len); // Transfer starts with this write.
+	SYNCDELAY;
 	// Set the pointer to the data
 	SUDPTRH = MSB((WORD)src);
+	SYNCDELAY;
 	SUDPTRL = LSB((WORD)src);
+	SYNCDELAY;
+	// Set how much to transfer
+	EP0BCH = MSB(len);
+	SYNCDELAY;
+	EP0BCL = LSB(len); // Transfer starts with this write.
+	SYNCDELAY;
 }
 
 // ==================================================================
 // ==================================================================
 
+#define PRINT_REQUEST(str) \
+	printf( \
+		str " bControl:%d bRequest:%s bLength: %d\n", \
+		uvc_ctrl_request.wValue.bControl, \
+		uvc_control_request_str(uvc_ctrl_request.bRequest), \
+		uvc_ctrl_request.wLength);
+
+
+#define CHECK_UNITID(id) \
+	if (uvc_ctrl_request.wIndex.bUnitId != (id)) { \
+		printf("Invalid unit id %d (should be %d)\n", \
+				uvc_ctrl_request.wIndex.bUnitId, (id)); \
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT); \
+	}
+
+#define CHECK_INTERFACE(id) \
+	if (uvc_ctrl_request.wIndex.bInterface != (id)) { \
+		printf("Invalid interface %d (should be %d)\n", \
+				uvc_ctrl_request.wIndex.bInterface, (id)); \
+		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT); \
+	}
+
+#define RETURN_INVALID_REQUEST() \
+	printf( \
+		"Invalid request: %s\n", \
+		uvc_control_request_str(uvc_ctrl_request.bRequest)); \
+	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+
+#define RETURN_INVALID_CONTROL() \
+	printf("Invalid control: %02x\n", uvc_ctrl_request.wValue.bControl); \
+	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
 
 // FIXME: Look at the descriptors?
 const WORD uvc_bcd_version = UVC_BCD_V11;
@@ -153,7 +205,7 @@ __xdata __at(0xE740) volatile struct uvc_vs_control_data_v15 ep0buffer;
 BOOL handleUVCCommand(BYTE cmd)
 {
 	BOOL r = FALSE;
-
+/*
 	// assert cmd == uvc_ctrl_request.bRequest
 	switch(cmd) {
 	case CLEAR_FEATURE:
@@ -175,26 +227,48 @@ BOOL handleUVCCommand(BYTE cmd)
 		EP0BCL = 0; // ACK
 		return TRUE;
 	}
+*/
 
 	// if ((uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_DIR) == UVC_REQUEST_TYPE_SET)
 	//	assert uvc_ctrl_request.bRequest == UVC_SET_CUR || uvc_ctrl_request.bRequest == UVC_SET_CUR_ALL
-	switch (uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_MASK) {
+	printf(".bmRequestType %02x Type:%02x Recipient:%02x\n", uvc_ctrl_request.bmRequestType, uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_MASK, uvc_ctrl_request.bmRequestType & UVC_REQUEST_RECIPIENT_MASK);
 
-	// 4.2 VideoControl Requests
-	case UVC_REQUEST_TYPE_CONTROL:
-		r = uvc_control_request();
-		break;
-
-	// 4.3 VideoStreaming Requests
-	case UVC_REQUEST_TYPE_STREAM:
-		r = uvc_stream_request();
-		break;
+	if ((uvc_ctrl_request.bmRequestType & UVC_REQUEST_TYPE_MASK) != UVC_REQUEST_TYPE_CLASS) {
+		printf("Not class specific request.\n");
+		return FALSE;
 	}
 
-	if (r)
-		uvc_control_clear_error();
+	switch (uvc_ctrl_request.bmRequestType & UVC_REQUEST_RECIPIENT_MASK) {
+	case UVC_REQUEST_RECIPIENT_INTERFACE:
+		switch (uvc_ctrl_request.wIndex.bInterface) {
+		// 4.2 VideoControl Requests
+		case INTERFACE_ID_CONTROL:
+			r = uvc_control_request();
+			break;
+	
+		// 4.3 VideoStreaming Requests
+		case INTERFACE_ID_STREAM:
+			r = uvc_stream_request();
+			break;
 
-	return r;
+		default:
+			printf("Unknown interface! %d\n", uvc_ctrl_request.wIndex.bInterface);
+			return FALSE;
+		}
+		if (r)
+			uvc_control_clear_error();
+		return r;
+
+	case UVC_REQUEST_RECIPIENT_ENDPOINT:
+		printf("Endpoint request: %d\n", uvc_ctrl_request.wIndex.bInterface);
+		return FALSE;
+
+	default:
+		printf("Unknown request type!\n");
+		return FALSE;	
+	}
+
+	return FALSE;
 }
 
 // Return a response to a GET_INFO request
@@ -211,31 +285,99 @@ inline BOOL uvc_control_return_byte(BYTE data) {
 	return TRUE;
 }
 
+#ifdef DEBUG_UVC_SETUPDAT
+const char* uvc_control_error_str(enum bmRequestControlErrorCodeType code) {
+	switch(code) {
+	case CONTROL_ERROR_CODE_NONE:
+		return "NONE";
+	case CONTROL_ERROR_CODE_NOT_READY:
+		return "NOT_READY";
+	case CONTROL_ERROR_CODE_WRONG_STATE:
+		return "WRONG_STATE";
+	case CONTROL_ERROR_CODE_POWER:
+		return "POWER";
+	case CONTROL_ERROR_CODE_OUT_OF_RANGE:
+		return "OUT_OF_RANGE";
+	case CONTROL_ERROR_CODE_INVALID_UNIT:
+		return "INVALID_UNIT";
+	case CONTROL_ERROR_CODE_INVALID_CONTROL:
+		return "INVALID_CONTROL";
+	case CONTROL_ERROR_CODE_INVALID_REQUEST:
+		return "INVALID_REQUEST";
+	case CONTROL_ERROR_CODE_INVALID_VALUE:
+		return "INVALID_VALUE";
+	case CONTROL_ERROR_CODE_UNKNOWN:
+		return "UNKNOWN";
+	default:
+		return "???";
+	}
+}
+
+const char* uvc_control_request_str(BYTE request_code) {
+	switch(request_code) {
+	case UVC_RC_UNDEFINED:
+		return "RC_UNDEFINED";
+	case UVC_SET_CUR:
+		return "SET_CUR";
+	case UVC_SET_CUR_ALL:
+		return "SET_CUR_ALL";
+	case UVC_GET_CUR:
+		return "GET_CUR";
+	case UVC_GET_MIN:
+		return "GET_MIN";
+	case UVC_GET_MAX:
+		return "GET_MAX";
+	case UVC_GET_RES:
+		return "GET_RES";
+	case UVC_GET_LEN:
+		return "GET_LEN";
+	case UVC_GET_INFO:
+		return "GET_INFO";
+	case UVC_GET_DEF:
+		return "GET_DEF";
+	case UVC_GET_CUR_ALL:
+		return "GET_CUR_ALL";
+	case UVC_GET_MIN_ALL:
+		return "GET_MIN_ALL";
+	case UVC_GET_MAX_ALL:
+		return "GET_MAX_ALL";
+	case UVC_GET_RES_ALL:
+		return "GET_RES_ALL";
+	case 0x95:
+		return "RS_0x95";
+	case 0x96:
+		return "RS_0x96";
+	case UVC_GET_DEF_all:
+		return "GET_DEF_all";
+	default:
+		return "RC_UNKNOWN";
+	}
+}
+#endif
+
 enum bmRequestControlErrorCodeType uvc_control_error_last = 0;
 inline BOOL uvc_control_set_error(enum bmRequestControlErrorCodeType code) {
-	printf("uvc_control_set_error code:%d\n", code);
+	printf("uvc_control_set_error code:%s\n", uvc_control_error_str(code));
 	// Set the error value
 	uvc_control_error_last = 0;
 
 	// Stall the endpoint
-	STALLEP0();
+	//STALLEP0();
 
-	return TRUE;
+	return FALSE;
 }
 
 inline void uvc_control_clear_error() {
-	printf("uvc_control_clear_error lcode:%d\n", uvc_control_error_last);
+	printf("uvc_control_clear_error lcode:%s\n", uvc_control_error_str(uvc_control_error_last));
 	uvc_control_error_last = CONTROL_ERROR_CODE_NONE;
 }
-
 
 // 4.2 VideoControl Requests
 // ==========================================
 inline BOOL uvc_control_request() {
 	printf("uvc_control_request bInterface:%d bUnitId:%d\n", uvc_ctrl_request.wIndex.bInterface, uvc_ctrl_request.wIndex.bUnitId);
 	// Should be sending to the control interface
-	if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videocontrol.interface.bInterfaceNumber)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_INTERFACE(INTERFACE_ID_CONTROL);
 
 	// Check sending to a valid UVC interface
 	//if (uvc_ctrl_request.wIndex.bInterface > UVC_DESCRIPTOR.assoc_interface.bFirstInterface &&
@@ -270,12 +412,10 @@ inline BOOL uvc_control_request() {
 
 // 4.2.1 Interface Control Requests
 // ------------------------------------------
-
 inline BOOL uvc_interface_control_request() {
-	printf("uvc_interface_control_request UnitId:%d\n", uvc_ctrl_request.wIndex.bUnitId);
+	PRINT_REQUEST("uvc_interface_control_request");
 	// assert uvc_ctrl_request.wLength == 1
-	if (uvc_ctrl_request.wIndex.bUnitId != 0)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_UNITID(0);
 
 	switch (uvc_ctrl_request.wValue.bControl) {
 	// 4.2.1.1 Power Mode Control	
@@ -296,11 +436,16 @@ inline BOOL uvc_interface_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	// 4.2.1.2 Request Error Code Control
 	case UVC_VC_REQUEST_ERROR_CODE_CONTROL:
+		printf(
+			"uvc_control_error_request bRequest:0x%02x code:%s\n",
+			uvc_ctrl_request.bRequest,
+			uvc_control_error_str(uvc_control_error_last));
+
 		switch (uvc_ctrl_request.bRequest) {
 		case UVC_GET_CUR:
 			return uvc_control_return_byte(uvc_control_error_last);
@@ -312,11 +457,11 @@ inline BOOL uvc_interface_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+		RETURN_INVALID_CONTROL();
 	}
 }
 
@@ -325,10 +470,9 @@ inline BOOL uvc_interface_control_request() {
 // 4.2.2.1 Camera Terminal Control Requests
 // We don't implement most of the camera controls, not being a camera.
 inline BOOL uvc_camera_control_request() {
-	printf("uvc_camera_control_request bControl:%d\n", uvc_ctrl_request.wValue.bControl);
+	PRINT_REQUEST("uvc_camera_control_request");
 	// assert uvc_ctrl_request.wLength == 1
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_CAMERA)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_UNITID(UNIT_ID_CAMERA);
 
 	switch (uvc_ctrl_request.wValue.bControl) {
 	// Exposure related controls
@@ -392,22 +536,21 @@ inline BOOL uvc_camera_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+		RETURN_INVALID_CONTROL();
 	}
 }
 
 // 4.2.2.2 Selector Unit Control Requests
 // ------------------------------------------
+// FIXME: Actually add a selector unit
 inline BOOL uvc_selector_control_request() {
+	PRINT_REQUEST("uvc_selector_control_request");
 	// assert uvc_ctrl_request.wLength == 1
-
-	// FIXME: Actually add a selector unit
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_SELECTOR_4_ENCODER)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_UNITID(UNIT_ID_SELECTOR_4_ENCODER);
 
 	switch (uvc_ctrl_request.wValue.bControl) {
 	case UVC_SU_INPUT_SELECT_CONTROL:
@@ -436,11 +579,11 @@ inline BOOL uvc_selector_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+		RETURN_INVALID_CONTROL();
 	}
 }
 
@@ -449,9 +592,9 @@ inline BOOL uvc_selector_control_request() {
 // We don't implement most of the processing unit controls, not being a
 // camera.
 inline BOOL uvc_processing_control_request() {
+	PRINT_REQUEST("uvc_processing_control_request");
 	// assert uvc_ctrl_request.wLength == 1
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_PROCESSING)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_UNITID(UNIT_ID_PROCESSING);
 
 	switch (uvc_ctrl_request.wValue.bControl) {
 	// 4.2.2.3.1 Backlight Compensation Control
@@ -499,7 +642,7 @@ inline BOOL uvc_processing_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	// 4.2.2.3.19 Analog Video Lock Status Control
@@ -523,11 +666,11 @@ inline BOOL uvc_processing_control_request() {
 
 		// Unsupported request type
 		default:
-			return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+			RETURN_INVALID_REQUEST();
 		}
 
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+		RETURN_INVALID_CONTROL();
 	}
 }
 
@@ -536,42 +679,42 @@ inline BOOL uvc_processing_control_request() {
 // Doesn't seem to be supported under Linux?
 // Complicated!?
 inline BOOL uvc_encoding_control_request() {
+	PRINT_REQUEST("uvc_encoding_control_request");
 	// assert uvc_ctrl_request.wLength == 1
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_ENCODER)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_UNITID(UNIT_ID_ENCODER);
 
-	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+	RETURN_INVALID_CONTROL();
 }
 
 // 4.2.2.5 Extension Unit Control Requests
 // Not sure what to do here...
 inline BOOL uvc_extension_control_request() {
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_EXTENSION)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	PRINT_REQUEST("uvc_extension_control_request");
+	// assert uvc_ctrl_request.wLength == 1
+	CHECK_UNITID(UNIT_ID_EXTENSION);
 
-	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+	RETURN_INVALID_CONTROL();
 }
 
 // 4.2.2.?? Output Terminal Control Requests
 // ------------------------------------------
 // Output Terminal's don't have any control.
 inline BOOL uvc_output_control_request() {
-	if (uvc_ctrl_request.wIndex.bUnitId != UNIT_ID_OUTPUT)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	PRINT_REQUEST("uvc_extension_output_request");
+	// assert uvc_ctrl_request.wLength == 1
+	CHECK_UNITID(UNIT_ID_OUTPUT);
 
-	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+	RETURN_INVALID_CONTROL();
 }
 
 
 // 4.3 VideoStreaming Requests
 // ==========================================
 inline BOOL uvc_stream_request() {
+	PRINT_REQUEST("uvc_stream_request");
 	// assert UVC_REQUEST_TYPE_STREAM:
 	// assert wIndex.bEntityId == 0;
-
-	// Should be sending to the videostream interface
-	if (uvc_ctrl_request.wIndex.bInterface != UVC_DESCRIPTOR.videostream.interface.bInterfaceNumber)
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_UNIT);
+	CHECK_INTERFACE(INTERFACE_ID_STREAM);
 	
 	// 4.3.1 Interface Control Requests
 	switch (uvc_ctrl_request.wValue.bControl) {
@@ -592,10 +735,10 @@ inline BOOL uvc_stream_request() {
 
 	// 4.3.1.7 Stream Error Code Control
 	case UVC_VS_STREAM_ERROR_CODE_CONTROL:
-		return uvc_stream_commit_request();
+		return uvc_stream_error_request();
 	
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
+		RETURN_INVALID_CONTROL();
 	}
 }
 
@@ -606,42 +749,14 @@ inline BOOL uvc_stream_request() {
 BOOL uvc_stream_common_request(control_data_ptr_t dst);
 void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst);
 
-control_data_t stream_config_probed;
 inline BOOL uvc_stream_probe_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
-	return uvc_stream_common_request(&stream_config_probed);
+	return uvc_stream_common_request(&descriptors.config_probed);
 }
-control_data_t stream_config_committed;
 inline BOOL uvc_stream_commit_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_COMMIT_CONTROL
-	return uvc_stream_common_request(&stream_config_committed);
+	return uvc_stream_common_request(&descriptors.config_committed);
 }
-
-#define DEFAULT_bFormatIndex 1
-#define DEFAULT_bFrameIndex 1
-
-// Default, min, max and step configurations
-const_control_data_t stream_config_default = {
-	.bFormatIndex		= DEFAULT_bFormatIndex,
-	.bFrameIndex		= DEFAULT_bFrameIndex,
-	.dwFrameInterval	= FRAME_INTERVAL_30FPS, //UVC_DESCRIPTOR.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwFrameInterval[DEFAULT_bFrameIndex],
-	.wDelay				= 5,
-	.dwMaxVideoFrameSize = FRAME_SIZE_1024x768, //UVC_DESCRIPTORS.mjpeg_stream.frames[DEFAULT_bFormatIndex].dwMaxVideoFrameBufferSize,
-	.dwMaxPayloadTransferSize = 1024,
-	.bPreferedVersion	= UVC_PROBE_PAYLOAD_MJPEG_V11,
-	.bMinVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
-	.bMaxVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
-};
-#define stream_config_max	stream_config_default
-const_control_data_t stream_config_min = {
-	.bFormatIndex		= 1,
-	.bFrameIndex		= 1,
-};
-const_control_data_t stream_config_step = {
-	.bFormatIndex		= 1,
-	.bFrameIndex		= 1,
-};
-
 
 inline BYTE uvc_control_size() {
 	switch (uvc_bcd_version) {
@@ -657,8 +772,8 @@ inline BYTE uvc_control_size() {
 }
 
 BOOL uvc_stream_common_request(control_data_ptr_t dst) {
-	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
 	BYTE size = uvc_control_size();
+	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
 
 	switch (uvc_ctrl_request.bRequest) {
 
@@ -674,18 +789,18 @@ BOOL uvc_stream_common_request(control_data_ptr_t dst) {
 		return TRUE;
 
 	case UVC_GET_MIN:
-		writeep0_auto_code(&stream_config_min, size);
+		writeep0_auto_xdata(&descriptors.config_min, size);
 		return TRUE;
 	case UVC_GET_MAX:
-		writeep0_auto_code(&stream_config_max, size);
+		writeep0_auto_xdata(&descriptors.config_default, size);
 		return TRUE;
 	// Get "number of steps"
 	case UVC_GET_RES:
-		writeep0_auto_code(&stream_config_step, size);
+		writeep0_auto_xdata(&descriptors.config_step, size);
 		return TRUE;
 	// Get "default value"
 	case UVC_GET_DEF:
-		writeep0_auto_code(&stream_config_default, size);
+		writeep0_auto_xdata(&descriptors.config_default, size);
 		return TRUE;
 
 	case UVC_GET_LEN:
@@ -705,7 +820,7 @@ BOOL uvc_stream_common_request(control_data_ptr_t dst) {
 
 	// Unsupported request type
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+		RETURN_INVALID_REQUEST();
 	}
 }
 
@@ -858,13 +973,16 @@ void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst
 enum bmRequestStreamErrorCodeType uvc_stream_error_last = 0;
 
 inline BOOL uvc_stream_error_request() {
+	printf(
+		"uvc_stream_error_request bRequest:0x%02x code:%d\n",
+		uvc_ctrl_request.bRequest,
+		uvc_stream_error_last);
+
 	// assert uvc_ctrl_request.bRequest == UVC_VC_REQUEST_ERROR_CODE_CONTROL
 	// 4.2.1.2 Request Error Code Control
 	switch (uvc_ctrl_request.bRequest) {
 	case UVC_GET_CUR:
-		// FIXME: Implement
-		// struct uvc_vc_data_error_code_control
-		return TRUE;
+		return uvc_control_return_byte(uvc_stream_error_last);
 
 	case UVC_GET_INFO:
 		return uvc_control_get_info(
@@ -873,7 +991,7 @@ inline BOOL uvc_stream_error_request() {
 
 	// Unsupported request type
 	default:
-		return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_REQUEST);
+		RETURN_INVALID_REQUEST();
 	}
 }
 

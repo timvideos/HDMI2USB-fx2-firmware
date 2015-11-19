@@ -51,7 +51,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				.interface = {
 					.bLength		= USB_DT_INTERFACE_SIZE,
 					.bDescriptorType	= USB_DT_INTERFACE,
-					.bInterfaceNumber	= 0,
+					.bInterfaceNumber	= INTERFACE_ID_CONTROL,
 					.bAlternateSetting	= 0,
 					.bNumEndpoints		= 0,
 					.bInterfaceClass	= USB_CLASS_VIDEO,
@@ -64,7 +64,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 					.bLength		= UVC_DT_HEADER_SIZE(1),
 					.bDescriptorType	= USB_DT_CS_INTERFACE,
 					.bDescriptorSubType	= UVC_VC_HEADER,
-					.bcdUVC			= UVC_BCD_V10,
+					.bcdUVC			= UVC_BCD_V11,
 					/* Total size of class specific descriptors (till output terminal) */
 					.wTotalLength		= sizeof(descriptors.highspeed.uvc.videocontrol) - sizeof(descriptors.highspeed.uvc.videocontrol.interface),
 					.dwClockFrequency	= 48000000, // 48MHz?
@@ -157,7 +157,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 				.interface = {
 					.bLength		= USB_DT_INTERFACE_SIZE,
 					.bDescriptorType	= USB_DT_INTERFACE,
-					.bInterfaceNumber	= 1,
+					.bInterfaceNumber	= INTERFACE_ID_STREAM,
 					.bAlternateSetting	= 0,
 					.bNumEndpoints		= 0,
 					.bInterfaceClass	= USB_CLASS_VIDEO,
@@ -430,4 +430,26 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 	},
 	.fullspeed = 0x0,
 #include "descriptors_strings.inc"
+
+	// Default, min, max and step configurations
+	.config_default = {
+		.bFormatIndex		= 1,
+		.bFrameIndex		= 1,
+		.dwFrameInterval	= FRAME_INTERVAL_30FPS,
+		.wDelay			= 5,
+		.dwMaxVideoFrameSize = FRAME_SIZE_1024x768,
+		.dwMaxPayloadTransferSize = 1024,
+		.bmFramingInfo		= 0,
+		.bPreferedVersion	= UVC_PROBE_PAYLOAD_MJPEG_V11,
+		.bMinVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
+		.bMaxVersion		= UVC_PROBE_PAYLOAD_MJPEG_V11,
+	},
+	.config_min = {
+		.bFormatIndex		= 1,
+		.bFrameIndex		= 1,
+	},
+	.config_step = {
+		.bFormatIndex		= 1,
+		.bFrameIndex		= 1,
+	}
 };

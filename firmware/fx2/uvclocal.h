@@ -19,6 +19,11 @@
 // 234881024
 #define BIT_RATE 0xE000000
 
+enum uvc_interface_ids {
+	INTERFACE_ID_CONTROL = 0,
+	INTERFACE_ID_STREAM = 1,
+};
+
 enum uvc_unit_ids {
 	UNIT_ID_NONE = 0,
 	UNIT_ID_CAMERA,

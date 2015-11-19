@@ -133,6 +133,9 @@ check_int2jt: $(TARGET).hex
 
 check: check_int2jt
 
+print-size: $(TARGET).hex
+	@grep "bytes (" hdmi2usb.map | sort | uniq
+
 clean:
 	$(Q_RM)$(RM) *.iic *.asm *.lnk *.lst *.map *.mem *.rel *.rst *.sym \
 		*.lk firmware.hex date.h descriptors_strings.h descriptors_strings.c

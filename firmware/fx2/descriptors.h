@@ -96,12 +96,54 @@ struct usb_section {
 	} cdc;
 };
 
+#define UVC_PROBE_PAYLOAD_MJPEG_V10		0
+#define UVC_PROBE_PAYLOAD_MJPEG_V11		1
+#define UVC_PROBE_PAYLOAD_MJPEG_V15		5
+struct uvc_vs_control_data_v15 {
+	WORD  bmHint;
+
+	BYTE  bFormatIndex;		// Index to descriptor values, 1 == first value
+	BYTE  bFrameIndex;
+
+	DWORD dwFrameInterval;		// 100 ns
+	WORD  wKeyFrameRate;
+	WORD  wPFrameRate;
+	WORD  wCompQuality;		// 1 == lowest, 10000 == highest
+	WORD  wCompWindowSize;
+
+	WORD  wDelay;			// in ms
+
+	DWORD dwMaxVideoFrameSize;	// in bytes
+	DWORD dwMaxPayloadTransferSize; // in bytes
+
+	// New in v1.1
+	DWORD dwClockFrequency;		// in Hz
+	BYTE  bmFramingInfo;		// Ignored for MJPEG/Uncompressed/DV
+	BYTE  bPreferedVersion;		// ??? -- bNumFormats
+	BYTE  bMinVersion;		// ???
+	BYTE  bMaxVersion;		// ???
+
+	// New in v1.5
+	BYTE  bUsage;
+	BYTE  bBitDepthLuma;
+	BYTE  bmSettings;
+	BYTE  bMaxNumberOfRefFramesPlus1;
+	BYTE  bmRateControlModes;
+	BYTE  bmLayoutPerStream;
+};
+
 struct usb_descriptors {
 	struct usb_device_descriptor device;
 	struct usb_section highspeed;
 	struct usb_qualifier_descriptor qualifier;
 	WORD fullspeed;
 	struct usb_descriptors_strings strings;
+	// Data usage..
+	struct uvc_vs_control_data_v15 config_default;
+	struct uvc_vs_control_data_v15 config_min;
+	struct uvc_vs_control_data_v15 config_step;
+	struct uvc_vs_control_data_v15 config_probed;
+	struct uvc_vs_control_data_v15 config_committed;
 };
 
 __xdata __at(DSCR_AREA) struct usb_descriptors descriptors;
