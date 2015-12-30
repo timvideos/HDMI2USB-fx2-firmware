@@ -118,12 +118,16 @@ _start:
 
 segment:
 	setb	PD0		; DEBUG
-
-	; Length L
+	; Length H
 	acall	i2c_wait4done	; 2 bytes
 	rlc	A		; 1 byte
 	jc	finished	; 2 bytes
 	rr	A		; 1 byte
+	inc	A
+	mov	r4, A		; 1 byte  -- 5 bytes
+
+	; Length L
+	acall	i2c_wait4done	; 2 bytes
 	mov	r5, A		; 1 byte  -- 6 bytes
 
 	; Start Addr H
@@ -139,11 +143,14 @@ segment:
 	; DATA!
 load_data:
 	setb	PD1		; DEBUG
+	setb	PD2		; DEBUG
 	acall	i2c_wait4done	; 2 bytes
 	movx	A, @r1		; 1 byte
 	movx	@DPTR, A   	; 1 byte
 	inc	DPTR       	; 1 byte
 	djnz	r5, load_data	; 2 bytes
+	clr	PD1		; DEBUG
+	djnz	r4, load_data	; 2 bytes -- 9 bytes
 	clr	PD2		; DEBUG
 	ajmp	segment
 
