@@ -39,14 +39,14 @@ USE_16K := 1
 # Must only be hex numbers
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
-CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c read-serialno.c to-uart.c descriptors.c
+CC_SRCS := app.c cdc.c debug.c softserial.c uvc.c firmware.c descriptors.c to-uart.c # read-serialno.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 CFLAGS += -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
 
 ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -Wl"-b INT2JT=0x3f00" --no-xinit-opt --no-xinit-opt --debug
+	CFLAGS += --code-size 0x3e00 --xram-size 0x0200 -DDSCR_AREA=0x2e00 -DUSE_16K -Wl"-b INT2JT=0x3f00" --debug
 else
 	CFLAGS += --code-size 0x1e00 --xram-size 0x0200 -DDSCR_AREA=0x1e00 -Wl"-b INT2JT=0x1f00"
 endif

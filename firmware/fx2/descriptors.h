@@ -19,6 +19,7 @@
 
 DECLARE_UVC_HEADER_DESCRIPTOR(1);
 DECLARE_UVC_HEADER_DESCRIPTOR(2);
+DECLARE_UVC_FRAME_COMMON(1);
 
 struct usb_section {
 	struct usb_config_descriptor config;
@@ -50,7 +51,7 @@ struct usb_section {
 				/* Class specific VS format descriptor */
 				struct uvc_format_mjpeg format;
 				/* Class specific VS frame descriptor 1 + 2 */
-				DECLARE_UVC_FRAME_MJPEG(1) frames[2];
+				struct UVC_FRAME_COMMON(1) frames[2];
 				/* VS Color Matching Descriptor Descriptor */
 				struct uvc_color_matching_descriptor color;
 			} mjpeg_stream;
@@ -59,7 +60,7 @@ struct usb_section {
 				/* Class specific VS format descriptor */
 				struct uvc_format_uncompressed format;
 				/* Frame descriptors 1 + 2 */
-				DECLARE_UVC_FRAME_UNCOMPRESSED(1) frames[2];
+				struct UVC_FRAME_COMMON(1) frames[2];
 				/* VS Color Matching Descriptor Descriptor */
 				struct uvc_color_matching_descriptor color;
 			} yuy2_stream;

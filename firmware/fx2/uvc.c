@@ -107,53 +107,6 @@ BOOL handle_get_descriptor() {
 #define control_data_ptr_t \
 	__xdata struct uvc_vs_control_data_v15 * const
 
-
-// FIXME: Move these somewhere.
-inline void writeep0_byte(BYTE byte) {
-	printf("bwriteep0\n");
-	SUDPTRCTL = 0; // bmSDPAUTO;
-	SYNCDELAY;
-	EP0BUF[0] = byte;
-	SYNCDELAY;
-	// Set how much to transfer
-	EP0BCH = 0;
-	SYNCDELAY;
-	EP0BCL = 1; // Transfer starts with this write.
-	SYNCDELAY;
-}
-inline void writeep0_auto_code(const_control_data_ptr_t src, WORD len) {
-	printf("cwriteep0 %d\n", len);
-	// Turn off "auto read length mode"
-	SUDPTRCTL = 0; // bmSDPAUTO;
-	SYNCDELAY;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SYNCDELAY;
-	SUDPTRL = LSB((WORD)src); 
-	SYNCDELAY;
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	SYNCDELAY;
-	EP0BCL = LSB(len); // Transfer starts with this write.
-	SYNCDELAY;
-}
-inline void writeep0_auto_xdata(control_data_ptr_t src, WORD len) {
-	printf("xwriteep0 %p %d\n", src, len);
-	// Turn off "auto read length mode"
-	SUDPTRCTL = 0; // bmSDPAUTO;
-	SYNCDELAY;
-	// Set the pointer to the data
-	SUDPTRH = MSB((WORD)src);
-	SYNCDELAY;
-	SUDPTRL = LSB((WORD)src);
-	SYNCDELAY;
-	// Set how much to transfer
-	EP0BCH = MSB(len);
-	SYNCDELAY;
-	EP0BCL = LSB(len); // Transfer starts with this write.
-	SYNCDELAY;
-}
-
 // ==================================================================
 // ==================================================================
 
@@ -188,10 +141,6 @@ inline void writeep0_auto_xdata(control_data_ptr_t src, WORD len) {
 #define RETURN_INVALID_CONTROL() \
 	printf("Invalid control: %02x\n", uvc_ctrl_request.wValue.bControl); \
 	return uvc_control_set_error(CONTROL_ERROR_CODE_INVALID_CONTROL);
-
-// FIXME: Look at the descriptors?
-const WORD uvc_bcd_version = UVC_BCD_V11;
-
 
 // FIXME: Figure out how to make this __at(0xE6B8) be __at(&SETUPDAT)
 __xdata __at(0xE6B8) volatile struct uvc_control_request uvc_ctrl_request;
@@ -267,8 +216,6 @@ BOOL handleUVCCommand(BYTE cmd)
 		printf("Unknown request type!\n");
 		return FALSE;	
 	}
-
-	return FALSE;
 }
 
 // Return a response to a GET_INFO request
@@ -281,7 +228,7 @@ inline BOOL uvc_control_get_info(BYTE control, BYTE capabilities) {
 
 inline BOOL uvc_control_return_byte(BYTE data) {
 	// Send the single byte response....
-	writeep0_byte(data);
+	ep0_send_byte(data);
 	return TRUE;
 }
 
@@ -745,9 +692,8 @@ inline BOOL uvc_stream_request() {
 // 4.3.1 Interface Control Requests
 // ------------------------------------------
 // 4.3.1.1 Video Probe and Commit control
-
 BOOL uvc_stream_common_request(control_data_ptr_t dst);
-void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst);
+BOOL uvc_vs_control_data_negotiate(BYTE size, control_data_ptr_t src, control_data_ptr_t dst);
 
 inline BOOL uvc_stream_probe_request() {
 	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
@@ -759,7 +705,7 @@ inline BOOL uvc_stream_commit_request() {
 }
 
 inline BYTE uvc_control_size() {
-	switch (uvc_bcd_version) {
+	switch (UVC_DESCRIPTOR.videocontrol.header.bcdUVC) {
 	case UVC_BCD_V10:
 		return sizeof(struct uvc_vs_control_data_v10);
 	case UVC_BCD_V11:
@@ -771,36 +717,36 @@ inline BYTE uvc_control_size() {
 	}
 }
 
+#define XDATA_BYTES(x) \
+	((__xdata BYTE *)(x))
+
 BOOL uvc_stream_common_request(control_data_ptr_t dst) {
 	BYTE size = uvc_control_size();
 	// assert uvc_ctrl_request.bRequest == UVC_VS_PROBE_CONTROL
-
 	switch (uvc_ctrl_request.bRequest) {
 
 	case UVC_SET_CUR:
-		// assert MAKEWORD(EP0BCH, EP0BCL) == size
-		uvc_vs_control_data_populate(&ep0buffer, dst);
-		return TRUE;
+		size = ep0_recv();
+		return uvc_vs_control_data_negotiate(size, &ep0buffer, dst);
 
 	// Get current
 	// Returns the current state of the streaming interface.
 	case UVC_GET_CUR:
-		writeep0_auto_xdata(dst, size);
+		ep0_send_auto(XDATA_BYTES(dst), size);
 		return TRUE;
-
 	case UVC_GET_MIN:
-		writeep0_auto_xdata(&descriptors.config_min, size);
+		ep0_send_auto(XDATA_BYTES(&descriptors.config_min), size);
 		return TRUE;
 	case UVC_GET_MAX:
-		writeep0_auto_xdata(&descriptors.config_default, size);
+		ep0_send_auto(XDATA_BYTES(&descriptors.config_default), size);
 		return TRUE;
 	// Get "number of steps"
 	case UVC_GET_RES:
-		writeep0_auto_xdata(&descriptors.config_step, size);
+		ep0_send_auto(XDATA_BYTES(&descriptors.config_step), size);
 		return TRUE;
 	// Get "default value"
 	case UVC_GET_DEF:
-		writeep0_auto_xdata(&descriptors.config_default, size);
+		ep0_send_auto(XDATA_BYTES(&descriptors.config_default), size);
 		return TRUE;
 
 	case UVC_GET_LEN:
@@ -850,122 +796,182 @@ BOOL uvc_stream_common_request(control_data_ptr_t dst) {
 // supported values according to the negotiation loop avoidance rules. 
 // 
 // This convention allows the host to cycle through supported values of a field.
-void uvc_vs_control_data_populate(control_data_ptr_t src, control_data_ptr_t dst) {
-	if (uvc_bcd_version != UVC_BCD_V10 && 
-		uvc_bcd_version != UVC_BCD_V11 &&
-		uvc_bcd_version != UVC_BCD_V15)
-		return;
 
-	// This field is set by the host.
-	if (dst->bFormatIndex == 0) {
-		dst->bFormatIndex = src->bFormatIndex;
+/*
+SET_BY_HOST
+SET_BY_DEVICE
+HOST_PREFERENCE	
+IGNORED
+*/
+
+// BFORMAT is 1 indexed
+#define BFORMAT_MJPEG \
+	1
+#define BFORMAT_YUY2 \
+	2
+
+BOOL uvc_vs_control_data_negotiate(BYTE size, control_data_ptr_t host, control_data_ptr_t device) {
+	if (UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V10 && 
+		UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V11 &&
+		UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V15)
+		return FALSE;
+
+	// SET_BY_HOST(bFormatIndex)
+	switch (host->bFormatIndex) {
+	case 0: // Use default
+		device->bFormatIndex = descriptors.config_default.bFormatIndex;
+		break;
+	case BFORMAT_MJPEG:
+	case BFORMAT_YUY2:
+		device->bFormatIndex = host->bFormatIndex;
+		break;
+	default:
+		printf("Invalid bFormatIndex: %d\n", host->bFormatIndex);
+		return FALSE;
+	}
+	printf("Neg bFormatIndex: %d\n", device->bFormatIndex);
+
+	// SET_BY_HOST(bFrameIndex)
+ 	// FIXME: This should be something like ARRAY_SIZE(descriptors.videostream.mjpeg_stream.frames)
+	switch(host->bFrameIndex) {
+	case 0: // Use default
+		device->bFrameIndex = descriptors.config_default.bFormatIndex;
+		break;
+	case 1:
+	case 2:
+		device->bFrameIndex = host->bFrameIndex;
+		break;
+	default:
+		printf("Invalid bFrameIndex: %d\n", host->bFrameIndex);
+		return FALSE;
+	}
+	printf("Neg bFrameIndex: %d\n", device->bFrameIndex);
+
+	{
+		BYTE i;
+		__xdata struct UVC_FRAME_COMMON(1)* frame = NULL;
+		switch(device->bFormatIndex) {
+		case BFORMAT_MJPEG:
+			frame = &(UVC_DESCRIPTOR.videostream.mjpeg_stream.frames[device->bFormatIndex-1]);
+			break;
+		case BFORMAT_YUY2:
+			frame = &(UVC_DESCRIPTOR.videostream.yuy2_stream.frames[device->bFormatIndex-1]);
+			break;
+		}
+
+		// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
+		// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
+		if (host->dwFrameInterval == 0) {
+			device->dwFrameInterval = frame->dwDefaultFrameInterval;
+		} else {
+			printf("Host requested frame interval: %lu\n", host->dwFrameInterval);
+			for(i = 0; i < frame->bFrameIntervalType; i++) {
+				if (host->dwFrameInterval < frame->dwFrameInterval[i])
+					continue;
+				device->dwFrameInterval = frame->dwFrameInterval[i];
+				break;
+			}
+		}
+		printf("Neg dwFrameInterval: %lu\n", device->dwFrameInterval);
 	}
 
-	// This field is set by the host.
-	if (dst->bFrameIndex == 0) {
-		dst->bFrameIndex = src->bFrameIndex;
-	}
-
+	return TRUE;
+/*
+	// Use of this control is at the discretion of the device, and is indicated in the VS Input or Output Header descriptor.
 	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
 	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
-	if (dst->dwFrameInterval == 0) {
-		dst->dwFrameInterval = src->dwFrameInterval;
+	if (host->wKeyFrameRate == 0) {
+		device->wKeyFrameRate = host->wKeyFrameRate;
 	}
 
 	// Use of this control is at the discretion of the device, and is indicated in the VS Input or Output Header descriptor.
 	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
 	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
-	if (dst->wKeyFrameRate == 0) {
-		dst->wKeyFrameRate = src->wKeyFrameRate;
-	}
-
-	// Use of this control is at the discretion of the device, and is indicated in the VS Input or Output Header descriptor.
-	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
-	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
-	if (dst->wPFrameRate == 0) {
-		dst->wPFrameRate = src->wPFrameRate;
+	if (host->wPFrameRate == 0) {
+		device->wPFrameRate = host->wPFrameRate;
 	}
 
 	// The resolution reported by this control will determine the number of discrete quality settings that it can support.
 	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
 	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
-	if (dst->wCompQuality == 0) {
-		dst->wCompQuality = src->wCompQuality;
+	if (host->wCompQuality == 0) {
+		device->wCompQuality = host->wCompQuality;
 	}
 
 	// When used in conjunction with an IN endpoint, the host shall indicate its preference during the Probe phase. The value must be from the range of values supported by the device.
 	// When used in conjunction with an OUT endpoint, the host shall accept the value indicated by the device.
-	if (dst->wCompWindowSize == 0) {
-		dst->wCompWindowSize = src->wCompWindowSize;
+	if (host->wCompWindowSize == 0) {
+		device->wCompWindowSize = host->wCompWindowSize;
 	}
 
 	// When used in conjunction with an IN endpoint, this field is set by the device and read only from the host.
 	// When used in conjunction with an OUT endpoint, this field is set by the host and read only from the device.
-	if (dst->wDelay == 0) {
-		dst->wDelay = src->wDelay;
+	if (host->wDelay == 0) {
+		device->wDelay = host->wDelay;
 	}
 
 	// For frame-based formats, this field indicates the maximum size of a single video frame.
 	// When used in conjunction with an IN endpoint, this field is set by the device and read only from the host.
 	// When used in conjunction with an OUT endpoint, this field is set by the host and read only from the device.
-	if (dst->dwMaxVideoFrameSize == 0) {
-		dst->dwMaxVideoFrameSize = src->dwMaxVideoFrameSize;
+	if (host->dwMaxVideoFrameSize == 0) {
+		device->dwMaxVideoFrameSize = host->dwMaxVideoFrameSize;
 	}
 
 	// This field is set by the device and read only from the host. Some host implementations restrict the maximum value permitted for this field.
-	if (dst->dwMaxPayloadTransferSize == 0) {
-		dst->dwMaxPayloadTransferSize = src->dwMaxPayloadTransferSize;
+	if (host->dwMaxPayloadTransferSize == 0) {
+		device->dwMaxPayloadTransferSize = host->dwMaxPayloadTransferSize;
 	}
 
 	// UVC1.0 ends here
-	if (uvc_bcd_version != UVC_BCD_V11 && 
-		uvc_bcd_version != UVC_BCD_V15)
+	if (UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V11 && 
+		UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V15)
 		return;
 
 	// This parameter is set by the device and read only from the host.
-	if (dst->dwClockFrequency == 0) {
-		dst->dwClockFrequency = src->dwClockFrequency;
+	if (host->dwClockFrequency == 0) {
+		device->dwClockFrequency = host->dwClockFrequency;
 	}
 
 	// Ignored for frame based formats (MJPEG + Uncompressed)
-	if (dst->bmFramingInfo == 0) {
-		dst->bmFramingInfo = src->bmFramingInfo;
+	if (host->bmFramingInfo == 0) {
+		device->bmFramingInfo = host->bmFramingInfo;
 	}
 
 	// The host initializes bPreferedVersion and the following bMinVersion and bMaxVersion fields to zero on the first Probe Set. 
 	// Upon Probe Get, the device shall return its preferred version, plus the minimum and maximum versions supported by the device (see bMinVersion and bMaxVersion below).
-	if (dst->bPreferedVersion == 0) {
-		dst->bPreferedVersion = src->bPreferedVersion;
+	if (host->bPreferedVersion == 0) {
+		device->bPreferedVersion = host->bPreferedVersion;
 	}
-	if (dst->bMinVersion == 0) {
-		dst->bMinVersion = src->bMinVersion;
+	if (host->bMinVersion == 0) {
+		device->bMinVersion = host->bMinVersion;
 	}
-	if (dst->bMaxVersion == 0) {
-		dst->bMaxVersion = src->bMaxVersion;
+	if (host->bMaxVersion == 0) {
+		device->bMaxVersion = host->bMaxVersion;
 	}
 
 	// UVC1.1 ends here
-	if (uvc_bcd_version != UVC_BCD_V15)
+	if (UVC_DESCRIPTOR.videocontrol.header.bcdUVC != UVC_BCD_V15)
 		return;
 
-	if (dst->bUsage == 0) {
-		dst->bUsage = src->bUsage;
+	if (host->bUsage == 0) {
+		device->bUsage = host->bUsage;
 	}
-	if (dst->bBitDepthLuma == 0) {
-		dst->bBitDepthLuma = src->bBitDepthLuma;
+	if (host->bBitDepthLuma == 0) {
+		device->bBitDepthLuma = host->bBitDepthLuma;
 	}
-	if (dst->bmSettings == 0) {
-		dst->bmSettings = src->bmSettings;
+	if (host->bmSettings == 0) {
+		device->bmSettings = host->bmSettings;
 	}
-	if (dst->bMaxNumberOfRefFramesPlus1 == 0) {
-		dst->bMaxNumberOfRefFramesPlus1 = src->bMaxNumberOfRefFramesPlus1;
+	if (host->bMaxNumberOfRefFramesPlus1 == 0) {
+		device->bMaxNumberOfRefFramesPlus1 = host->bMaxNumberOfRefFramesPlus1;
 	}
-	if (dst->bmRateControlModes == 0) {
-		dst->bmRateControlModes = src->bmRateControlModes;
+	if (host->bmRateControlModes == 0) {
+		device->bmRateControlModes = host->bmRateControlModes;
 	}
-	if (dst->bmLayoutPerStream == 0) {
-		dst->bmLayoutPerStream = src->bmLayoutPerStream;
+	if (host->bmLayoutPerStream == 0) {
+		device->bmLayoutPerStream = host->bmLayoutPerStream;
 	}
+*/
 }
 
 // 4.3.1.7 Stream Error Code Control

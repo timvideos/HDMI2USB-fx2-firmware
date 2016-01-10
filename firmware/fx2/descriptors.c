@@ -381,7 +381,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
 						.bEndpointAddress	= USB_ENDPOINT_NUMBER(0x1) | USB_DIR_IN,
 						.bmAttributes		= USB_ENDPOINT_XFER_INT,
 						.wMaxPacketSize		= 16,
-						.bInterval		= 64,
+						.bInterval		= 1,
 					}
 				},
 			},

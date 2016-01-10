@@ -37,6 +37,7 @@
 
 volatile __bit dosud=FALSE;
 volatile __bit dosuspend=FALSE;
+volatile __bit ep0out_sending=FALSE;
 
 // custom functions
 extern void main_loop();
@@ -66,6 +67,7 @@ void main() {
  ENABLE_HISPEED(); 
  ENABLE_SUSPEND();
  ENABLE_RESUME();
+ //ENABLE_EP0OUT();
 
  printf("3\n");
  EA=1;
@@ -116,6 +118,15 @@ void ISR_USART0(void) __interrupt TI_0_ISR __critical {
  TI = 0;
  RI = 0;
 }
+
+/*
+void ep0out_isr() __interrupt EP0OUT_ISR {
+ printf("O\n");
+ ep0out_sending = FALSE;
+ CLEAR_EP0OUT();
+}
+*/
+
 /*
 	if (RI) {
 		RI=0;
