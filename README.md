@@ -36,3 +36,40 @@ The firmware is also used for control and debugging of the system, through a
 USB Communications Class Device. This is a common way of attaching serial ports
 to the system, and under Linux it can be accessed at /dev/ttyUSBX.
 
+# Cypress EZ-USB FX2LP
+
+FIXME: Put some documentation about the FX2 here.
+
+[Cypress EZ-USB FX2LP](http://www.cypress.com/?id=193)
+
+> Cypress’s EZ-USB® FX2LP™ (CY7C68013A/14/15/16A) is a low power, highly
+> integrated USB 2.0 microcontroller. FX2LP has a fully configurable General
+> Programmable Interface (GPIF™) and master/slave endpoint FIFO (8-bit or
+> 16-bit data bus), which provides an easy and glueless connection to popular
+> interfaces such as ATA, UTOPIA, EPP, PCMCIA, DSP, and most processors.
+
+# Boards
+
+## [Numato Opsis](https://opsis.hdmi2usb.tv)
+
+ * FX2 - `CY7C68013A_100AC` - 100 pin version
+ * EEPROM - `24AA02E48` -  256*bytes* (128 usable)
+
+ * `Bank A`/`Port A`, `Bank B`/`Port B`, `Bank C`/`Port D`, `Bank F`/`Port C`, `Bank H`/`RDY+CTRL` - FPGA IO Pins
+ * `Bank G`/`Port E` connected to FPGA JTAG.
+ * 2 x Hardware UARTs
+ * 1 x Interrupts?
+
+ * [Further Documentation](https://opsis.hdmi2usb.tv/features/usb-peripheral.html)
+
+## Digilent Atlys
+
+ * FX2 - `CY7C68013A-56` - 56 pin version
+ * EEPROM - `24AA128` - 16k*bytes*
+
+ * `Bank A`/`Port A`, `Bank B`/`Port B`, `RDY+CTRL` - FPGA IO Pins
+ * `Bank C/Port D` connected to FPGA JTAG.
+
+
+ * [Further Documentation](https://reference.digilentinc.com/atlys:atlys:atlys)
+
