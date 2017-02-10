@@ -14,6 +14,11 @@ In microload every program **byte** counts and thus is hand coded in assembly.
 The firemware is used on the Numato Opsis board to allows the FPGA to switch
 the FX2 functionality.
 
+## [eeprom-unconfigured](./eeprom-unconfigured)
+
+eeprom-unconfigured will cause the Cypress FX2 which boot with a given VID/PID
+and then wait for full firmware to be loaded via USB.
+
 ## [JTAG](./jtag)
 
 The JTAG firmware is used to allow loading gateware onto an FPGA.
