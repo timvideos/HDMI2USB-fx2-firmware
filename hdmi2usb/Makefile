@@ -32,12 +32,12 @@
 #   make AS8051=asx8051
 #
 TARGET := hdmi2usb
-FX2LIBDIR := ../../third_party/fx2lib
+FX2LIBDIR := ../third_party/fx2lib
 LIBS := $(FX2LIBDIR)/lib/fx2.lib
 INCS := -I sdcc -I$(FX2LIBDIR)/include -I.
 
 # Settings specific for the TimVideo hdmi2usb firmware
-BOARD ?= atlys
+BOARD ?= opsis
 FLAGS +=-DDEBUG -DBOARD_${BOARD}
 USE_16K := 1
 
