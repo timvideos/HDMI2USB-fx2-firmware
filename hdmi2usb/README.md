@@ -17,7 +17,7 @@ to the system, and under Linux it can be accessed at /dev/ttyUSBX.
 The firmware uses the Open Source fx2lib, which will be downloaded as part of
 the build process.
 
-The build process requires git, make and sdcc. SDCC, the Small Device C
+The build process requires git, make and SDCC. SDCC, the Small Device C
 Compiler, is packaged in Debian and derivatives such as Ubuntu, as well as
 Fedora:
 
@@ -26,12 +26,25 @@ Fedora:
 
 `make`
 
-# Flasing
+Firmware is generally compiled with [SDDC 3.6]() and the sdas8051 assembler.
+Older versions *might* work but have been known to generate incorrect firmware.
 
-Use fx2loader from the libfpgalink project:
+# USB IDs
 
-`fx2loader -v 0925:3881 firmware.hex ram`
++----------------+------+------+------+
+| Board          | VID  | PID  | DID  |
++----------------+------+------+------+
+| Digilent Atlys | 1D50 | 60B7 | 0002 |
+| Numato Opsis   | 2A19 | 5442 | 0002 |
++----------------+------+------+------+
 
+# Flashing
+
+```bash
+sudo /sbin/fxload -D /dev/bus/usb/$dev -t fx2lp -I $1`
+```
+
+# How it Works
 
 ## Existing HDMI2USB USB endpoint usage
 
@@ -57,8 +70,6 @@ FIXME: Check this is correct!!!
 |     4    | IN or OUT  | BULK/ISO/INT  |  |
 |     6    | IN or OUT  | BULK/ISO/INT  |  |
 |     8    | IN or OUT  | BULK/ISO/INT  |  |
-
-
 
 # References
     Create a USB Virtual COM Port: http://janaxelson.com/usb_virtual_com_port.htm
