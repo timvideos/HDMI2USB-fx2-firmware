@@ -5,3 +5,5 @@ $(FX2LIBDIR)/.git: .gitmodules
 	git submodule sync --recursive -- $$(dirname $@)
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r .gitmodules
+
+# FIXME: Add check_int2jit from hdmi2usb/Makefile

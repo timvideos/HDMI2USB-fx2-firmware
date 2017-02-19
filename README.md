@@ -5,6 +5,9 @@ This repository contains the firmware used in the
 such as the [Numato Opsis](https://opsis.hdmi2usb.tv) and the Digilent Atlys
 boards.
 
+Firmware is generally compiled with [SDDC 3.6]() and the sdas8051 assembler.
+Older versions *might* work but have been known to generate incorrect firmware.
+
 ## [microload](./microload)
 
 microload is firmware which loads a second stage firmware from an FPGA via I2C.
@@ -22,6 +25,8 @@ and then wait for full firmware to be loaded via USB.
 ## [JTAG](./jtag)
 
 The JTAG firmware is used to allow loading gateware onto an FPGA.
+
+ * [ixo-usb-jtag](https://github.com/mithro/ixo-usb-jtag)
 
 ## [HDMI2USB UVC+CDC](./hdmi2usb)
 
@@ -62,7 +67,7 @@ FIXME: Put some documentation about the FX2 here.
 
  * [Further Documentation](https://opsis.hdmi2usb.tv/features/usb-peripheral.html)
 
-## Digilent Atlys
+## [Digilent Atlys](https://www.digilentinc.com/atlys)
 
  * FX2 - `CY7C68013A-56` - 56 pin version
  * EEPROM - `24AA128` - 16k*bytes*
