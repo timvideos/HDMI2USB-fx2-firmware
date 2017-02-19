@@ -46,6 +46,12 @@ sudo /sbin/fxload -D /dev/bus/usb/$dev -t fx2lp -I $1`
 
 # How it Works
 
+## microload
+
+This firmware is designed to be compatible with loading using microload. This
+means that it can't put loaded segments at locations XXXX.
+
+
 ## Existing HDMI2USB USB endpoint usage
 
 FIXME: Check this is correct!!!
