@@ -1,3 +1,4 @@
+FX2LIBDIR = ./third_party/fx2lib
 
 # We depend on the .git file inside the directory as git creates an empty dir
 # for us.
