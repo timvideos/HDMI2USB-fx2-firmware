@@ -78,3 +78,11 @@ FIXME: Put some documentation about the FX2 here.
 
  * [Further Documentation](https://reference.digilentinc.com/atlys:atlys:atlys)
 
+# Building
+
+    make -f Makefile.fx2 load-fx2
+
+will build and flash the FX2 firmware. This requires the `hdmi2usb-mode-switch`
+command, which on Debian Sid and Stretch can be installed using the
+`hdmi2usb-mode-switch` package, otherwise see
+[HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch).
