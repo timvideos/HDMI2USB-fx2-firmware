@@ -86,3 +86,13 @@ will build and flash the FX2 firmware. This requires the `hdmi2usb-mode-switch`
 command, which on Debian Sid and Stretch can be installed using the
 `hdmi2usb-mode-switch` package, otherwise see
 [HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch).
+
+There are three ways to run `hdmi2usb-mode-switch`:
+
+ 1. As root
+ 1. Install the
+ [unbind-helper](https://github.com/timvideos/HDMI2USB-mode-switch/blob/master/unbind-helper.c)
+ as a setuid binary
+ 1. Install the
+ [udev-rules](https://github.com/timvideos/HDMI2USB-mode-switch/tree/master/udev)
+ which sets the permissions of the unbind.
