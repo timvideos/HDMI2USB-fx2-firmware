@@ -14,6 +14,8 @@
 # use it to emulate a USB UVC Webcam and a USB CDC-ACM serial port.
 #
 
+MODESWITCH_CMD = hdmi2usb-mode-switch
+
 TARGETS += fx2
 
 help-fx2:
@@ -24,29 +26,29 @@ gateware-generate-fx2:
 	@true
 
 gateware-build-fx2:
-	cp gateware/encoder/vhdl/header.hex $(MSCDIR)/build/header.hex
+	cp gateware/streamer/vhdl/header.hex $(MSCDIR)/build/header.hex
 
 # Firmware for the Cypress FX2
-firmware-fx2: firmware/fx2/hdmi2usb.hex
+firmware-fx2: hdmi2usb/hdmi2usb.hex
 	@true
 
 embed-fx2: firmware/lm32/fx2_fw_hdmi2usb.c
 	@true
 
-load-fx2: firmware/fx2/hdmi2usb.hex
-	$(MODESWITCH_CMD) --load-fx2-firmware firmware/fx2/hdmi2usb.hex
+load-fx2: hdmi2usb/hdmi2usb.hex
+	$(MODESWITCH_CMD) --load-fx2-firmware hdmi2usb/hdmi2usb.hex
 
 flash-fx2:
 	@true
 
 clean-fx2:
-	$(MAKE) -C firmware/fx2 clean
+	$(MAKE) -C hdmi2usb clean
 
-firmware/fx2/hdmi2usb.hex:
-	$(MAKE) -C firmware/fx2
+hdmi2usb/hdmi2usb.hex:
+	$(MAKE) -C hdmi2usb
 
-firmware/lm32/fx2_fw_hdmi2usb.c: firmware/fx2/generate_fx2_microboot.py firmware/fx2/hdmi2usb.hex
-	firmware/fx2/generate_fx2_microboot.py firmware/fx2/hdmi2usb.hex > firmware/lm32/fx2_fw_hdmi2usb.c
+firmware/lm32/fx2_fw_hdmi2usb.c: microload/generate_2nd_stage.py hdmi2usb/hdmi2usb.hex
+	microload/generate_2nd_stage.py hdmi2usb/hdmi2usb.hex > firmware/lm32/fx2_fw_hdmi2usb.c
 
 # Utility functions
 view:
