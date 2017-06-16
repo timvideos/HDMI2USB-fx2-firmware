@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <delay.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
 #include "makestuff.h"
@@ -70,7 +71,6 @@ void main(void) {
     usartInit();
     while (1) {
         usartSendString("This is the serial example for the HDMI2USB firmware\n");
-        for (i = 0; i < 255; i++) // Delay to display message every two seconds
-            for (j = 0; j < 5000; j++);
+        delay(2000);
     }
 }
