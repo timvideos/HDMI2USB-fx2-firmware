@@ -1,3 +1,16 @@
-*.lst
+*.adb
+*.asm
+*.cdb
 *.hex
+*.lk
+*.lst
+*.map
+*.mem
+*.omf
+*.rel
+*.rst
+*.sym
 *-prod.a51
+date.h
+descriptors_strings.h
+descriptors_strings.inc
