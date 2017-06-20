@@ -19,18 +19,18 @@
 #include <fx2regs.h>
 #include <fx2types.h>
 
-#define P_D3 0xB3
+#define PD3 0xB3
 #define BAUD 32
 
-__sbit __at P_D3 USART; // USART slave send from port D3
+__sbit __at PD3 USART; // USART slave send from port D3
 
-void usartInit(void) {
+void usart_init(void) {
     SETCPUFREQ(CLK_48M);
 	USART = 1;
 	OED |= 0xff;
 }
 
-void usartSendByte(BYTE c) {
+void usart_send_byte(BYTE c) {
 	(void)c; /* argument passed in DPL */
 	__asm
 		mov a, dpl
@@ -51,25 +51,25 @@ void usartSendByte(BYTE c) {
 	__endasm;
 }
 
-void usartSendString(const char *s) {
+void usart_send_string(const char *s) {
 	while ( *s ) {
         switch (*s) {
             case '\r':
             case '\n':
-                usartSendByte('\n');
-                usartSendByte('\r');
+                usart_send_byte('\n');
+                usart_send_byte('\r');
                 break;
             default:	
-                usartSendByte(*s);
+                usart_send_byte(*s);
         }
         *s++;
 	}
 }
 
 void main(void) {
-    usartInit();
+    usart_init();
     while (1) {
-        usartSendString("This is the serial example for the HDMI2USB firmware\n");
+        usart_send_string("This is the serial example for the HDMI2USB firmware\n");
         delay(2000);
     }
 }

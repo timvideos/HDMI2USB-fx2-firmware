@@ -28,25 +28,18 @@ INCS := -I sdcc -I$(FX2LIBDIR)/include -I.
 
 USE_16K := 1
 
-# Must only be hex numbers
-FIRMWARE_VERSION := $(shell date +%Y%m%d)
-
 CC_SRCS := serial.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 $(FLAGS)
+CFLAGS += -mmcs51 --xram-size 0x0200 $(FLAGS)
 
 ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00 --xram-size 0x0200
+	CFLAGS += --code-size 0x3e00
 else
-	CFLAGS += --code-size 0x1e00 --xram-size 0x0200
+	CFLAGS += --code-size 0x1e00
 endif
-
-VID := 2A19
-PID := 5445
-DID := 0002
 
 # Use make V=1 for a verbose build.
 ifndef V
@@ -58,7 +51,7 @@ ifndef V
 	Q_GEN=@echo     '     GEN ' $@;
 endif
 
-.PHONY: all clean check check_int2jt
+.PHONY: all clean
 
 all: $(TARGET).hex
 
@@ -82,16 +75,6 @@ $(TARGET).hex: $(CC_OBJS)
 
 %.rel: %.c
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $?
-
-check_int2jt: $(TARGET).hex
-	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \
-	export ACTUAL=$(shell grep "C:.*INT2JT" $(TARGET).map | sed -e's/C: *0*\([^ ]*\)  _INT2JT.*/0x\1/' | tr A-Z a-z ); \
-	if [ "$$REQUESTED" != "$$ACTUAL" ]; then \
-		echo "INT2JT at $$ACTUAL but requested $$REQUESTED"; \
-		exit 1; \
-	fi
-
-check: check_int2jt
 
 clean:
 	$(Q_RM)$(RM) *.iic *.asm *.lnk *.lst *.map *.mem *.rel *.rst *.sym \
