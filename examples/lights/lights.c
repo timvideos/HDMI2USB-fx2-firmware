@@ -26,46 +26,45 @@ void init_lights(void) {
     PORTACFG = 0x00;
 }
 
-void d1on(void) {
+void d1_on(void) {
     OEA |= 0x01;
     IOA &= ~0x01;
 }
 
-void d2on(void) {
+void d2_on(void) {
     OEA |= 0x02;
     IOA &= ~0x02;
 }
 
-void d1off(void) {
+void d1_off(void) {
     OEA |= 0x01;
     IOA |= 0x01;
 }
 
-void d2off(void) {
+void d2_off(void) {
     OEA |= 0x02;
     IOA |= 0x02;
 }
 
-void main(void)
-{
-	BYTE n=0;
+void main(void) {
+    BYTE n=0;
 
     init_lights();
 
-    while(1) {
+    while(TRUE) {
        switch(n) {
-           case 0:
-               d1on();
-               break;
-           case 1:
-               d2on();
-               break;
-           case 2:
-               d1off();
-               break;
-           default:
-               d2off();
-               break;
+       case 0:
+           d1_on();
+           break;
+       case 1:
+           d2_on();
+           break;
+       case 2:
+           d1_off();
+           break;
+       default:
+           d2_off();
+           break;
        }
        delay(250);
        n = (n + 1) % 4;
