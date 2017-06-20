@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 # To build the firmware you will need:
 #   SDCC from http://sdcc.sourceforge.net
 #   fx2lib from http://fx2lib.wiki.sourceforge.net
@@ -28,25 +27,18 @@ INCS := -I sdcc -I$(FX2LIBDIR)/include -I.
 
 USE_16K := 1
 
-# Must only be hex numbers
-FIRMWARE_VERSION := $(shell date +%Y%m%d)
-
 CC_SRCS := lights.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 $(FLAGS)
+CFLAGS += -mmcs51 --xram-size 0x0200 $(FLAGS) 
 
 ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00 --xram-size 0x0200
+	CFLAGS += --code-size 0x3e00
 else
-	CFLAGS += --code-size 0x1e00 --xram-size 0x0200
+	CFLAGS += --code-size 0x1e00
 endif
-
-VID := 2A19
-PID := 5445
-DID := 0002
 
 # Use make V=1 for a verbose build.
 ifndef V
@@ -58,7 +50,7 @@ ifndef V
 	Q_GEN=@echo     '     GEN ' $@;
 endif
 
-.PHONY: all clean check check_int2jt
+.PHONY: all clean
 
 all: $(TARGET).hex
 
