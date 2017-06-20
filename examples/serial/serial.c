@@ -17,7 +17,7 @@
 #include <delay.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
-#include "makestuff.h"
+#include <fx2types.h>
 
 #define P_D3 0xB3
 #define BAUD 32
@@ -30,7 +30,7 @@ void usartInit(void) {
 	OED |= 0xff;
 }
 
-void usartSendByte(uint8 c) {
+void usartSendByte(BYTE c) {
 	(void)c; /* argument passed in DPL */
 	__asm
 		mov a, dpl
@@ -67,7 +67,6 @@ void usartSendString(const char *s) {
 }
 
 void main(void) {
-    int i, j;
     usartInit();
     while (1) {
         usartSendString("This is the serial example for the HDMI2USB firmware\n");
