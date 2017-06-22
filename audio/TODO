@@ -1,0 +1,4 @@
+* This may be better as a miscellaneous device with an interface association so
+  that the same driver instance handles video and audio capture
+  http://www.usb.org/developers/docs/whitepapers/iadclasscode_r10.pdf
+  http://www.usb.org/developers/docs/InterfaceAssociationDescriptor_ecn.pdf
