@@ -29,15 +29,15 @@
 #define DESCRIPTORS_H_
 
 struct usb_section {
-	struct usb_config_descriptor config;
-	/* ;;;;;;;;;;;;;;;;;;;;;;;;;; AUDIO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; */
-	struct usb_audio {
-		struct usb_interface_assoc_descriptor assoc_interface;
+    struct usb_config_descriptor config;
+    /* ;;;;;;;;;;;;;;;;;;;;;;;;;; AUDIO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; */
+    struct usb_audio {
+        struct usb_interface_assoc_descriptor assoc_interface;
 
-		struct usb_audio_control {
+        struct usb_audio_control {
             /* Standard audio control interface descriptor (alternate setting 0) */
             struct usb_interface_descriptor interface;
-			/* Header functional descriptor */
+            /* Header functional descriptor */
             DECLARE_UAC_AC_HEADER_DESCRIPTOR(1) header;
             /* Input terminal descriptor */
             struct uac_input_terminal_descriptor input;
@@ -45,16 +45,16 @@ struct usb_section {
             DECLARE_UAC_FEATURE_UNIT_DESCRIPTOR(2) feature;
             /* Ouput terminal descriptor */
             struct uac1_output_terminal_descriptor output;
-		} audiocontrol;
+        } audiocontrol;
 
-		struct usb_audio_stream1 {
+        struct usb_audio_stream1 {
             /* Standard audio control interface descriptor (alternate setting 1) */
             struct usb_interface_descriptor interface;
-		} audiostream1;
-		struct usb_audio_stream2 {
+        } audiostream1;
+        struct usb_audio_stream2 {
             /* Standard audio control interface descriptor (alternate setting 2) */
             struct usb_interface_descriptor interface;
-			/* Header functional descriptor */
+            /* Header functional descriptor */
             struct uac1_as_header_descriptor header;
             /* Audio Streaming discrete interface */
             DECLARE_UAC_FORMAT_TYPE_I_DISCRETE_DESC(8) asinterface;
@@ -62,20 +62,20 @@ struct usb_section {
             struct usb_audio_endpoint_descriptor endpoints[1];
             /* Audio specific endpoint for changing sample rate */
             struct uac_iso_endpoint_descriptor acendpoints[1];
-		} audiostream2;
+        } audiostream2;
         /* Streaming with lower bandwidth 
          * 1x 50 bytes packet size
          * Subframe size 1
          * 8 bits per sample */
-		struct usb_audio_stream2 audiostream3;
-	} audio;
+        struct usb_audio_stream2 audiostream3;
+    } audio;
 };
 
 struct usb_descriptors {
-	struct usb_device_descriptor device;
-	struct usb_section highspeed;
-	WORD fullspeed;
-	struct usb_descriptors_strings strings;
+    struct usb_device_descriptor device;
+    struct usb_section highspeed;
+    WORD fullspeed;
+    struct usb_descriptors_strings strings;
 };
 
 __xdata __at(DSCR_AREA) struct usb_descriptors descriptors;
