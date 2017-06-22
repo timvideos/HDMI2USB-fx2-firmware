@@ -7,3 +7,5 @@ cycle repeats
 The firmware is built using `make` and loaded using `make load`, which uses the
 [HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch)
 utility to load the firmware onto the FX2 chip.
+
+![](http://cloud.paddatrapper.me/s/SSbZnHGQVJRFIj6/download)
