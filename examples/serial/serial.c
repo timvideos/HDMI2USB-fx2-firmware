@@ -34,20 +34,19 @@ void usart_send_byte(BYTE c) {
 	(void)c; /* argument passed in DPL */
 	__asm
 		mov a, dpl
-		mov r1, #9
+		mov r1, #9      // Move 9 into r1 for loop to execute 8 times (byte)
 		clr c
 	loop:
-		mov _USART, c
-		rrc a
-		mov r0, #BAUD
-		djnz r0, .
+		mov _USART, c   // Move c into USART register
+		rrc a           // Rotate accumulator 1 bit right
+		mov r0, #BAUD   // Indicate ready to send
+		djnz r0, .      // Wait for r0 to be cleared
 		nop
-		djnz r1, loop
+		djnz r1, loop   // Reduce r1 and start loop again
 
-		;; Stop bit
-		setb _USART
-		mov r0, #BAUD
-		djnz r0, .
+		setb _USART     // Stop bit
+		mov r0, #BAUD   // Indicate ready to send
+		djnz r0, .      // Wait to be sent
 	__endasm;
 }
 
