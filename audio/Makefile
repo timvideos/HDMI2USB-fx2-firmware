@@ -45,7 +45,7 @@ USE_16K := 1
 # Must only be hex numbers
 FIRMWARE_VERSION := $(shell date +%Y%m%d)
 
-CC_SRCS := descriptors.c
+CC_SRCS := descriptors.c firmware.c
 CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
