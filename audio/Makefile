@@ -50,15 +50,6 @@ CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
-CFLAGS +=  --xram-size 0x0200 -DDSCR_AREA=0x2e00 --debug
-
-ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00
-else
-	CFLAGS += --code-size 0x1e00
-endif
-
 ifeq (${BOARD},atlys)
 VID := 1D50
 PID := 60B7
@@ -73,6 +64,9 @@ $(error "Unknown board type '$(BOARD)'")
 endif
 endif
 
+CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
+CFLAGS += -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
+CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
 # Use make V=1 for a verbose build.
 ifndef V
@@ -108,11 +102,6 @@ $(TARGET).hex: $(CC_OBJS)
 
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
-
-progOffsets.h: prog.rel
-	$(Q_GEN)cat prog.lst | ./lstParse.py > progOffsets.h
-
-livePatch.c: progOffsets.h
 
 date.h: Makefile
 	$(Q_GEN)

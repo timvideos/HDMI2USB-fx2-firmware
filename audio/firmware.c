@@ -1,20 +1,19 @@
-/**
- * Copyright (C) 2009 Ubixum, Inc. 
+/*
+ * Copyright (C) 2017 Kyle Robbertze
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <stdio.h>
 
 #include <fx2regs.h>
@@ -38,7 +37,6 @@ DWORD lcount;
 __bit on;
 
 void main() {
-
     REVCTL=0; // not using advanced endpoint controls
 
     d2off();
@@ -52,18 +50,15 @@ void main() {
     // renumerate
     RENUMERATE_UNCOND(); 
 
-
     SETCPUFREQ(CLK_48M);
     SETIF48MHZ();
     sio0_init(57600);
-
 
     USE_USB_INTS(); 
     ENABLE_SUDAV();
     ENABLE_SOF();
     ENABLE_HISPEED();
     ENABLE_USBRESET();
-
 
     // only valid endpoints are 2/6
     EP2CFG = 0xA2; // 10100010
@@ -79,24 +74,18 @@ void main() {
     EP8CFG &= ~bmVALID;
     SYNCDELAY; 
 
-
     // arm ep2
     EP2BCL = 0x80; // write once
     SYNCDELAY;
     EP2BCL = 0x80; // do it again
 
-
     // make it so we enumberate
-
-
     EA=1; // global interrupt enable 
     printf ( "Done initializing stuff\n" );
-
 
     d3off();
 
     while(TRUE) {
-
         if (got_sud) {
             printf ( "Handle setupdata\n" );
             handle_setupdata(); 
@@ -129,7 +118,6 @@ void main() {
 }
 
 // copied routines from setupdat.h
-
 BOOL handle_get_descriptor() {
     return FALSE;
 }
@@ -192,7 +180,6 @@ BOOL handle_set_configuration(BYTE cfg) {
 
 // copied usb jt routines from usbjt.h
 void sudav_isr() __interrupt SUDAV_ISR {
-
     got_sud=TRUE;
     CLEAR_SUDAV();
 }
