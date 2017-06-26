@@ -21,6 +21,7 @@
 
 #include <ch9.h>
 #include <ch9-extra.h>
+#include <audio.h>
 
 #ifndef DESCRIPTORS_H_
 #define DESCRIPTORS_H_
@@ -28,7 +29,7 @@
 struct usb_section {
     struct usb_config_descriptor config;
     struct usb_interface_descriptor interface;
-    struct usb_endpoint_descriptor endpoints[2];
+    struct usb_audio_endpoint_descriptor endpoints[1];
 };
 
 struct usb_descriptors {

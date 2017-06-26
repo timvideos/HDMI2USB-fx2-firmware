@@ -60,26 +60,20 @@ void main() {
     ENABLE_HISPEED();
     ENABLE_USBRESET();
 
-    // only valid endpoints are 2/6
+    // only valid endpoints is 2
     EP2CFG = 0xA2; // 10100010
-    SYNCDELAY;
-    EP6CFG = 0xE2; // 11100010 
-    SYNCDELAY;
-    EP1INCFG &= ~bmVALID;
     SYNCDELAY;
     EP1OUTCFG &= ~bmVALID;
     SYNCDELAY;
     EP4CFG &= ~bmVALID;
     SYNCDELAY;
-    EP8CFG &= ~bmVALID;
-    SYNCDELAY; 
 
     // arm ep2
     EP2BCL = 0x80; // write once
     SYNCDELAY;
     EP2BCL = 0x80; // do it again
 
-    // make it so we enumberate
+    // make it so we enumerate
     EA=1; // global interrupt enable 
     printf ( "Done initializing stuff\n" );
 
