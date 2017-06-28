@@ -53,9 +53,9 @@ void usart_send_byte(BYTE c) {
 void usart_send_string(const char *s) {
     while (*s) {
         switch (*s) {
-            case '\r':
-            case '\n':
-                usart_send_byte('\n');
+            case '\r': // Send new line and carriage return so there is less
+            case '\n': // configuration of serial software needed.
+                usart_send_byte('\n'); 
                 usart_send_byte('\r');
                 break;
             default:    
