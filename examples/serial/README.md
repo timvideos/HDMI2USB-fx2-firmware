@@ -20,4 +20,4 @@ Under linux serial can be read using minicom. This example was tested using the
 Digilent PmodUSBUART Serial to USB adaptor. 
 
 ## Wiring Diagram
-![](http://cloud.paddatrapper.me/s/h1M4CxbsItW8aM4/download)
+![](../../docs/serial_diagram.png)
