@@ -27,7 +27,7 @@ __sbit __at PD3 USART; // USART slave send from port D3
 void usart_init(void) {
     SETCPUFREQ(CLK_48M);
     USART = 1;
-    OED |= 0xff;
+    OED |= 0xff; // Set all pins' outputs enabled
 }
 
 void usart_send_byte(BYTE c) {
