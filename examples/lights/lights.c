@@ -22,29 +22,38 @@
 #include <delay.h>
 
 void init_lights(void) {
-    IFCONFIG &= ~3;
+    // Set pins to port mode instead of GPIF master/slave mode
+    IFCONFIG &= ~(bmIFCONFGMASK);
     PORTACFG = 0x00;
 }
 
 // d1 is the LED labelled D1 on the FX2LP CY7C68013A mini-board
 void d1_on(void) {
+    // Set pin A1 I/O
     OEA |= 0x01;
+    // Enable output pin A1
     IOA &= ~0x01;
 }
 
 // d2 is the LED labelled D2 on the FX2LP CY7C68013A mini-board
 void d2_on(void) {
+    // Set pin A2 I/O
     OEA |= 0x02;
+    // Enable output pin A2
     IOA &= ~0x02;
 }
 
 void d1_off(void) {
+    // Set pin A1 I/O
     OEA |= 0x01;
+    // Disable output pin A1
     IOA |= 0x01;
 }
 
 void d2_off(void) {
+    // Set pin A2 I/O
     OEA |= 0x02;
+    // Disable output pin A2
     IOA |= 0x02;
 }
 
