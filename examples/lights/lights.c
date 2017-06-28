@@ -26,11 +26,13 @@ void init_lights(void) {
     PORTACFG = 0x00;
 }
 
+// d1 is the LED labelled D1 on the FX2LP CY7C68013A mini-board
 void d1_on(void) {
     OEA |= 0x01;
     IOA &= ~0x01;
 }
 
+// d2 is the LED labelled D2 on the FX2LP CY7C68013A mini-board
 void d2_on(void) {
     OEA |= 0x02;
     IOA &= ~0x02;
