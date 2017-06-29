@@ -20,7 +20,7 @@
 #include <fx2types.h>
 
 #define PD3 0xB3
-#define BAUD 32
+#define BAUD 32 // FIXME: Figure out why this is 32
 
 __sbit __at PD3 USART; // USART slave send from port D3
 
@@ -55,10 +55,10 @@ void usart_send_string(const char *s) {
         switch (*s) {
             case '\r': // Send new line and carriage return so there is less
             case '\n': // configuration of serial software needed.
-                usart_send_byte('\n'); 
+                usart_send_byte('\n');
                 usart_send_byte('\r');
                 break;
-            default:    
+            default:
                 usart_send_byte(*s);
         }
         *s++;

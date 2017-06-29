@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# FIXME: Make this shared between all examples.
+
 # To build the firmware you will need:
 #   SDCC from http://sdcc.sourceforge.net
 #   fx2lib from http://fx2lib.wiki.sourceforge.net
