@@ -22,66 +22,8 @@
 #
 TARGET := lights
 FX2LIBDIR := ../../third_party/fx2lib
-LIBS := $(FX2LIBDIR)/lib/fx2.lib
-INCS := -I sdcc -I$(FX2LIBDIR)/include -I.
-
-USE_16K := 1
+GITDIR := ../../.git
 
 CC_SRCS := lights.c
-CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
-CC := sdcc
-
-CFLAGS += -mmcs51 --xram-size 0x0200 $(FLAGS) 
-
-ifeq ($(USE_16K),1)
-	CFLAGS += --code-size 0x3e00
-else
-	CFLAGS += --code-size 0x1e00
-endif
-
-# Use make V=1 for a verbose build.
-ifndef V
-	Q_CC=@echo      '      CC ' $@;
-	Q_AS=@echo      '      AS ' $@;
-	Q_LINK=@echo    '    LINK ' $@;
-	Q_RM=@echo      '   CLEAN ';
-	Q_OBJCOPY=@echo ' OBJCOPY ' $@;
-	Q_GEN=@echo     '     GEN ' $@;
-endif
-
-.PHONY: all clean
-
-all: $(TARGET).hex
-
-$(CC_SRCS): $(FX2LIBDIR)/lib/fx2.lib
-
-$(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
-	cd $(dir $@) && make -j1
-
-# We depend on a file inside the directory as git creates an
-# empty dir for us.
-#
-# Note that although we have the variable FX2LIBDIR, the submodule
-# magic will always check it out in fx2lib/
-$(FX2LIBDIR)/.git: ../../.gitmodules
-	git submodule sync --recursive -- $$(dirname $@)
-	git submodule update --recursive --init $$(dirname $@)
-	touch $@ -r ../../.gitmodules
-
-$(TARGET).hex: $(CC_OBJS)
-	$(Q_LINK)$(CC) $(CFLAGS) -o $@ $+ $(LIBS)
-
-%.rel: %.c
-	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $?
-
-clean:
-	$(Q_RM)$(RM) *.iic *.asm *.lnk *.lst *.map *.mem *.rel *.rst *.sym \
-		*.lk serial.hex
-	cd $(FX2LIBDIR) && make clean
-
-distclean: clean
-	$(RM) -r $(FX2LIBDIR)
-
-load: $(TARGET).hex
-	hdmi2usb-mode-switch --load-fx2-firmware $(TARGET).hex
+include ../example.mk
