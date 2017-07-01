@@ -23,7 +23,7 @@
 
 void init_lights(void) {
     // Set pins to port mode instead of GPIF master/slave mode
-    IFCONFIG &= ~(bmIFCONFGMASK);
+    IFCONFIG &= ~(bmIFCFGMASK);
     PORTACFG = 0x00;
 }
 
