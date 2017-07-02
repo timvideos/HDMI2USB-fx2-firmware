@@ -66,7 +66,7 @@ $(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
 #
 # Note that although we have the variable FX2LIBDIR, the submodule
 # magic will always check it out in fx2lib/
-$(FX2LIBDIR)/.git: $(GITDIR)
+$(FX2LIBDIR)/.git: $(GITMODULESDIR)
 	git submodule sync --recursive -- $$(dirname $@)
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r $<
