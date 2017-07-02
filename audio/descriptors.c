@@ -22,10 +22,10 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_SIZE,
         .bDescriptorType    = USB_DT_DEVICE,
         .bcdUSB             = USB_BCD_V20,
-        .bDeviceClass       = 0,
+        .bDeviceClass       = 0, // Class and protocol defined per interface
         .bDeviceSubClass    = 0,
         .bDeviceProtocol    = 0,
-        .bMaxPacketSize0    = 64,
+        .bMaxPacketSize0    = 64, // kB
         .idVendor           = VID,
         .idProduct          = PID,
         .bcdDevice          = DID,
@@ -38,23 +38,23 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_QUALIFIER_SIZE,
         .bDescriptorType    = USB_DT_DEVICE_QUALIFIER,
         .bcdUSB             = USB_BCD_V20,
-        .bDeviceClass       = 0,
+        .bDeviceClass       = 0, // Class and protocol defined per interface 
         .bDeviceSubClass    = 0,
         .bDeviceProtocol    = 0,
         .bMaxPacketSize0    = 64,
         .bNumConfigurations = 1,
-        .bRESERVED          = 0,
+        .bRESERVED          = 0, // Must be zero
     },
     .highspeed = {
         .config = {
-            .bLength            = USB_DT_CONFIG_SIZE,
-            .bDescriptorType    = USB_DT_CONFIG,
-            .wTotalLength       = sizeof(descriptors.highspeed),
-            .bNumInterfaces     = 1,
+            .bLength                = USB_DT_CONFIG_SIZE,
+            .bDescriptorType        = USB_DT_CONFIG,
+            .wTotalLength           = sizeof(descriptors.highspeed),
+            .bNumInterfaces         = 1,
             .bConfigurationValue    = 1,
-            .iConfiguration     = 0,
-            .bmAttributes       = USB_CONFIG_ATT_ONE,
-            .bMaxPower          = 0x32, // * 2 mA
+            .iConfiguration         = 0,
+            .bmAttributes           = USB_CONFIG_ATT_ONE,
+            .bMaxPower              = 0x32, // * 2 mA
         },
         .interface = {
             .bLength            = USB_DT_INTERFACE_SIZE,
@@ -64,7 +64,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bNumEndpoints      = 1,
             .bInterfaceClass    = USB_CLASS_AUDIO,
             .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            .bInterfaceProtocol = 0, // Must be 0
+            .bInterfaceProtocol = 0, // Must be zero
             .iInterface         = USB_STRING_INDEX(2),
         },
         .endpoints = {
@@ -96,20 +96,22 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bDescriptorType    = USB_DT_INTERFACE,
             .bInterfaceNumber   = 0,
             .bAlternateSetting  = 0,
-            .bNumEndpoints      = 2,
-            .bInterfaceClass    = USB_CLASS_VENDOR_SPEC,
-            .bInterfaceSubClass = USB_SUBCLASS_VENDOR_SPEC,
-            .bInterfaceProtocol = 0xff,
-            .iInterface         = 3,
+            .bNumEndpoints      = 1,
+            .bInterfaceClass    = USB_CLASS_AUDIO,
+            .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
+            .bInterfaceProtocol = 0, // Must be zero
+            .iInterface         = USB_STRING_INDEX(2),
         },
         .endpoints = {
             {
-                .bLength            = USB_DT_ENDPOINT_SIZE,
+                .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                .bmAttributes       = USB_ENDPOINT_XFER_BULK,
-                .wMaxPacketSize     = 64,
-                .bInterval          = 0,
+                .bmAttributes       = 0x1, // Isynchronous endpoint
+                .wMaxPacketSize     = 512,
+                .bInterval          = 1,
+                .bRefresh           = 0,
+                .bSynchAddress      = 0,
             },
         },
     },
