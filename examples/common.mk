@@ -19,8 +19,11 @@
 
 # To build the firmware you will need:
 #   SDCC from http://sdcc.sourceforge.net
-#   fx2lib from http://fx2lib.wiki.sourceforge.net
+#   Git from https://git-scm.com/
 #
+# To load the firmware you will need:
+# 	HDMI2USB-mode-swtich from https://github.com/timvideos/HDMI2USB-mode-switch
+# 
 LIBS ?= $(FX2LIBDIR)/lib/fx2.lib
 INCS += -I sdcc -I$(FX2LIBDIR)/include -I.
 
