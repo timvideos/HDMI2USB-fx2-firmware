@@ -103,7 +103,7 @@ $(TARGET).hex: $(CC_OBJS)
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
 
-date.h: Makefile
+date.h: Makefile # FIXME: Use git hash instead of date
 	$(Q_GEN)
 	@echo "// This is an auto-generated file. Please modify the Makefile instead " > $@
 	@echo "#ifndef _DATE_H_" >> $@
