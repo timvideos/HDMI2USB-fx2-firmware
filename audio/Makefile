@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2009-2012 Chris McClelland
 # Copyright 2015 Joel Stanley <joel@jms.id.au>
+# Copyright 2017 Kyle Robbertze <krobbertze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,19 +19,20 @@
 
 # To build the firmware you will need:
 #   SDCC from http://sdcc.sourceforge.net
-#   fx2lib from http://fx2lib.wiki.sourceforge.net
+#   Git from https://git-scm.com/
 #
 # To build a firmware suitable for loading into RAM:
 #   make
 #
 # To build a firmware suitable for loading from EEPROM:
 #   make FLAGS="-DEEPROM"
+#   
+# To load a firmware:
+# 	make load
+# 	You will need HDMI2USB-mode-switch from
+# 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
-#
-# This Makefile assumes a recent version of SDCC. If you're still using an older
-# version with the asx8051 assembler, build like this:
-#   make AS8051=asx8051
-#
+# TODO: Use a common Makefile between all the firmware versions
 TARGET := audio
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
