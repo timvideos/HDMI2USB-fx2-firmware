@@ -114,11 +114,11 @@ date.h: Makefile # FIXME: Use git hash instead of date
 	@echo "#define DID 0x$(DID)" >> $@
 	@echo "#endif // _DATE_H_" >> $@
 
-descriptors_strings.h: descriptors_string_table.py descriptors.strings
-	@python2 descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
+descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
 
-descriptors_strings.inc: descriptors_string_table.py descriptors.strings
-	@python2 descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
+descriptors_strings.inc: $(LINUXHEADERSDIR)/.git descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
 
 descriptors.h: date.h descriptors_strings.h
 descriptors.c: descriptors_strings.inc
