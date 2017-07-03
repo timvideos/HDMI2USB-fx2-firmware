@@ -19,42 +19,70 @@
  **/
 
 #include <fx2regs.h>
+#include <fx2types.h>
 #include <delay.h>
 
 void init_lights(void) {
     // Set pins to port mode instead of GPIF master/slave mode
     IFCONFIG &= ~(bmIFCFGMASK);
+    // No alternate functions
+#ifdef BOARD_fx2
     PORTACFG = 0x00;
+#endif
+#ifdef BOARD_opsis
+    PORTECFG = 0x00;
+#endif
 }
 
 // d1 is the LED labelled D1 on the FX2LP CY7C68013A mini-board
 void d1_on(void) {
-    // Set pin A1 I/O
-    OEA |= 0x01;
-    // Enable output pin A1
-    IOA &= ~0x01;
+#ifdef BOARD_fx2
+    // Set pin A0 as output
+    OEA |= bmBIT0;
+    // Set A0
+    IOA &= ~bmBIT0;
+#endif // Opsis D1 not connected to FX2
 }
 
 // d2 is the LED labelled D2 on the FX2LP CY7C68013A mini-board
+// d2 is the LED labelled D2 on the Numato Opsis
 void d2_on(void) {
-    // Set pin A2 I/O
-    OEA |= 0x02;
-    // Enable output pin A2
-    IOA &= ~0x02;
+#ifdef BOARD_fx2
+    // Set pin A1 as output
+    OEA |= bmBIT1;
+    // Set A1 high
+    IOA &= ~bmBIT1;
+#endif
+#ifdef BOARD_opsis
+    // Set pin E5 as output
+    OEE |= bmBIT5;
+    // Set E5
+    IOE &= ~bmBIT5;
+#endif
 }
 
 void d1_off(void) {
-    // Set pin A1 I/O
-    OEA |= 0x01;
-    // Disable output pin A1
-    IOA |= 0x01;
+#ifdef BOARD_fx2
+    // Set pin A0 as output
+    OEA |= bmBIT0;
+    // Clear A0
+    IOA |= bmBIT0;
+#endif // Opsis D1 not connected to FX2
 }
 
 void d2_off(void) {
-    // Set pin A2 I/O
-    OEA |= 0x02;
-    // Disable output pin A2
-    IOA |= 0x02;
+#ifdef BOARD_fx2
+    // Set pin A1 as output
+    OEA |= bmBIT1;
+    // Clear A1
+    IOA |= bmBIT1;
+#endif
+#ifdef BOARD_opsis
+    // Set pin E5 as output
+    OEE |= bmBIT5;
+    // Clear E5
+    IOE |= bmBIT5;
+#endif
 }
 
 void main(void) {

@@ -34,6 +34,7 @@ CC_OBJS ?= $(CC_SRCS:%.c=%.rel)
 CC = sdcc
 
 CFLAGS += -mmcs51 --xram-size 0x0200 $(FLAGS)
+CFLAGS += -DBOARD_$(BOARD)
 
 ifeq ($(USE_16K),1)
 	CFLAGS += --code-size 0x3e00

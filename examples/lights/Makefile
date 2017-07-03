@@ -23,6 +23,7 @@
 TARGET := lights
 FX2LIBDIR := ../../third_party/fx2lib
 GITMODULESDIR := ../../.gitmodules
+BOARD ?= fx2
 
 CC_SRCS := lights.c
 
