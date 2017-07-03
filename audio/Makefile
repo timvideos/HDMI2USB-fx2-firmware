@@ -40,7 +40,7 @@ LIBS := $(FX2LIBDIR)/lib/fx2.lib
 INCS := -I sdcc -I$(FX2LIBDIR)/include -I$(LINUXHEADERSDIR) -I.
 
 # Settings specific for the TimVideo hdmi2usb firmware
-BOARD ?= opsis
+BOARD ?= fx2-dev
 FLAGS +=-DDEBUG -DBOARD_${BOARD}
 USE_16K := 1
 
@@ -52,18 +52,12 @@ CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 
-ifeq (${BOARD},atlys)
-VID := 1D50
-PID := 60B7
-DID := 0002
-else
-ifeq (${BOARD},opsis)
+ifeq (${BOARD},fx2-dev)
 VID := 2A19
 PID := 5442
 DID := 0002
 else
 $(error "Unknown board type '$(BOARD)'")
-endif
 endif
 
 CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
