@@ -3,7 +3,7 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -21,9 +21,10 @@
 #include <serial.h>
 #include <delay.h>
 #include <autovector.h>
-#include <lights.h>
 #include <setupdat.h>
 #include <eputils.h>
+
+#include "fx2lights.h"
 
 #define SYNCDELAY SYNCDELAY4
 #define REARMVAL 0x80
@@ -39,7 +40,7 @@ __bit on;
 void main() {
     REVCTL=0; // not using advanced endpoint controls
 
-    d2off();
+    d1off();
     on=0;
     lcount=0;
     got_sud=FALSE;
@@ -77,7 +78,7 @@ void main() {
     EA=1; // global interrupt enable 
     printf ( "Done initializing stuff\n" );
 
-    d3off();
+    d2off();
 
     while(TRUE) {
         if (got_sud) {
@@ -178,13 +179,13 @@ void sudav_isr() __interrupt SUDAV_ISR {
     CLEAR_SUDAV();
 }
 
-__bit on5;
+__bit on1;
 __xdata WORD sofct=0;
 void sof_isr () __interrupt SOF_ISR __using 1 {
     ++sofct;
     if(sofct==8000) { // about 8000 sof interrupts per second at high speed
-        on5=!on5;
-        if (on5) {d5on();} else {d5off();}
+        on1=!on1;
+        if (on1) {d1on();} else {d1off();}
         sofct=0;
     }
     CLEAR_SOF();
