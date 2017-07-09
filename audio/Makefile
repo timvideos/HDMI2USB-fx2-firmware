@@ -58,9 +58,9 @@ PID := 60B7
 DID := 0002
 else
 ifeq (${BOARD},fx2)
-VID := 2A19
-PID := 5442
-DID := 0002
+VID := 1D50
+PID := 60B7
+DID := 0003
 else
 ifeq (${BOARD},opsis)
 VID := 2A19
