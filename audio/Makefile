@@ -111,7 +111,9 @@ $(TARGET).hex: $(CC_OBJS)
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
 
-date.h: Makefile # FIXME: Use git hash instead of date
+# FIXME: Replace this with the better version stuff the HDMI2USB-litex-firmware uses.
+# See https://github.com/timvideos/HDMI2USB-litex-firmware/blob/master/firmware/version_data.sh
+date.h: Makefile
 	$(Q_GEN)
 	@echo "// This is an auto-generated file. Please modify the Makefile instead " > $@
 	@echo "#ifndef _DATE_H_" >> $@
