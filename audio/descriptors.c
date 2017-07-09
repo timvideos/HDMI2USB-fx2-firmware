@@ -1,5 +1,6 @@
 /**
  * Copyright (C) 2009 Ubixum, Inc. 
+ * Copyright (C) 2014 Tim 'mithro' Ansell
  * Copyright (C) 2017 Kyle Robbertze
  *
  * This library is free software; you can redistribute it and/or
