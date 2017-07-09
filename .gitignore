@@ -14,3 +14,5 @@
 date.h
 descriptors_strings.h
 descriptors_strings.inc
+docs/html/
+docs/latex/

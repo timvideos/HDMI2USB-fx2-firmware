@@ -8,3 +8,11 @@ $(FX2LIBDIR)/.git: .gitmodules
 	touch $@ -r .gitmodules
 
 # FIXME: Add check_int2jit from hdmi2usb/Makefile
+
+.PHONY: docs clean
+
+docs:
+	doxygen docs/docs.conf
+
+clean:
+	rm -fr docs/html docs/latex
