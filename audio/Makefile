@@ -124,6 +124,7 @@ date.h: Makefile
 	@echo "#define DID 0x$(DID)" >> $@
 	@echo "#endif // _DATE_H_" >> $@
 
+# FIXME: This should be part of a common Makefile in $(LINUXHEADERSDIR)/.git
 descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
 	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
 
