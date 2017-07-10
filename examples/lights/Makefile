@@ -27,4 +27,4 @@ BOARD ?= fx2
 
 CC_SRCS := lights.c
 
-include ../example.mk
+include ../common.mk

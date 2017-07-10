@@ -24,7 +24,8 @@
 TARGET := serial
 FX2LIBDIR := ../../third_party/fx2lib
 GITMODULESDIR := ../../.gitmodules
+BOARD ?= fx2
 
 CC_SRCS := serial.c
 
-include ../example.mk
+include ../common.mk
