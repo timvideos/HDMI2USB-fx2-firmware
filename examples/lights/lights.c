@@ -34,9 +34,9 @@ void init_lights(void) {
 #ifdef BOARD_atlys
     PORTDCFG = 0x00;
 #endif // BOARD_atlys
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
     PORTACFG = 0x00;
-#endif // BOARD_fx2
+#endif // BOARD_fx2miniboard
 #ifdef BOARD_opsis
     PORTECFG = 0x00;
 #endif // BOARD_opsis
@@ -53,12 +53,12 @@ void d1_on(void) {
     // Set D7
     IOD &= ~bmBIT7;
 #endif // BOARD_atlys
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
     // Set pin A0 as output
     OEA |= bmBIT0;
     // Set A0
     IOA &= ~bmBIT0;
-#endif // BOARD_fx2
+#endif // BOARD_fx2miniboard
 }
 
 /**
@@ -66,12 +66,12 @@ void d1_on(void) {
  * FX2LP CY7C68013A mini-board. It is not connected on the Atlys
  */
 void d2_on(void) {
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
     // Set pin A1 as output
     OEA |= bmBIT1;
     // Set A1
     IOA &= ~bmBIT1;
-#endif // BOARD_fx2
+#endif // BOARD_fx2miniboard
 #ifdef BOARD_opsis
     // Set pin E5 as output
     OEE |= bmBIT5;
@@ -87,7 +87,7 @@ void d1_off(void) {
     // Clear D7
     IOD |= bmBIT7;
 #endif // BOARD_atlys
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
     // Set pin A0 as output
     OEA |= bmBIT0;
     // Clear A0
@@ -96,12 +96,12 @@ void d1_off(void) {
 }
 
 void d2_off(void) {
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
     // Set pin A1 as output
     OEA |= bmBIT1;
     // Clear A1
     IOA |= bmBIT1;
-#endif // BOARD_fx2
+#endif // BOARD_fx2miniboard
 #ifdef BOARD_opsis
     // Set pin E5 as output
     OEE |= bmBIT5;
