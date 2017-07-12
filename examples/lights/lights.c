@@ -33,15 +33,13 @@ void init_lights(void) {
     // No alternate functions
 #ifdef BOARD_atlys
     PORTDCFG = 0x00;
-#else
+#endif // BOARD_atlys
 #ifdef BOARD_fx2
     PORTACFG = 0x00;
-#else
+#endif // BOARD_fx2
 #ifdef BOARD_opsis
     PORTECFG = 0x00;
 #endif // BOARD_opsis
-#endif // BOARD_fx2
-#endif // BOARD_atlys
 }
 
 /**
@@ -54,14 +52,13 @@ void d1_on(void) {
     OED |= bmBIT7;
     // Set D7
     IOD &= ~bmBIT7;
-#else
+#endif // BOARD_atlys
 #ifdef BOARD_fx2
     // Set pin A0 as output
     OEA |= bmBIT0;
     // Set A0
     IOA &= ~bmBIT0;
-#endif // Opsis D1 not connected to FX2
-#endif // BOARD_atlys
+#endif // BOARD_fx2
 }
 
 /**
@@ -74,14 +71,13 @@ void d2_on(void) {
     OEA |= bmBIT1;
     // Set A1
     IOA &= ~bmBIT1;
-#else
+#endif // BOARD_fx2
 #ifdef BOARD_opsis
     // Set pin E5 as output
     OEE |= bmBIT5;
     // Set E5
     IOE &= ~bmBIT5;
 #endif // BOARD_opsis
-#endif // BOARD_fx2
 }
 
 void d1_off(void) {
@@ -90,13 +86,12 @@ void d1_off(void) {
     OED |= bmBIT7;
     // Clear D7
     IOD |= bmBIT7;
-#else
+#endif // BOARD_atlys
 #ifdef BOARD_fx2
     // Set pin A0 as output
     OEA |= bmBIT0;
     // Clear A0
     IOA |= bmBIT0;
-#endif // Opsis D1 not connected to FX2
 #endif // BOARD_atlys
 }
 
@@ -106,14 +101,13 @@ void d2_off(void) {
     OEA |= bmBIT1;
     // Clear A1
     IOA |= bmBIT1;
-#else
+#endif // BOARD_fx2
 #ifdef BOARD_opsis
     // Set pin E5 as output
     OEE |= bmBIT5;
     // Clear E5
     IOE |= bmBIT5;
 #endif // BOARD_opsis
-#endif // BOARD_fx2
 }
 
 void main(void) {
