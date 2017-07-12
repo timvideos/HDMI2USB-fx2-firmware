@@ -31,9 +31,6 @@ void init_lights(void) {
     // Set pins to port mode instead of GPIF master/slave mode
     IFCONFIG &= ~(bmIFCFGMASK);
     // No alternate functions
-#ifdef BOARD_atlys
-    PORTDCFG = 0x00;
-#endif // BOARD_atlys
 #ifdef BOARD_fx2miniboard
     PORTACFG = 0x00;
 #endif // BOARD_fx2miniboard
