@@ -48,7 +48,7 @@ void d1_on(void) {
     // Set pin D7 as output
     OED |= bmBIT7;
     // Set D7
-    IOD &= ~bmBIT7;
+    IOD |= bmBIT7;
 #endif // BOARD_atlys
 #ifdef BOARD_fx2miniboard
     // Set pin A0 as output
@@ -82,7 +82,7 @@ void d1_off(void) {
     // Set pin D7 as output
     OED |= bmBIT7;
     // Clear D7
-    IOD |= bmBIT7;
+    IOD &= ~bmBIT7;
 #endif // BOARD_atlys
 #ifdef BOARD_fx2miniboard
     // Set pin A0 as output
