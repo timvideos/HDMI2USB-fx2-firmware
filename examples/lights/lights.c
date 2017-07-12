@@ -19,7 +19,7 @@
 /** \file lights.c
  * Example firmware that flashes LEDs.
  *
- * On the Atlys this is LD14, on the FX2 miniboard D1 and D2 and on the 
+ * On the Atlys this is LD14 (DONE), on the FX2 miniboard D1 and D2 and on the 
  * Opsis it is D2
  */
 
