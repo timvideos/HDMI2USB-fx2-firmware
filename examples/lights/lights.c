@@ -1,22 +1,27 @@
-/**
- * Copyright (C) 2009 Ubixum, Inc. 
- * Copyright (C) 2016 Matthew Iselin <miselin@google.com>
- * Copyright (C) 2017 Kyle Robbertze <krobbertze@gmail.com>
+// Copyright (C) 2009 Ubixum, Inc.
+// Copyright (C) 2016 Matthew Iselin <miselin@google.com>
+// Copyright (C) 2017 Kyle Robbertze <krobbertze@gmail.com>
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+/** \file
+ * Example firmware that flashes LEDs.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **/
+ * On the Atlys this is LD14, on the FX2 miniboard D1 and D2 and on the 
+ * Opsis it is D2
+ */
 
 #include <fx2regs.h>
 #include <fx2types.h>
@@ -28,6 +33,7 @@ void init_lights(void) {
     // No alternate functions
 #ifdef BOARD_atlys
     PORTDCFG = 0x00;
+#else
 #ifdef BOARD_fx2
     PORTACFG = 0x00;
 #else
@@ -38,14 +44,16 @@ void init_lights(void) {
 #endif // BOARD_atlys
 }
 
-// d2 is the LED labelled D1 in the Atlys set to the input transfer colour
-// d1 is the LED labelled D1 on the FX2LP CY7C68013A mini-board
+/**
+ * d1 is the LED labelled LD14 on the Atlys and the LED labelled D1 on the
+ * FX2LP CY7C68013A mini-board. It is not connected on the Opsis
+ */
 void d1_on(void) {
 #ifdef BOARD_atlys
-    // Set pin D0 as output
-    OED |= bmBIT0;
-    // Set D0
-    IOD &= ~bmBIT0;
+    // Set pin D7 as output
+    OED |= bmBIT7;
+    // Set D7
+    IOD &= ~bmBIT7;
 #else
 #ifdef BOARD_fx2
     // Set pin A0 as output
@@ -56,16 +64,11 @@ void d1_on(void) {
 #endif // BOARD_atlys
 }
 
-// d2 is the LED labelled D1 in the Atlys set to the output transfer colour
-// d2 is the LED labelled D2 on the FX2LP CY7C68013A mini-board
-// d2 is the LED labelled D2 on the Numato Opsis
+/**
+ * d2 is the LED labelled D2 on the Numato Opsis and the LED labelled D2 on the
+ * FX2LP CY7C68013A mini-board. It is not connected on the Atlys
+ */
 void d2_on(void) {
-#ifdef BOARD_atlys
-    // Set pin D1 as output
-    OED |= bmBIT1;
-    // Set D1
-    IOD &= ~bmBIT1;
-#else
 #ifdef BOARD_fx2
     // Set pin A1 as output
     OEA |= bmBIT1;
@@ -79,15 +82,14 @@ void d2_on(void) {
     IOE &= ~bmBIT5;
 #endif // BOARD_opsis
 #endif // BOARD_fx2
-#endif // BOARD_atlys
 }
 
 void d1_off(void) {
 #ifdef BOARD_atlys
-    // Set pin D0 as output
-    OED |= bmBIT0;
-    // Clear D0
-    IOD |= bmBIT0;
+    // Set pin D7 as output
+    OED |= bmBIT7;
+    // Clear D7
+    IOD |= bmBIT7;
 #else
 #ifdef BOARD_fx2
     // Set pin A0 as output
@@ -99,12 +101,6 @@ void d1_off(void) {
 }
 
 void d2_off(void) {
-#ifdef BOARD_atlys
-    // Set pin D1 as output
-    OED |= bmBIT1;
-    // Clear D1
-    IOD |= bmBIT1;
-#else
 #ifdef BOARD_fx2
     // Set pin A1 as output
     OEA |= bmBIT1;
@@ -118,7 +114,6 @@ void d2_off(void) {
     IOE |= bmBIT5;
 #endif // BOARD_opsis
 #endif // BOARD_fx2
-#endif // BOARD_atlys
 }
 
 void main(void) {
