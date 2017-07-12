@@ -22,7 +22,7 @@
 #include <fx2types.h>
 #include <fx2regs.h>
 
-#ifdef BOARD_fx2
+#ifdef BOARD_fx2miniboard
 // FX2 Dev board lights
 #define d1on() OEA |= bmBIT0; IOA &= ~bmBIT0;
 #define d1off() OEA |= bmBIT0; IOA |= ~bmBIT0; 
@@ -38,5 +38,5 @@
 #else
 #include <lights.h> // Other boards
 #endif // BOARD_opsis
-#endif // BOARD_fx2
+#endif // BOARD_fx2miniboard
 #endif // FX2LIGHTS_H

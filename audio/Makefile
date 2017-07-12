@@ -40,7 +40,7 @@ LIBS := $(FX2LIBDIR)/lib/fx2.lib
 INCS := -I sdcc -I$(FX2LIBDIR)/include -I$(LINUXHEADERSDIR) -I.
 
 # Settings specific for the TimVideo hdmi2usb firmware
-BOARD ?= fx2
+BOARD ?= fx2miniboard
 FLAGS +=-DDEBUG -DBOARD_$(BOARD)
 USE_16K := 1
 
@@ -57,7 +57,7 @@ VID := 1D50
 PID := 60B7
 DID := 0002
 else
-ifeq (${BOARD},fx2)
+ifeq (${BOARD},fx2miniboard)
 VID := 1D50
 PID := 60B7
 DID := 0003
