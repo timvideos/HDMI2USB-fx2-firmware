@@ -1,22 +1,24 @@
-/**
- * Copyright (C) 2009 Ubixum, Inc. 
- * Copyright (C) 2014 Tim 'mithro' Ansell
- * Copyright (C) 2017 Kyle Robbertze
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **/
+ //Copyright (C) 2009 Ubixum, Inc. 
+ //Copyright (C) 2014 Tim 'mithro' Ansell
+ //Copyright (C) 2017 Kyle Robbertze
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+/** \file descriptors.c
+ * Describes the device according to Section 4 of the USB Audio Spec
+ */
 
 #include "descriptors.h"
 #include "version_data.h"
@@ -42,12 +44,14 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_QUALIFIER_SIZE,
         .bDescriptorType    = USB_DT_DEVICE_QUALIFIER,
         .bcdUSB             = USB_BCD_V20,
-        .bDeviceClass       = 0, // Class and protocol defined per interface 
+        /* Class and protocol defined per interface */
+        .bDeviceClass       = 0,
         .bDeviceSubClass    = 0,
         .bDeviceProtocol    = 0,
         .bMaxPacketSize0    = 64,
         .bNumConfigurations = 1,
-        .bRESERVED          = 0, // Must be zero
+        /* Must be zero */
+        .bRESERVED          = 0,
     },
     .highspeed = {
         .config = {
@@ -58,7 +62,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bConfigurationValue    = 1,
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
-            .bMaxPower              = 0x32, // * 2 mA
+            /* bMaxPower has a resolution of 2mA */
+            .bMaxPower              = 0x32,
         },
         .interface = {
             .bLength            = USB_DT_INTERFACE_SIZE,
@@ -68,7 +73,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bNumEndpoints      = 1,
             .bInterfaceClass    = USB_CLASS_AUDIO,
             .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            .bInterfaceProtocol = 0, // Must be zero
+            /* Must be zero */
+            .bInterfaceProtocol = 0,
             .iInterface         = USB_STRING_INDEX(2),
         },
         .endpoints = {
@@ -76,7 +82,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                .bmAttributes       = 0x1, // Isynchronous endpoint
+                /* Isynchronous endpoint */
+                .bmAttributes       = 0x1,
                 .wMaxPacketSize     = 512,
                 .bInterval          = 1,
                 .bRefresh           = 0,
@@ -93,7 +100,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bConfigurationValue    = 1,
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
-            .bMaxPower              = 0x32, // * 2 mA
+            /* bMaxPower has a resolution of 2mA */
+            .bMaxPower              = 0x32,
         },
         .interface = {
             .bLength            = USB_DT_INTERFACE_SIZE,
@@ -103,7 +111,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bNumEndpoints      = 1,
             .bInterfaceClass    = USB_CLASS_AUDIO,
             .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            .bInterfaceProtocol = 0, // Must be zero
+            /* Must be zero */
+            .bInterfaceProtocol = 0,
             .iInterface         = USB_STRING_INDEX(2),
         },
         .endpoints = {
@@ -111,7 +120,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                .bmAttributes       = 0x1, // Isynchronous endpoint
+                /* Isynchronous endpoint */
+                .bmAttributes       = 0x1,
                 .wMaxPacketSize     = 512,
                 .bInterval          = 1,
                 .bRefresh           = 0,
