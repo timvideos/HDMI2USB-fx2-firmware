@@ -17,18 +17,22 @@
  * Initialises the USB audio firmware and handles interrupts
  */
 
-#include <stdio.h>
-
 #include <fx2regs.h>
 #include <fx2macros.h>
-#include <serial.h>
 #include <delay.h>
+#include <serial.h>
 #include <autovector.h>
 #include <setupdat.h>
 #include <eputils.h>
 
 #include "fx2lights.h"
 #include "audiodata.h"
+
+#ifdef DEBUG
+#include "debug.c"
+#else
+#define usart_send_string(...)
+#endif
 
 #define SYNCDELAY SYNCDELAY4
 #define REARMVAL 0x80
@@ -44,7 +48,7 @@ __bit on;
 void main() {
     REVCTL=0; // not using advanced endpoint controls
 
-    d1off();
+    d1on();
     on=0;
     lcount=0;
     got_sud=FALSE;
@@ -57,7 +61,8 @@ void main() {
 
     SETCPUFREQ(CLK_48M);
     SETIF48MHZ();
-    sio0_init(57600);
+    sio0_init(57600); // Required for sending descriptors
+    usart_init();
 
     USE_USB_INTS(); 
     ENABLE_SUDAV();
@@ -80,38 +85,16 @@ void main() {
 
     // make it so we enumerate
     EA=1; // global interrupt enable 
-    printf ( "Done initializing stuff\n" );
+    usart_send_string("Initialisation complete\n");
+    usart_send_string("Initialisation complete\n");
 
-    d2off();
+    d2on();
 
     while(TRUE) {
         if (got_sud) {
-            printf ( "Handle setupdata\n" );
             handle_setupdata(); 
             got_sud=FALSE;
-        }
-
-        if (!(EP2468STAT & bmEP2EMPTY)) {
-            printf ( "ep2 out received data\n" );
-            if (!(EP2468STAT & bmEP6FULL)) { // wait for at least one empty in buffer
-                WORD i;
-                printf ( "Sending data to ep6 in\n");
-
-                bytes = MAKEWORD(EP2BCH,EP2BCL);
-
-                for (i=0;i<bytes;++i) EP6FIFOBUF[i] = EP2FIFOBUF[i];
-
-                // can copy whole string w/ autoptr instead.
-                // or copy directly from one buf to another
-
-                // ARM ep6 out
-                EP6BCH=MSB(bytes);
-                SYNCDELAY;
-                EP6BCL=LSB(bytes); 
-
-                REARM(); // ep2
-                //printf ( "Re-Armed ep2\n" );
-            }
+            //usart_send_string("Handled setupdata\n");
         }
     }
 }
@@ -124,7 +107,9 @@ BOOL handle_vendorcommand(BYTE cmd) {
     case VC_EPSTAT:
         {         
             __xdata BYTE* pep= ep_addr(SETUPDAT[2]);
-            printf ( "ep %02x\n" , *pep );
+            //usart_send_string("ep ");
+            //usart_send_byte_hex(*pep);
+            //usart_send_newline();
             if (pep) {
                 EP0BUF[0] = *pep;
                 EP0BCH=0;
@@ -133,7 +118,9 @@ BOOL handle_vendorcommand(BYTE cmd) {
             } 
         }
     default:
-        printf ( "Need to implement vendor command: %02x\n", cmd );
+        //usart_send_string("Need to implement vendor command: ");
+        //usart_send_byte_hex(cmd);
+        //usart_send_newline();
     }
     return FALSE;
 }

@@ -3,3 +3,5 @@
   capture
   http://www.usb.org/developers/docs/whitepapers/iadclasscode_r10.pdf
   http://www.usb.org/developers/docs/InterfaceAssociationDescriptor_ecn.pdf
+* Fix serial write so it works more than once and for strings longer than
+  6 characters (see FIXME in firmware.c, line 65). 
