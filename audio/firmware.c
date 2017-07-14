@@ -46,9 +46,10 @@ DWORD lcount;
 __bit on;
 
 void main() {
+    d1on();
+    d2on();
     REVCTL=0; // not using advanced endpoint controls
 
-    d1on();
     on=0;
     lcount=0;
     got_sud=FALSE;
@@ -63,6 +64,7 @@ void main() {
     SETIF48MHZ();
     sio0_init(57600); // Required for sending descriptors
     usart_init();
+    d1off();
 
     USE_USB_INTS(); 
     ENABLE_SUDAV();
@@ -88,7 +90,7 @@ void main() {
     usart_send_string("Initialisation complete\n");
     usart_send_string("Initialisation complete\n");
 
-    d2on();
+    d2off();
 
     while(TRUE) {
         if (got_sud) {
@@ -99,29 +101,10 @@ void main() {
     }
 }
 
-// value (low byte) = ep
-#define VC_EPSTAT 0xB1
-
+/**
+ * There are no vendor commands to handle
+ */
 BOOL handle_vendorcommand(BYTE cmd) {
-    switch (cmd) {
-    case VC_EPSTAT:
-        {         
-            __xdata BYTE* pep= ep_addr(SETUPDAT[2]);
-            //usart_send_string("ep ");
-            //usart_send_byte_hex(*pep);
-            //usart_send_newline();
-            if (pep) {
-                EP0BUF[0] = *pep;
-                EP0BCH=0;
-                EP0BCL=1;
-                return TRUE;
-            } 
-        }
-    default:
-        //usart_send_string("Need to implement vendor command: ");
-        //usart_send_byte_hex(cmd);
-        //usart_send_newline();
-    }
     return FALSE;
 }
 
