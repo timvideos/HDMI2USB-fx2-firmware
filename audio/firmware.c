@@ -38,41 +38,31 @@
 #define REARMVAL 0x80
 #define REARM() EP2BCL=REARMVAL
 
-volatile WORD bytes;
-volatile __bit gotbuf;
-volatile BYTE icount;
 volatile __bit got_sud;
-DWORD lcount;
-__bit on;
 
 void main() {
-    d1on();
-    d2on();
+    d1off();
+    d2off();
     REVCTL=0; // not using advanced endpoint controls
 
-    on=0;
-    lcount=0;
     got_sud=FALSE;
-    icount=0;
-    gotbuf=FALSE;
-    bytes=0;
 
     // renumerate
-    RENUMERATE_UNCOND(); 
+    RENUMERATE_UNCOND();
 
     SETCPUFREQ(CLK_48M);
     SETIF48MHZ();
-    sio0_init(57600); // Required for sending descriptors
+    /* Required for sending descriptors */
+    sio0_init(57600);
     usart_init();
-    d1off();
 
-    USE_USB_INTS(); 
+    USE_USB_INTS();
     ENABLE_SUDAV();
-    ENABLE_SOF();
     ENABLE_HISPEED();
     ENABLE_USBRESET();
+    d1on();
 
-    // only valid endpoints is 2
+    /* only valid endpoint is 2 */
     EP2CFG = 0xA2; // 10100010
     SYNCDELAY;
     EP1OUTCFG &= ~bmVALID;
@@ -86,17 +76,13 @@ void main() {
     EP2BCL = 0x80; // do it again
 
     // make it so we enumerate
-    EA=1; // global interrupt enable 
-    usart_send_string("Initialisation complete\n");
-    usart_send_string("Initialisation complete\n");
-
-    d2off();
+    EA=1; // global interrupt enable
+    d2on();
 
     while(TRUE) {
         if (got_sud) {
-            handle_setupdata(); 
+            handle_setupdata();
             got_sud=FALSE;
-            //usart_send_string("Handled setupdata\n");
         }
     }
 }
@@ -108,22 +94,13 @@ BOOL handle_vendorcommand(BYTE cmd) {
     return FALSE;
 }
 
-// copied usb jt routines from usbjt.h
+/**
+ * Interrupt called when setup data is available.
+ * Copied usb jt routines from usbjt.h
+ */
 void sudav_isr() __interrupt SUDAV_ISR {
     got_sud=TRUE;
     CLEAR_SUDAV();
-}
-
-__bit on1;
-__xdata WORD sofct=0;
-void sof_isr () __interrupt SOF_ISR __using 1 {
-    ++sofct;
-    if(sofct==8000) { // about 8000 sof interrupts per second at high speed
-        on1=!on1;
-        if (on1) {d1on();} else {d1off();}
-        sofct=0;
-    }
-    CLEAR_SOF();
 }
 
 void usbreset_isr() __interrupt USBRESET_ISR {

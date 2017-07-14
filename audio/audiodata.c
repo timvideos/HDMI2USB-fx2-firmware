@@ -31,21 +31,21 @@
  * Returns the configuration. We only support cfg 1
  */
 BYTE handle_get_configuration() {
-    return 1; 
+    return 1;
 }
 
 /**
  * Sets the configuration. Successful if setting it to cfg 1, otherwise fail
  * as that is the only one supported
  */
-BOOL handle_set_configuration(BYTE cfg) { 
+BOOL handle_set_configuration(BYTE cfg) {
     return cfg==1 ? TRUE : FALSE;
 }
 
 /**
  * Returns the interface currently in use. This firmware only supports 0,0
  */
-BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) { 
+BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
     printf ( "Get Interface\n" );
     if (ifc==0) {*alt_ifc=0; return TRUE;} else { return FALSE;}
 }
@@ -53,7 +53,7 @@ BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
 /**
  * Sets the interface in use. Only 0,0 is supported.
  */
-BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) { 
+BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     printf ( "Set interface %d to alt: %d\n" , ifc, alt_ifc );
 
     if (ifc==0&&alt_ifc==0) {
@@ -69,7 +69,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY;
         RESETFIFO(0x86);
         return TRUE;
-    } else 
+    } else
         return FALSE;
 }
 
