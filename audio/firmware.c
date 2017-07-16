@@ -19,10 +19,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#include "softserial.h"
 #include "debug.h"
-#define putchar soft_putchar
-#define getchar soft_getchar
 #else
 #define printf(...)
 #endif
@@ -30,7 +27,6 @@
 #include <fx2regs.h>
 #include <fx2macros.h>
 #include <delay.h>
-#include <serial.h>
 #include <autovector.h>
 #include <setupdat.h>
 #include <eputils.h>
@@ -56,10 +52,7 @@ void main() {
 
     SETCPUFREQ(CLK_48M);
     SETIF48MHZ();
-    /* Required for sending descriptors */
-    sio0_init(57600);
-    /* The baud rate is not set using the usart_init function */
-    soft_sio0_init(0);
+    usart_init();
 
     USE_USB_INTS();
     ENABLE_SUDAV();

@@ -30,5 +30,7 @@ void usart_send_word_hex(WORD word);
 void usart_send_long_hex(DWORD word);
 void usart_send_string(const char *s);
 void usart_send_newline(void);
+void putchar(char c);
+char getchar(void);
 
 #endif

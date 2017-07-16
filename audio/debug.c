@@ -123,3 +123,21 @@ void usart_send_newline(void) {
     usart_send_byte('\n');
     usart_send_byte('\r');
 }
+
+void putchar(char c) {
+    switch (c) {
+        case '\r':
+        case '\n':
+            usart_send_newline();
+            break;
+        default:    
+            usart_send_byte(c);
+    }
+}
+
+/**
+ * Not implemented
+ */
+char getchar(void) {
+    return '0';
+}
