@@ -17,6 +17,16 @@
  * Initialises the USB audio firmware and handles interrupts
  */
 
+#ifdef DEBUG
+#include <stdio.h>
+#include "softserial.h"
+#include "debug.h"
+#define putchar soft_putchar
+#define getchar soft_getchar
+#else
+#define printf(...)
+#endif
+
 #include <fx2regs.h>
 #include <fx2macros.h>
 #include <delay.h>
@@ -27,12 +37,6 @@
 
 #include "fx2lights.h"
 #include "audiodata.h"
-
-#ifdef DEBUG
-#include "debug.c"
-#else
-#define usart_send_string(...)
-#endif
 
 #define SYNCDELAY SYNCDELAY4
 #define REARMVAL 0x80
@@ -54,7 +58,8 @@ void main() {
     SETIF48MHZ();
     /* Required for sending descriptors */
     sio0_init(57600);
-    usart_init();
+    /* The baud rate is not set using the usart_init function */
+    soft_sio0_init(0);
 
     USE_USB_INTS();
     ENABLE_SUDAV();
@@ -70,7 +75,7 @@ void main() {
     EP4CFG &= ~bmVALID;
     SYNCDELAY;
 
-    // arm ep2
+    /* arm ep2 */
     EP2BCL = 0x80; // write once
     SYNCDELAY;
     EP2BCL = 0x80; // do it again
@@ -79,8 +84,11 @@ void main() {
     EA=1; // global interrupt enable
     d2on();
 
+    printf("Initialisation complete\n");
+
     while(TRUE) {
         if (got_sud) {
+            printf("Handle setup data\n");
             handle_setupdata();
             got_sud=FALSE;
         }
