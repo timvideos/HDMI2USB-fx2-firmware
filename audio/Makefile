@@ -43,7 +43,7 @@ INCS := -I$(LINUXHEADERSDIR)
 CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
-CC_SRCS := descriptors.c audiodata.c firmware.c version_data.c
+CC_SRCS := descriptors.c debug.c softserial.c audiodata.c firmware.c version_data.c
 
 include $(COMMON_DIR)/common.mk
 
