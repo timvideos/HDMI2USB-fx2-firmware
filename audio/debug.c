@@ -26,103 +26,97 @@ __sbit __at PD3 USART;
 #define BAUD 32
 
 void usart_init(void) {
-	USART = 1;
-	OED |= bmBIT3; // Enable output on pin D3
+    USART = 1;
+    OED |= bmBIT3; // Enable output on pin D3
 }
 
 void usart_send_byte(BYTE c) {
-	(void)c; /* argument passed in DPL */
-	__asm
-		mov a, dpl
-		mov r1, #9
-		clr c
-	loop:
-		mov _USART, c
-		rrc a
-		mov r0, #BAUD
-		djnz r0, .
-		nop
-		djnz r1, loop
+    (void)c; /* argument passed in DPL */
+    __asm
+        mov a, dpl
+        mov r1, #9
+        clr c
+    loop:
+        mov _USART, c
+        rrc a
+        mov r0, #BAUD
+        djnz r0, .
+        nop
+        djnz r1, loop
 
-		;; Stop bit
-		setb _USART
-		mov r0, #BAUD
-		djnz r0, .
-	__endasm;
+        ;; Stop bit
+        setb _USART
+        mov r0, #BAUD
+        djnz r0, .
+    __endasm;
 }
 
 void usart_send_byte_hex(BYTE byte) {
-	__xdata BYTE ch;
-	ch = (byte >> 4) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = byte & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
+    __xdata BYTE ch;
+    ch = (byte >> 4) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = byte & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
 }
 
 void usart_send_word_hex(WORD word) {
-	__xdata BYTE ch;
-	ch = (word >> 12) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 8) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 4) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 0) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
+    __xdata BYTE ch;
+    ch = (word >> 12) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 8) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 4) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 0) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
 }
 
 void usart_send_long_hex(DWORD word) {
-	__xdata BYTE ch;
-	ch = (word >> 28) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 24) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 20) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 16) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 12) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 8) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 4) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
-	ch = (word >> 0) & 0x0F;
-	ch += (ch < 10 ) ? '0' : 'A' - 10;
-	usart_send_byte(ch);
+    __xdata BYTE ch;
+    ch = (word >> 28) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 24) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 20) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 16) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 12) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 8) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 4) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
+    ch = (word >> 0) & 0x0F;
+    ch += (ch < 10 ) ? '0' : 'A' - 10;
+    usart_send_byte(ch);
 }
 
-/**
- * FIXME: USART serial works realiably for a single string write of 6
- * characters, including \r\n. Anything longer results in undefined behaviour.
- * Also multiple calls to usart_send_string(...) causes undefined behaviour.
- */
 void usart_send_string(const char *s) {
-	while (*s) {
+    while (*s) {
         switch (*s) {
             case '\r':
             case '\n':
-                usart_send_byte('\n');
-                usart_send_byte('\r');
+                usart_send_newline();
                 break;
             default:
                 usart_send_byte(*s);
         }
         *s++;
-	}
+    }
 }
 
 void usart_send_newline(void) {
