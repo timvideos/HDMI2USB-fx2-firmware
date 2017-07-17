@@ -41,13 +41,14 @@
 volatile __bit got_sud;
 
 void main() {
-    d1off();
-    d2off();
-    REVCTL=0; // not using advanced endpoint controls
+    d1on();
+    d2on();
+    /* Not using advanced endpoint controls */
+    REVCTL=0;
 
     got_sud=FALSE;
 
-    // renumerate
+    /* renumerate */
     RENUMERATE_UNCOND();
 
     SETCPUFREQ(CLK_48M);
@@ -58,7 +59,7 @@ void main() {
     ENABLE_SUDAV();
     ENABLE_HISPEED();
     ENABLE_USBRESET();
-    d1on();
+    d1off();
 
     /* only valid endpoint is 2 */
     EP2CFG = 0xA2; // 10100010
@@ -73,9 +74,9 @@ void main() {
     SYNCDELAY;
     EP2BCL = 0x80; // do it again
 
-    // make it so we enumerate
-    EA=1; // global interrupt enable
-    d2on();
+    /* Enable global interrupts */
+    EA=1;
+    d2off();
 
     printf("Initialisation complete\n");
 
