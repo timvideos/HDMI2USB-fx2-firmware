@@ -22,10 +22,12 @@
 #include "debug.h"
 #else
 #define printf(...)
+#define usart_init()
 #endif
 
 #include <fx2regs.h>
 #include <fx2macros.h>
+#include <fx2types.h>
 #include <delay.h>
 #include <autovector.h>
 #include <setupdat.h>
@@ -46,7 +48,7 @@ void main() {
     /* Not using advanced endpoint controls */
     REVCTL=0;
 
-    got_sud=FALSE;
+    got_sud = FALSE;
 
     /* renumerate */
     RENUMERATE_UNCOND();
@@ -61,30 +63,29 @@ void main() {
     ENABLE_USBRESET();
     d1off();
 
-    /* only valid endpoint is 2 */
-    EP2CFG = 0xA2; // 10100010
+    /* No valid endpoints by default */
+    EP2CFG &= ~bmVALID;
     SYNCDELAY;
     EP1OUTCFG &= ~bmVALID;
     SYNCDELAY;
     EP4CFG &= ~bmVALID;
     SYNCDELAY;
 
-    /* arm ep2 */
     EP2BCL = 0x80; // write once
     SYNCDELAY;
     EP2BCL = 0x80; // do it again
 
     /* Enable global interrupts */
-    EA=1;
+    //EA=1;
     d2off();
 
     printf("Initialisation complete\n");
 
     while(TRUE) {
-        if (got_sud) {
+        if (SETUPDAT) {
             printf("Handle setup data\n");
             handle_setupdata();
-            got_sud=FALSE;
+            got_sud = FALSE;
         }
     }
 }
