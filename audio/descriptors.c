@@ -28,10 +28,13 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_SIZE,
         .bDescriptorType    = USB_DT_DEVICE,
         .bcdUSB             = USB_BCD_V20,
-        .bDeviceClass       = 0, // Class and protocol defined per interface
+        /* Class defined per interface */
+        .bDeviceClass       = 0, 
         .bDeviceSubClass    = 0,
+        /* Protocol defined per interface */
         .bDeviceProtocol    = 0,
-        .bMaxPacketSize0    = 64, // kB
+        /* packet size is in bytes */
+        .bMaxPacketSize0    = 8,
         .idVendor           = VID,
         .idProduct          = PID,
         .bcdDevice          = DID,
@@ -44,11 +47,13 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_QUALIFIER_SIZE,
         .bDescriptorType    = USB_DT_DEVICE_QUALIFIER,
         .bcdUSB             = USB_BCD_V20,
-        /* Class and protocol defined per interface */
+        /* Class defined per interface */
         .bDeviceClass       = 0,
         .bDeviceSubClass    = 0,
+        /* Protocol defined per interface */
         .bDeviceProtocol    = 0,
-        .bMaxPacketSize0    = 64,
+        /* packet size is in kB */
+        .bMaxPacketSize0    = 8,
         .bNumConfigurations = 1,
         /* Must be zero */
         .bRESERVED          = 0,
@@ -58,37 +63,133 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bLength                = USB_DT_CONFIG_SIZE,
             .bDescriptorType        = USB_DT_CONFIG,
             .wTotalLength           = sizeof(descriptors.highspeed),
-            .bNumInterfaces         = 1,
+            .bNumInterfaces         = 2,
             .bConfigurationValue    = 1,
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
             .bMaxPower              = 0x32,
         },
-        .interface = {
+        .control = {
+            .standard = {
+                .bLength            = USB_DT_INTERFACE_SIZE,
+                .bDescriptorType    = USB_DT_INTERFACE,
+                .bInterfaceNumber   = 0,
+                .bAlternateSetting  = 0,
+                .bNumEndpoints      = 0,
+                .bInterfaceClass    = USB_CLASS_AUDIO,
+                .bInterfaceSubClass = USB_SUBCLASS_AUDIOCONTROL,
+                /* Must be zero */
+                .bInterfaceProtocol = 0,
+                /* Unused */
+                .iInterface         = 0,
+            },
+            .classspec = {
+                .bLength            = UAC_DT_AC_HEADER_SIZE(1),
+                .bDescriptorType    = USB_DT_CS_INTERFACE,
+                .bDescriptorSubtype = UAC_MS_HEADER,
+                .bcdADC             = UAC_BCD_V10,
+                .wTotalLength       =
+                    sizeof(descriptors.highspeed.control.classspec) +
+                    sizeof(descriptors.highspeed.input) +
+                    sizeof(descriptors.highspeed.output),
+                /* Number of streaming interfaces */
+                .bInCollection      = 1,
+                /* The first streaming interface belongs to this control */
+                .baInterfaceNr[0]   = 1,
+            },
+        },
+        .input = {
+            .bLength            = UAC_DT_INPUT_TERMINAL_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_INPUT_TERMINAL,
+            .bTerminalID        = 1,
+            .wTerminalType      = UAC_INPUT_TERMINAL_MICROPHONE,
+            /* No associated terminals */
+            .bAssocTerminal     = 0,
+            /* Stereo channels */
+            .bNrChannels        = 1,
+            .wChannelConfig     = 0, //(UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
+            .iChannelNames      = 0, //USB_STRING_INDEX(3),
+            /* Unused */
+            .iTerminal          = 0,
+        },
+        .output = {
+            .bLength            = UAC_DT_OUTPUT_TERMINAL_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_OUTPUT_TERMINAL,
+            .bTerminalID        = 2,
+            .wTerminalType      = UAC_OUTPUT_TERMINAL_STREAMING,
+            .bAssocTerminal     = 0,
+            /* Connected to the input terminal */
+            .bSourceID          = 1,
+            .iTerminal          = 0,
+        },
+        .streaming0 = {
             .bLength            = USB_DT_INTERFACE_SIZE,
             .bDescriptorType    = USB_DT_INTERFACE,
-            .bInterfaceNumber   = 0,
+            .bInterfaceNumber   = 1,
             .bAlternateSetting  = 0,
+            .bNumEndpoints      = 0,
+            .bInterfaceClass    = USB_CLASS_AUDIO,
+            .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
+            .bInterfaceProtocol = 0,
+            .iInterface         = 0,
+        },
+        .streaming1 = {
+            .bLength            = USB_DT_INTERFACE_SIZE,
+            .bDescriptorType    = USB_DT_INTERFACE,
+            .bInterfaceNumber   = 1,
+            .bAlternateSetting  = 1,
             .bNumEndpoints      = 1,
             .bInterfaceClass    = USB_CLASS_AUDIO,
             .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            /* Must be zero */
             .bInterfaceProtocol = 0,
-            .iInterface         = USB_STRING_INDEX(2),
+            .iInterface         = 0,
+        },
+        .streamheader = {
+            .bLength            = UAC_DT_AS_HEADER_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_AS_GENERAL,
+            .bTerminalLink      = 2,
+            .bDelay             = 1,
+            .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
+        },
+        .format = {
+            .bLength            = UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_FORMAT_TYPE,
+            .bFormatType        = UAC_FORMAT_TYPE_I,
+            .bNrChannels        = 1,
+            /* Bytes per audio subframe */
+            .bSubframeSize      = 2,
+            .bBitResolution     = 16,
+            /* Frequencies supported */
+            .bSamFreqType       = 1,
+            /* 8000Hz */
+            .tSamFreq[0]        = { 0x00, 0x1F, 0x40 },
         },
         .endpoints = {
             {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                /* Isynchronous endpoint */
+                .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_IN,
+                /* Isynchronous endpoint, not shared */
                 .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 512,
+                .wMaxPacketSize     = 16,
                 .bInterval          = 1,
                 .bRefresh           = 0,
                 .bSynchAddress      = 0,
             },
+        },
+        .isoendpoint = {
+            .bLength            = UAC_ISO_ENDPOINT_DESC_SIZE,
+            .bDescriptorType    = USB_DT_CS_ENDPOINT,
+            .bDescriptorSubtype = UAC_AS_GENERAL,
+            .bmAttributes       = 0,
+            /* Unused */
+            .bLockDelayUnits    = 0,
+            .wLockDelay         = 0,
         },
     },
     .fullspeed = {
@@ -96,37 +197,133 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bLength                = USB_DT_CONFIG_SIZE,
             .bDescriptorType        = USB_DT_CONFIG,
             .wTotalLength           = sizeof(descriptors.fullspeed),
-            .bNumInterfaces         = 1,
+            .bNumInterfaces         = 2,
             .bConfigurationValue    = 1,
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
             .bMaxPower              = 0x32,
         },
-        .interface = {
+        .control = {
+            .standard = {
+                .bLength            = USB_DT_INTERFACE_SIZE,
+                .bDescriptorType    = USB_DT_INTERFACE,
+                .bInterfaceNumber   = 0,
+                .bAlternateSetting  = 0,
+                .bNumEndpoints      = 0,
+                .bInterfaceClass    = USB_CLASS_AUDIO,
+                .bInterfaceSubClass = USB_SUBCLASS_AUDIOCONTROL,
+                /* Must be zero */
+                .bInterfaceProtocol = 0,
+                /* Unused */
+                .iInterface         = 0,
+            },
+            .classspec = {
+                .bLength            = UAC_DT_AC_HEADER_SIZE(1),
+                .bDescriptorType    = USB_DT_CS_INTERFACE,
+                .bDescriptorSubtype = UAC_MS_HEADER,
+                .bcdADC             = UAC_BCD_V10,
+                .wTotalLength       =
+                    sizeof(descriptors.fullspeed.control.classspec) +
+                    sizeof(descriptors.fullspeed.input) + 
+                    sizeof(descriptors.fullspeed.output),
+                /* Number of streaming interfaces */
+                .bInCollection      = 1,
+                /* The first streaming interface belongs to this control */
+                .baInterfaceNr[0]   = 1,
+            },
+        },
+        .input = {
+            .bLength            = UAC_DT_INPUT_TERMINAL_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_INPUT_TERMINAL,
+            .bTerminalID        = 1,
+            .wTerminalType      = UAC_INPUT_TERMINAL_MICROPHONE,
+            /* No associated terminals */
+            .bAssocTerminal     = 0,
+            /* Stereo channels */
+            .bNrChannels        = 1,
+            .wChannelConfig     = 0, //(UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
+            .iChannelNames      = 0, //USB_STRING_INDEX(3),
+            /* Unused */
+            .iTerminal          = 0,
+        },
+        .output = {
+            .bLength            = UAC_DT_OUTPUT_TERMINAL_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_OUTPUT_TERMINAL,
+            .bTerminalID        = 2,
+            .wTerminalType      = UAC_OUTPUT_TERMINAL_STREAMING,
+            .bAssocTerminal     = 0,
+            /* Connected to the input terminal */
+            .bSourceID          = 1,
+            .iTerminal          = 0,
+        },
+        .streaming0 = {
             .bLength            = USB_DT_INTERFACE_SIZE,
             .bDescriptorType    = USB_DT_INTERFACE,
-            .bInterfaceNumber   = 0,
+            .bInterfaceNumber   = 1,
             .bAlternateSetting  = 0,
+            .bNumEndpoints      = 0,
+            .bInterfaceClass    = USB_CLASS_AUDIO,
+            .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
+            .bInterfaceProtocol = 0,
+            .iInterface         = 0,
+        },
+        .streaming1 = {
+            .bLength            = USB_DT_INTERFACE_SIZE,
+            .bDescriptorType    = USB_DT_INTERFACE,
+            .bInterfaceNumber   = 1,
+            .bAlternateSetting  = 1,
             .bNumEndpoints      = 1,
             .bInterfaceClass    = USB_CLASS_AUDIO,
             .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            /* Must be zero */
             .bInterfaceProtocol = 0,
-            .iInterface         = USB_STRING_INDEX(2),
+            .iInterface         = 0,
+        },
+        .streamheader = {
+            .bLength            = UAC_DT_AS_HEADER_SIZE,
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_AS_GENERAL,
+            .bTerminalLink      = 2,
+            .bDelay             = 1,
+            .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
+        },
+        .format = {
+            .bLength            = UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
+            .bDescriptorType    = USB_DT_CS_INTERFACE,
+            .bDescriptorSubtype = UAC_FORMAT_TYPE,
+            .bFormatType        = UAC_FORMAT_TYPE_I,
+            .bNrChannels        = 1,
+            /* Bytes per audio subframe */
+            .bSubframeSize      = 2,
+            .bBitResolution     = 16,
+            /* Frequencies supported */
+            .bSamFreqType       = 1,
+            /* 8000Hz */
+            .tSamFreq[0]        = { 0x00, 0x1F, 0x40 },
         },
         .endpoints = {
             {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                /* Isynchronous endpoint */
+                .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_IN,
+                /* Isynchronous endpoint, not shared */
                 .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 512,
+                .wMaxPacketSize     = 16,
                 .bInterval          = 1,
                 .bRefresh           = 0,
                 .bSynchAddress      = 0,
             },
+        },
+        .isoendpoint = {
+            .bLength            = UAC_ISO_ENDPOINT_DESC_SIZE,
+            .bDescriptorType    = USB_DT_CS_ENDPOINT,
+            .bDescriptorSubtype = UAC_AS_GENERAL,
+            .bmAttributes       = 0,
+            /* Unused */
+            .bLockDelayUnits    = 0,
+            .wLockDelay         = 0,
         },
     },
     #include "descriptors_strings.inc"
