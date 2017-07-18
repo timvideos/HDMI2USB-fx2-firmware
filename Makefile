@@ -9,6 +9,8 @@ $(FX2LIBDIR)/.git: .gitmodules
 
 # FIXME: Add check_int2jit from hdmi2usb/Makefile
 
+docs: export PROJECT_NUMBER:=$(shell git describe --always --dirty --long)
+
 .PHONY: docs clean
 
 docs:
