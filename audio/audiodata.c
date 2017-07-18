@@ -42,35 +42,51 @@ BOOL handle_set_configuration(BYTE cfg) {
     return cfg==1 ? TRUE : FALSE;
 }
 
+/* The current alternative setting */
+BYTE AlternateSetting = 0;
 /**
- * Returns the interface currently in use. This firmware only supports 0,0
+ * Returns the interface currently in use.
  */
 BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
-    printf ( "Get Interface\n" );
-    if (ifc==0) {*alt_ifc=0; return TRUE;} else { return FALSE;}
+    printf("Get Interface\n");
+    if (ifc == 0 || ifc == 2) {
+        *alt_ifc=AlternateSetting;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /**
- * Sets the interface in use. Only 0,0 is supported.
+ * Sets the interface in use.
+ * 0,0 - Default control
+ * 1,0 - Streaming, no endpoint. This is used for when the device is not
+ *       streaming
+ * 1,1 - Streaming with endpoint 2.
+ * SEE TRM 2.3.7
  */
 BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
-    printf ( "Set interface %d to alt: %d\n" , ifc, alt_ifc );
+    printf("Set interface %d to alt: %d\n", ifc, alt_ifc);
 
-    if (ifc==0&&alt_ifc==0) {
-        // SEE TRM 2.3.7
-        // reset toggles
-        RESETTOGGLE(0x02);
-        RESETTOGGLE(0x86);
-        // restore endpoints to default condition
+    if (ifc == 0 && alt_ifc == 0) {
+        AlternateSetting = 0;
+        /* restore endpoints to default condition */
         RESETFIFO(0x02);
-        EP2BCL=0x80;
-        SYNCDELAY;
-        EP2BCL=0X80;
-        SYNCDELAY;
-        RESETFIFO(0x86);
         return TRUE;
-    } else
-        return FALSE;
+    } else if (ifc == 1 && alt_ifc == 0) {
+        AlternateSetting = 0;
+        /* reset toggles */
+        RESETTOGGLE(0x82);
+        return TRUE;
+    } else if (ifc == 1 && alt_ifc == 1) {
+        AlternateSetting = 1;
+        /* Reset audio streaming endpoint */
+        RESETTOGGLE(0x82);
+        RESETFIFO(0x02);
+        SYNCDELAY;
+        EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 BOOL handle_get_descriptor() {
