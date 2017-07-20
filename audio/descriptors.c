@@ -108,9 +108,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             /* No associated terminals */
             .bAssocTerminal     = 0,
             /* Stereo channels */
-            .bNrChannels        = 1,
-            .wChannelConfig     = 0, //(UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
-            .iChannelNames      = 0, //USB_STRING_INDEX(3),
+            .bNrChannels        = 2,
+            .wChannelConfig     = (UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
+            .iChannelNames      = USB_STRING_INDEX(2),
             /* Unused */
             .iTerminal          = 0,
         },
@@ -160,14 +160,14 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bDescriptorType    = USB_DT_CS_INTERFACE,
             .bDescriptorSubtype = UAC_FORMAT_TYPE,
             .bFormatType        = UAC_FORMAT_TYPE_I,
-            .bNrChannels        = 1,
+            .bNrChannels        = 2,
             /* Bytes per audio subframe */
             .bSubframeSize      = 2,
             .bBitResolution     = 16,
             /* Frequencies supported */
             .bSamFreqType       = 1,
             /* 8000Hz */
-            .tSamFreq[0]        = { 0x00, 0x1F, 0x40 },
+            .tSamFreq[0]        = { 0x40, 0x1F, 0x00 },
         },
         .endpoints = {
             {
@@ -176,7 +176,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_IN,
                 /* Isynchronous endpoint, not shared */
                 .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 16,
+                .wMaxPacketSize     = 32,
                 .bInterval          = 1,
                 .bRefresh           = 0,
                 .bSynchAddress      = 0,
@@ -242,9 +242,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             /* No associated terminals */
             .bAssocTerminal     = 0,
             /* Stereo channels */
-            .bNrChannels        = 1,
-            .wChannelConfig     = 0, //(UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
-            .iChannelNames      = 0, //USB_STRING_INDEX(3),
+            .bNrChannels        = 2,
+            .wChannelConfig     = (UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
+            .iChannelNames      = USB_STRING_INDEX(2),
             /* Unused */
             .iTerminal          = 0,
         },
@@ -294,7 +294,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bDescriptorType    = USB_DT_CS_INTERFACE,
             .bDescriptorSubtype = UAC_FORMAT_TYPE,
             .bFormatType        = UAC_FORMAT_TYPE_I,
-            .bNrChannels        = 1,
+            .bNrChannels        = 2,
             /* Bytes per audio subframe */
             .bSubframeSize      = 2,
             .bBitResolution     = 16,
