@@ -25,20 +25,18 @@
 #define usart_init()
 #endif
 
-#include <fx2regs.h>
-#include <fx2macros.h>
-#include <fx2types.h>
-#include <delay.h>
 #include <autovector.h>
-#include <setupdat.h>
+#include <delay.h>
 #include <eputils.h>
+#include <fx2macros.h>
+#include <fx2regs.h>
+#include <fx2types.h>
+#include <setupdat.h>
 
 #include "fx2lights.h"
 #include "audiodata.h"
 
 #define SYNCDELAY SYNCDELAY4
-#define REARMVAL 0x80
-#define REARM() EP2BCL=REARMVAL
 
 volatile __bit got_sud;
 
@@ -59,42 +57,36 @@ void main() {
 
     USE_USB_INTS();
     ENABLE_SUDAV();
-    ENABLE_HISPEED();
     ENABLE_USBRESET();
+    //ENABLE_HISPEED();
     d1off();
 
     /* No valid endpoints by default */
-    EP2CFG &= ~bmVALID;
-    SYNCDELAY;
-    EP1OUTCFG &= ~bmVALID;
-    SYNCDELAY;
-    EP4CFG &= ~bmVALID;
-    SYNCDELAY;
-
-    EP2BCL = 0x80; // write once
-    SYNCDELAY;
-    EP2BCL = 0x80; // do it again
+    EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
 
     /* Enable global interrupts */
-    //EA=1;
+    EA=1;
     d2off();
 
     printf("Initialisation complete\n");
 
     while(TRUE) {
-        if (SETUPDAT) {
+        if (got_sud) {
             printf("Handle setup data\n");
             handle_setupdata();
             got_sud = FALSE;
         }
+        /* ISO endpoint config type is 01 */
+        if ((EP2CFG & bmTYPE) == bmTYPE0) {
+            while (!(EP2468STAT & bmEP2FULL)) {
+                d1on();
+                /* Send known pattern 0x0400 */
+                EP2BCH = 0x04;
+                EP2BCL = 0x00;
+            }
+            d1off();
+        }
     }
-}
-
-/**
- * There are no vendor commands to handle
- */
-BOOL handle_vendorcommand(BYTE cmd) {
-    return FALSE;
 }
 
 /**
@@ -102,16 +94,20 @@ BOOL handle_vendorcommand(BYTE cmd) {
  * Copied usb jt routines from usbjt.h
  */
 void sudav_isr() __interrupt SUDAV_ISR {
+    printf("sudav interrupt\n");
     got_sud=TRUE;
     CLEAR_SUDAV();
 }
 
 void usbreset_isr() __interrupt USBRESET_ISR {
+    printf("reset interrupt\n");
+    /* By default the USB is in full speed mode when reset */
     handle_hispeed(FALSE);
     CLEAR_USBRESET();
 }
 
 void hispeed_isr() __interrupt HISPEED_ISR {
+    printf("hispeed interrupt\n");
     handle_hispeed(TRUE);
     CLEAR_HISPEED();
 }
