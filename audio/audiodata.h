@@ -22,7 +22,6 @@
 #define AUDIO_DATA_H
 
 #include <audio.h>
-
 #include <fx2types.h>
 
 BYTE handle_get_configuration();

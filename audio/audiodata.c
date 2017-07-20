@@ -43,14 +43,14 @@ BOOL handle_set_configuration(BYTE cfg) {
 }
 
 /* The current alternative setting */
-BYTE AlternateSetting = 0;
+BYTE alt_setting = 0;
 /**
  * Returns the interface currently in use.
  */
 BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
     printf("Get Interface\n");
     if (ifc == 0 || ifc == 2) {
-        *alt_ifc=AlternateSetting;
+        *alt_ifc = alt_setting;
         return TRUE;
     }
     return FALSE;
@@ -68,22 +68,26 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     printf("Set interface %d to alt: %d\n", ifc, alt_ifc);
 
     if (ifc == 0 && alt_ifc == 0) {
-        AlternateSetting = 0;
+        alt_setting = 0;
         /* restore endpoints to default condition */
-        RESETFIFO(0x02);
+        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        SYNCDELAY; RESETFIFO(0x02);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
-        AlternateSetting = 0;
+        alt_setting = 0;
         /* reset toggles */
-        RESETTOGGLE(0x82);
+        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETTOGGLE(0x82);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
-        AlternateSetting = 1;
+        alt_setting = 1;
         /* Reset audio streaming endpoint */
-        RESETTOGGLE(0x82);
-        RESETFIFO(0x02);
-        SYNCDELAY;
         EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
+        EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETTOGGLE(0x82);
+        EP2ISOINPKTS = 0x83; // TODO: Find correct value for this
         return TRUE;
     }
     return FALSE;
@@ -91,5 +95,12 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 
 BOOL handle_get_descriptor() {
     printf ( "Get Descriptor\n" );
+    return FALSE;
+}
+
+/**
+ * There are no vendor commands to handle
+ */
+BOOL handle_vendorcommand(BYTE cmd) {
     return FALSE;
 }
