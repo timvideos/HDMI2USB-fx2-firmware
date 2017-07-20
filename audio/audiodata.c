@@ -75,9 +75,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
-        /* reset toggles */
         EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
         SYNCDELAY; RESETFIFO(0x02);
+        /* reset toggles */
         SYNCDELAY; RESETTOGGLE(0x82);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {

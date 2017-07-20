@@ -38,7 +38,7 @@ LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
 INCS := -I$(LINUXHEADERSDIR)
 
-CFLAGS := -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
+CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
 CC_SRCS := descriptors.c debug.c audiodata.c firmware.c version_data.c
@@ -66,8 +66,30 @@ endif
 endif
 endif
 
+<<<<<<< HEAD
 check-descriptors: descriptors.c
 	gcc -I${FX2LIBDIR}/include -I$(LINUXHEADERSDIR) descriptors.c
+=======
+CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
+CFLAGS += -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
+CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
+
+# Use make V=1 for a verbose build.
+ifndef V
+    Q_CC=@echo      '      CC ' $@;
+    Q_AS=@echo      '      AS ' $@;
+    Q_LINK=@echo    '    LINK ' $@;
+    Q_RM=@echo      '   CLEAN ';
+    Q_OBJCOPY=@echo ' OBJCOPY ' $@;
+    Q_GEN=@echo     '     GEN ' $@;
+endif
+
+.PHONY: all clean check check_int2jt
+
+all: $(TARGET).hex
+
+$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib $(LINUXHEADERSDIR)/.git
+>>>>>>> audio: Place descriptors after the interrupt vector in memory
 
 $(CC_SRCS): $(LINUXHEADERSDIR)/.git
 

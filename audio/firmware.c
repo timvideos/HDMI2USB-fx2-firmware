@@ -39,6 +39,7 @@
 #define SYNCDELAY SYNCDELAY4
 
 volatile __bit got_sud;
+extern BYTE alt_setting;
 
 void main() {
     d1on();
@@ -58,7 +59,7 @@ void main() {
     USE_USB_INTS();
     ENABLE_SUDAV();
     ENABLE_USBRESET();
-    //ENABLE_HISPEED();
+    ENABLE_HISPEED();
     d1off();
 
     /* No valid endpoints by default */
@@ -77,12 +78,12 @@ void main() {
             got_sud = FALSE;
         }
         /* ISO endpoint config type is 01 */
-        if ((EP2CFG & bmTYPE) == bmTYPE0) {
+        if (alt_setting == 1) {
             while (!(EP2468STAT & bmEP2FULL)) {
                 d1on();
                 /* Send known pattern 0x0400 */
-                EP2BCH = 0x04;
-                EP2BCL = 0x00;
+                EP2BCH = 0x00;
+                EP2BCL = 0xe0;
             }
             d1off();
         }
@@ -94,20 +95,17 @@ void main() {
  * Copied usb jt routines from usbjt.h
  */
 void sudav_isr() __interrupt SUDAV_ISR {
-    printf("sudav interrupt\n");
     got_sud=TRUE;
     CLEAR_SUDAV();
 }
 
 void usbreset_isr() __interrupt USBRESET_ISR {
-    printf("reset interrupt\n");
     /* By default the USB is in full speed mode when reset */
     handle_hispeed(FALSE);
     CLEAR_USBRESET();
 }
 
 void hispeed_isr() __interrupt HISPEED_ISR {
-    printf("hispeed interrupt\n");
     handle_hispeed(TRUE);
     CLEAR_HISPEED();
 }
