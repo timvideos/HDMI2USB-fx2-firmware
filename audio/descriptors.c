@@ -166,7 +166,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bBitResolution     = 16,
             /* Frequencies supported */
             .bSamFreqType       = 1,
-            /* 8000Hz */
+            /* 8000Hz, little endian */
             .tSamFreq[0]        = { 0x40, 0x1F, 0x00 },
         },
         .endpoints = {
@@ -300,8 +300,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bBitResolution     = 16,
             /* Frequencies supported */
             .bSamFreqType       = 1,
-            /* 8000Hz */
-            .tSamFreq[0]        = { 0x00, 0x1F, 0x40 },
+            /* 8000Hz, little endian */
+            .tSamFreq[0]        = { 0x40, 0x1F, 0x00 },
         },
         .endpoints = {
             {
