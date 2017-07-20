@@ -27,6 +27,8 @@
 #include <fx2types.h>
 #include <delay.h>
 
+#include "fx2lights.h"
+
 void init_lights(void) {
     // Set pins to port mode instead of GPIF master/slave mode
     IFCONFIG &= ~(bmIFCFGMASK);
@@ -39,74 +41,6 @@ void init_lights(void) {
 #endif // BOARD_opsis
 }
 
-/**
- * d1 is the LED labelled LD14 on the Atlys and the LED labelled D1 on the
- * FX2LP CY7C68013A mini-board. It is not connected on the Opsis
- */
-void d1_on(void) {
-#ifdef BOARD_atlys
-    // Set pin D7 as output
-    OED |= bmBIT7;
-    // Set D7
-    IOD |= bmBIT7;
-#endif // BOARD_atlys
-#ifdef BOARD_fx2miniboard
-    // Set pin A0 as output
-    OEA |= bmBIT0;
-    // Set A0
-    IOA &= ~bmBIT0;
-#endif // BOARD_fx2miniboard
-}
-
-/**
- * d2 is the LED labelled D2 on the Numato Opsis and the LED labelled D2 on the
- * FX2LP CY7C68013A mini-board. It is not connected on the Atlys
- */
-void d2_on(void) {
-#ifdef BOARD_fx2miniboard
-    // Set pin A1 as output
-    OEA |= bmBIT1;
-    // Set A1
-    IOA &= ~bmBIT1;
-#endif // BOARD_fx2miniboard
-#ifdef BOARD_opsis
-    // Set pin E5 as output
-    OEE |= bmBIT5;
-    // Set E5
-    IOE &= ~bmBIT5;
-#endif // BOARD_opsis
-}
-
-void d1_off(void) {
-#ifdef BOARD_atlys
-    // Set pin D7 as output
-    OED |= bmBIT7;
-    // Clear D7
-    IOD &= ~bmBIT7;
-#endif // BOARD_atlys
-#ifdef BOARD_fx2miniboard
-    // Set pin A0 as output
-    OEA |= bmBIT0;
-    // Clear A0
-    IOA |= bmBIT0;
-#endif // BOARD_atlys
-}
-
-void d2_off(void) {
-#ifdef BOARD_fx2miniboard
-    // Set pin A1 as output
-    OEA |= bmBIT1;
-    // Clear A1
-    IOA |= bmBIT1;
-#endif // BOARD_fx2miniboard
-#ifdef BOARD_opsis
-    // Set pin E5 as output
-    OEE |= bmBIT5;
-    // Clear E5
-    IOE |= bmBIT5;
-#endif // BOARD_opsis
-}
-
 void main(void) {
     BYTE n=0;
 
@@ -115,16 +49,26 @@ void main(void) {
     while(TRUE) {
        switch(n) {
        case 0:
-           d1_on();
+           /**
+           * d1 is the LED labelled LD14 on the Atlys and the LED labelled
+           * D1 on the FX2LP CY7C68013A mini-board. It is not connected on
+           * the Opsis
+           */
+           d1on();
            break;
        case 1:
-           d2_on();
+          /**
+           * d2 is the LED labelled D2 on the Numato Opsis and the LED
+           * labelled D2 on the FX2LP CY7C68013A mini-board. It is not
+           * connected on the Atlys
+           */
+           d2on();
            break;
        case 2:
-           d1_off();
+           d1off();
            break;
        default:
-           d2_off();
+           d2off();
            break;
        }
        delay(250);
