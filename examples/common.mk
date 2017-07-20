@@ -25,7 +25,7 @@
 # 	HDMI2USB-mode-swtich from https://github.com/timvideos/HDMI2USB-mode-switch
 # 
 LIBS ?= $(FX2LIBDIR)/lib/fx2.lib
-INCS += -I sdcc -I$(FX2LIBDIR)/include -I.
+INCS += -I sdcc -I$(FX2LIBDIR)/include -I. -I../../common/boards
 
 USE_16K ?= 1
 

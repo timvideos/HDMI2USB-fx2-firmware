@@ -22,7 +22,6 @@
 #include <serial.h>
 #include <delay.h>
 #include <autovector.h>
-#include <lights.h>
 #include <setupdat.h>
 #include <eputils.h>
 #include <i2c.h>

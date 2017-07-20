@@ -34,7 +34,7 @@
 TARGET := hdmi2usb
 FX2LIBDIR := ../third_party/fx2lib
 LIBS := $(FX2LIBDIR)/lib/fx2.lib
-INCS := -I sdcc -I$(FX2LIBDIR)/include -I.
+INCS := -I sdcc -I$(FX2LIBDIR)/include -I. -I../common/boards
 
 # Settings specific for the TimVideo hdmi2usb firmware
 BOARD ?= opsis
