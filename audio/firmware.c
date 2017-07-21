@@ -81,9 +81,10 @@ void main() {
         if (alt_setting == 1) {
             while (!(EP2468STAT & bmEP2FULL)) {
                 d1on();
-                /* Send known pattern 0x0400 */
+                /* Send max data. Larger than 0x30 causes an EOVERFLOW */
                 EP2BCH = 0x00;
-                EP2BCL = 0xe0;
+                SYNCDELAY;
+                EP2BCL = 0x30;
             }
             d1off();
         }

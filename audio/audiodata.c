@@ -84,10 +84,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         alt_setting = 1;
         /* Reset audio streaming endpoint */
         EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
-        EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        SYNCDELAY; EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
         SYNCDELAY; RESETFIFO(0x02);
         SYNCDELAY; RESETTOGGLE(0x82);
-        EP2ISOINPKTS = 0x83; // TODO: Find correct value for this
         return TRUE;
     }
     return FALSE;
