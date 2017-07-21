@@ -36,7 +36,7 @@ struct uac_control_section {
     struct uac1_ac_header_descriptor_1 classspec;
 };
 
-struct usb_section {
+struct usb_hispeed_section {
     struct usb_config_descriptor config;
     struct uac_control_section control;
     struct uac_input_terminal_descriptor input;
@@ -49,11 +49,20 @@ struct usb_section {
     struct uac_iso_endpoint_descriptor isoendpoint;
 };
 
+struct usb_fullspeed_section {
+    struct usb_config_descriptor config;
+    struct uac_control_section control;
+    struct uac_input_terminal_descriptor input;
+    struct uac1_output_terminal_descriptor output;
+    struct usb_interface_descriptor streaming0;
+    struct uac1_as_header_descriptor streamheader;
+};
+
 struct usb_descriptors {
     struct usb_device_descriptor device;
     struct usb_qualifier_descriptor qualifier;
-    struct usb_section highspeed;
-    struct usb_section fullspeed;
+    struct usb_hispeed_section highspeed;
+    struct usb_fullspeed_section fullspeed;
     struct usb_descriptors_strings strings;
 };
 

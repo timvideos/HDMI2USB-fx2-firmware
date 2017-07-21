@@ -270,17 +270,6 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bInterfaceProtocol = 0,
             .iInterface         = 0,
         },
-        .streaming1 = {
-            .bLength            = USB_DT_INTERFACE_SIZE,
-            .bDescriptorType    = USB_DT_INTERFACE,
-            .bInterfaceNumber   = 1,
-            .bAlternateSetting  = 1,
-            .bNumEndpoints      = 1,
-            .bInterfaceClass    = USB_CLASS_AUDIO,
-            .bInterfaceSubClass = USB_SUBCLASS_AUDIOSTREAMING,
-            .bInterfaceProtocol = 0,
-            .iInterface         = 0,
-        },
         .streamheader = {
             .bLength            = UAC_DT_AS_HEADER_SIZE,
             .bDescriptorType    = USB_DT_CS_INTERFACE,
@@ -288,42 +277,6 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bTerminalLink      = 2,
             .bDelay             = 1,
             .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
-        },
-        .format = {
-            .bLength            = UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
-            .bDescriptorType    = USB_DT_CS_INTERFACE,
-            .bDescriptorSubtype = UAC_FORMAT_TYPE,
-            .bFormatType        = UAC_FORMAT_TYPE_I,
-            .bNrChannels        = 2,
-            /* Bytes per audio subframe */
-            .bSubframeSize      = 2,
-            .bBitResolution     = 16,
-            /* Frequencies supported */
-            .bSamFreqType       = 1,
-            /* 8000Hz, little endian */
-            .tSamFreq[0]        = { 0x40, 0x1F, 0x00 },
-        },
-        .endpoints = {
-            {
-                .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
-                .bDescriptorType    = USB_DT_ENDPOINT,
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_IN,
-                /* Isynchronous endpoint, not shared */
-                .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 16,
-                .bInterval          = 1,
-                .bRefresh           = 0,
-                .bSynchAddress      = 0,
-            },
-        },
-        .isoendpoint = {
-            .bLength            = UAC_ISO_ENDPOINT_DESC_SIZE,
-            .bDescriptorType    = USB_DT_CS_ENDPOINT,
-            .bDescriptorSubtype = UAC_AS_GENERAL,
-            .bmAttributes       = 0,
-            /* Unused */
-            .bLockDelayUnits    = 0,
-            .wLockDelay         = 0,
         },
     },
     #include "descriptors_strings.inc"
