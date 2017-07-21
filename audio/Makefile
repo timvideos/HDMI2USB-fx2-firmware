@@ -37,7 +37,7 @@ TARGET := audio
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 LIBS := $(FX2LIBDIR)/lib/fx2.lib
-INCS := -I sdcc -I$(FX2LIBDIR)/include -I$(LINUXHEADERSDIR) -I.
+INCS := -I sdcc -I$(FX2LIBDIR)/include -I$(LINUXHEADERSDIR) -I. -I../common/boards
 
 # Settings specific for the TimVideo hdmi2usb firmware
 BOARD ?= fx2miniboard
