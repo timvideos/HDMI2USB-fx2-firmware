@@ -34,7 +34,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         /* Protocol defined per interface */
         .bDeviceProtocol    = 0,
         /* packet size is in bytes */
-        .bMaxPacketSize0    = 8,
+        .bMaxPacketSize0    = 64,
         .idVendor           = VID,
         .idProduct          = PID,
         .bcdDevice          = DID,
@@ -53,7 +53,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         /* Protocol defined per interface */
         .bDeviceProtocol    = 0,
         /* packet size is in kB */
-        .bMaxPacketSize0    = 8,
+        .bMaxPacketSize0    = 64,
         .bNumConfigurations = 1,
         /* Must be zero */
         .bRESERVED          = 0,
@@ -174,10 +174,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_IN,
-                /* Isynchronous endpoint, not shared */
-                .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 32,
-                .bInterval          = 1,
+                .bmAttributes       = (USB_ENDPOINT_XFER_ISOC | USB_ENDPOINT_SYNC_NONE),
+                .wMaxPacketSize     = 512,
+                .bInterval          = 4,
                 .bRefresh           = 0,
                 .bSynchAddress      = 0,
             },
