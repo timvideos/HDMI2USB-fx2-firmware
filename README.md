@@ -1,4 +1,5 @@
 # HDMI2USB-fx2-firmware
+[![Build Status](https://api.travis-ci.org/timvideos/HDMI2USB-fx2-firmware.svg?branch=master)](https://travis-ci.org/timvideos/HDMI2USB-fx2-firmware)
 
 This repository contains the firmware used in the 
 [HDMI2USB project](https://hdmi2usb.tv) on the Cypress FX2 chip found on boards
