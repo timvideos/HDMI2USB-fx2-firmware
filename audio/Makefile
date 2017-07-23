@@ -52,20 +52,21 @@ CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
 CC := sdcc
 
+# See https://github.com/timvideos/HDMI2USB/wiki/USB-IDs
 ifeq (${BOARD},atlys)
 VID := 1D50
 PID := 60B7
-DID := 0002
+DID := 0012
 else
 ifeq (${BOARD},fx2miniboard)
 VID := 1D50
 PID := 60B7
-DID := 0003
+DID := 0012
 else
 ifeq (${BOARD},opsis)
 VID := 2A19
-PID := 5442
-DID := 0002
+PID := 5441
+DID := 0012
 else
 $(error "Unknown board type '$(BOARD)'")
 endif
