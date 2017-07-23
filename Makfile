@@ -15,6 +15,7 @@
 #
 
 MODESWITCH_CMD = hdmi2usb-mode-switch
+FX2LIBDIR = ./third_party/fx2lib
 
 TARGETS += fx2
 
@@ -54,4 +55,19 @@ firmware/lm32/fx2_fw_hdmi2usb.c: microload/generate_2nd_stage.py hdmi2usb/hdmi2u
 view:
 	./scripts/view-hdmi2usb.sh
 
-.PHONY: help-fx2 gateware-fx2 firmware-fx2 load-fx2 clean-fx2 view
+docs: export PROJECT_NUMBER:=$(shell git describe --always --dirty --long)
+
+docs:
+	doxygen docs/docs.conf
+
+clean-docs:
+	rm -fr docs/html docs/latex
+
+# We depend on the .git file inside the directory as git creates an empty dir
+# for us.
+$(FX2LIBDIR)/.git: .gitmodules
+	git submodule sync --recursive -- $$(dirname $@)
+	git submodule update --recursive --init $$(dirname $@)
+	touch $@ -r .gitmodules
+
+.PHONY: docs clean-docs help-fx2 gateware-fx2 firmware-fx2 load-fx2 clean-fx2 view
