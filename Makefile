@@ -51,6 +51,19 @@ hdmi2usb/hdmi2usb.hex:
 firmware/lm32/fx2_fw_hdmi2usb.c: microload/generate_2nd_stage.py hdmi2usb/hdmi2usb.hex
 	microload/generate_2nd_stage.py hdmi2usb/hdmi2usb.hex > firmware/lm32/fx2_fw_hdmi2usb.c
 
+# Audio firmware for the Cypress FX2
+firmware-audio-fx2: audio/audio.hex
+	@true
+
+load-audio-fx2: audio/audio.hex
+	$(MODESWITCH_CMD) --load-fx2-firmware audio/audio.hex
+
+clean-audio-fx2:
+	$(MAKE) -C audio clean
+
+audio/audio.hex:
+	$(MAKE) -C audio
+
 # Utility functions
 view:
 	./scripts/view-hdmi2usb.sh
