@@ -32,25 +32,18 @@
 # 	You will need HDMI2USB-mode-switch from
 # 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
-# TODO: Use a common Makefile between all the firmware versions
 TARGET := audio
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
-LIBS := $(FX2LIBDIR)/lib/fx2.lib
-INCS := -I sdcc -I$(FX2LIBDIR)/include -I$(LINUXHEADERSDIR) -I. -I../common/boards
+COMMON_DIR := ../common
+INCS := -I$(LINUXHEADERSDIR)
 
-# Settings specific for the TimVideo hdmi2usb firmware
-BOARD ?= fx2miniboard
-FLAGS +=-DDEBUG -DBOARD_$(BOARD)
-USE_16K := 1
-
-# Must only be hex numbers
-FIRMWARE_VERSION := $(shell date +%Y%m%d)
+CFLAGS := -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
+CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
 CC_SRCS := descriptors.c firmware.c
-CC_OBJS := $(CC_SRCS:%.c=%.rel)
 
-CC := sdcc
+include $(COMMON_DIR)/common.mk
 
 # See https://github.com/timvideos/HDMI2USB/wiki/USB-IDs
 ifeq (${BOARD},atlys)
@@ -73,41 +66,20 @@ endif
 endif
 endif
 
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
-CFLAGS += -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
-CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
+check-descriptors: descriptors.c
+	gcc -I${FX2LIBDIR}/include -I$(LINUXHEADERSDIR) descriptors.c
 
-# Use make V=1 for a verbose build.
-ifndef V
-    Q_CC=@echo      '      CC ' $@;
-    Q_AS=@echo      '      AS ' $@;
-    Q_LINK=@echo    '    LINK ' $@;
-    Q_RM=@echo      '   CLEAN ';
-    Q_OBJCOPY=@echo ' OBJCOPY ' $@;
-    Q_GEN=@echo     '     GEN ' $@;
-endif
-
-.PHONY: all clean check check_int2jt
-
-all: $(TARGET).hex
-
-$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib $(LINUXHEADERSDIR)/.git
-
-$(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
-	cd $(dir $@) && make -j1
+$(CC_SRCS): $(LINUXHEADERSDIR)/.git
 
 # We depend on a file inside the directory as git creates an
 # empty dir for us.
 #
 # Note that although we have the variable FX2LIBDIR, the submodule
 # magic will always check it out in fx2lib/
-$(FX2LIBDIR)/.git $(LINUXHEADERSDIR)/.git: ../.gitmodules
+$(LINUXHEADERSDIR)/.git: ../.gitmodules
 	git submodule sync --recursive -- $$(dirname $@)
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r ../.gitmodules
-
-$(TARGET).hex: $(CC_OBJS)
-	$(Q_LINK)$(CC) $(CFLAGS) -o $@ $+ $(LIBS)
 
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
@@ -133,28 +105,4 @@ descriptors_strings.inc: $(LINUXHEADERSDIR)/.git descriptors.strings
 	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
 
 descriptors.h: date.h descriptors_strings.h
-descriptors.c: descriptors_strings.inc
-
-check-descriptors: descriptors.c
-	gcc -I${FX2LIBDIR}/include descriptors.c
-
-check_int2jt: $(TARGET).hex
-	@export REQUESTED=$(shell grep "INT2JT=" $(TARGET).map | sed -e's/INT2JT=//'); \
-	export ACTUAL=$(shell grep "C:.*INT2JT" $(TARGET).map | sed -e's/C: *0*\([^ ]*\)  _INT2JT.*/0x\1/' | tr A-Z a-z ); \
-	if [ "$$REQUESTED" != "$$ACTUAL" ]; then \
-		echo "INT2JT at $$ACTUAL but requested $$REQUESTED"; \
-		exit 1; \
-	fi
-
-check: check_int2jt
-
-clean:
-	$(Q_RM)$(RM) *.adb *.asm *.cdb *.lk *.lst *.omf *.map *.mem *.rel *.rst \
-		*.sym descriptors_strings.* date.h ${TARGET}.hex
-	cd $(FX2LIBDIR) && make clean
-
-distclean: clean
-	$(RM) -r $(FX2LIBDIR)
-
-load: $(TARGET).hex
-	hdmi2usb-mode-switch --load-fx2-firmware $(TARGET).hex
+descriptors.c: descriptors_strings.h descriptors_strings.inc
