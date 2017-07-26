@@ -2,12 +2,9 @@ language: c
 sudo: required
 
 install:
-    - # Add PPA with newer version of sdcc backported to precise
-      #    - sudo apt-add-repository -y ppa:mithro/sdcc-precise
-      #- sudo apt-get update
     - # Install sdcc
     - sudo apt-get install --force-yes -y sdcc
     - sdcc --version
 
 script:
-    - make firmware-fx2
+    - make firmware-fx2 firmware-audio-fx2

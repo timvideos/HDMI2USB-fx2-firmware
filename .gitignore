@@ -11,6 +11,7 @@
 *.rst
 *.sym
 *-prod.a51
+a.out
 date.h
 descriptors_strings.h
 descriptors_strings.inc
