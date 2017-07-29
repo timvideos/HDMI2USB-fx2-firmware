@@ -64,6 +64,28 @@ clean-audio-fx2:
 audio/audio.hex:
 	$(MAKE) -C audio
 
+# Default USB VID/PID for the FX2
+flash-unconfigured:
+	$(MAKE) -C eeprom-unconfigured flash
+
+firmware-unconfigured:
+	$(MAKE) -C eeprom-unconfigured hdmi2usb_unconfigured.iic
+
+clean-unconfigured:
+	$(MAKE) -C eeprom-unconfigured clean
+
+# Microload
+microload: fifo-microload fifo-i2c
+
+fifo-microload:
+	$(MAKE) -C microload fifo
+
+i2c-microload:
+	$(MAKE) -C microload i2c
+
+clean-microload:
+	$(MAKE) -C microload clean
+
 # Utility functions
 view:
 	./scripts/view-hdmi2usb.sh
