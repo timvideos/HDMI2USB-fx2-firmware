@@ -3,7 +3,7 @@ sudo: required
 
 install:
     - # Install sdcc and as31
-    - sudo apt-get install --force-yes -y sdcc as31
+    - sudo apt-get install --force-yes -y as31 doxygen sdcc
     - sdcc --version
 
 script:
@@ -11,3 +11,7 @@ script:
     - make firmware-audio-fx2
     - make firmware-unconfigured
     - make microload
+    - make docs
+
+after_success:
+    - ./.travis-push-docs.sh
