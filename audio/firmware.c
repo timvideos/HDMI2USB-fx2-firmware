@@ -77,8 +77,8 @@ void main() {
             handle_setupdata();
             got_sud = FALSE;
         }
-        /* ISO endpoint config type is 01 */
-        if (alt_setting == 1) {
+        /* ISO endpoint config type is 01 in the enpoint configuration buffer */
+        if ((EP2CFG & bmTYPE) == bmTYPE0) {
             while (!(EP2468STAT & bmEP2FULL)) {
                 d1on();
                 /* Send max data. Larger than 0x30 causes an EOVERFLOW */
@@ -100,12 +100,18 @@ void sudav_isr() __interrupt SUDAV_ISR {
     CLEAR_SUDAV();
 }
 
+/**
+ * Interrupt called when a reset is requested.
+ */
 void usbreset_isr() __interrupt USBRESET_ISR {
     /* By default the USB is in full speed mode when reset */
     handle_hispeed(FALSE);
     CLEAR_USBRESET();
 }
 
+/**
+ * Interrupt called when hispeed mode is requested.
+ */
 void hispeed_isr() __interrupt HISPEED_ISR {
     handle_hispeed(TRUE);
     CLEAR_HISPEED();
