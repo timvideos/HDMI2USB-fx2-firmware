@@ -75,7 +75,7 @@ clean-unconfigured:
 	$(MAKE) -C eeprom-unconfigured clean
 
 # Microload
-microload: fifo-microload fifo-i2c
+microload: fifo-microload i2c-microload
 
 fifo-microload:
 	$(MAKE) -C microload fifo
