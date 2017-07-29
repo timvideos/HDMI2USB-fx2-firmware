@@ -25,11 +25,18 @@
 __sbit __at PD3 USART;
 #define BAUD 32
 
+/**
+ * Initialises the usart interface. It supports output from the FX2 on pin D3
+ */
 void usart_init(void) {
     USART = 1;
-    OED |= bmBIT3; // Enable output on pin D3
+    /* Enable output on pin D3 */
+    OED |= bmBIT3;
 }
 
+/**
+ * Bit banging serial output
+ */
 void usart_send_byte(BYTE c) {
     (void)c; /* argument passed in DPL */
     __asm
@@ -51,6 +58,9 @@ void usart_send_byte(BYTE c) {
     __endasm;
 }
 
+/**
+ * Send a byte encoded as hexadecimal
+ */
 void usart_send_byte_hex(BYTE byte) {
     __xdata BYTE ch;
     ch = (byte >> 4) & 0x0F;
@@ -61,6 +71,9 @@ void usart_send_byte_hex(BYTE byte) {
     usart_send_byte(ch);
 }
 
+/**
+ * Send a word width of data as hexadecimal
+ */
 void usart_send_word_hex(WORD word) {
     __xdata BYTE ch;
     ch = (word >> 12) & 0x0F;
@@ -77,6 +90,9 @@ void usart_send_word_hex(WORD word) {
     usart_send_byte(ch);
 }
 
+/**
+ * Send a long word as hexadecimal
+ */
 void usart_send_long_hex(DWORD word) {
     __xdata BYTE ch;
     ch = (word >> 28) & 0x0F;
@@ -105,6 +121,10 @@ void usart_send_long_hex(DWORD word) {
     usart_send_byte(ch);
 }
 
+/**
+ * Send a string using bit banging output. Either \n or \r will send both
+ * \n and \r for ease of programming
+ */
 void usart_send_string(const char *s) {
     while (*s) {
         switch (*s) {
@@ -119,11 +139,18 @@ void usart_send_string(const char *s) {
     }
 }
 
+/**
+ * Ease of use for sending a new line.
+ */
 void usart_send_newline(void) {
     usart_send_byte('\n');
     usart_send_byte('\r');
 }
 
+/**
+ * The function that printf uses to send characters. This allows printf to
+ * be used for debug messages.
+ */
 void putchar(char c) {
     switch (c) {
         case '\r':

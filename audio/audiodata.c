@@ -92,6 +92,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     return FALSE;
 }
 
+/**
+ * Descriptor requests are handled by fx2lib.
+ */
 BOOL handle_get_descriptor() {
     printf ( "Get Descriptor\n" );
     return FALSE;
