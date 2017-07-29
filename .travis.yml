@@ -2,9 +2,12 @@ language: c
 sudo: required
 
 install:
-    - # Install sdcc
-    - sudo apt-get install --force-yes -y sdcc
+    - # Install sdcc and as31
+    - sudo apt-get install --force-yes -y sdcc as31
     - sdcc --version
 
 script:
-    - make firmware-fx2 firmware-audio-fx2
+    - make firmware-fx2
+    - make firmware-audio-fx2
+    - make firmware-unconfigured
+    - make microload
