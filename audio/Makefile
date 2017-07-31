@@ -41,7 +41,7 @@ INCS := -I$(LINUXHEADERSDIR)
 CFLAGS := -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
-CC_SRCS := descriptors.c firmware.c
+CC_SRCS := descriptors.c firmware.c version_data.c
 
 include $(COMMON_DIR)/common.mk
 
@@ -84,18 +84,8 @@ $(LINUXHEADERSDIR)/.git: ../.gitmodules
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
 
-# FIXME: Replace this with the better version stuff the HDMI2USB-litex-firmware uses.
-# See https://github.com/timvideos/HDMI2USB-litex-firmware/blob/master/firmware/version_data.sh
-date.h: Makefile
-	$(Q_GEN)
-	@echo "// This is an auto-generated file. Please modify the Makefile instead " > $@
-	@echo "#ifndef _DATE_H_" >> $@
-	@echo "#define _DATE_H_" >> $@
-	@echo "#define DATE 0x$(FIRMWARE_VERSION)" >> $@
-	@echo "#define VID 0x$(VID)" >> $@
-	@echo "#define PID 0x$(PID)" >> $@
-	@echo "#define DID 0x$(DID)" >> $@
-	@echo "#endif // _DATE_H_" >> $@
+version_data.h: Makefile
+	$(Q_GEN) $(COMMON_DIR)/version_data.sh $(VID) $(PID) $(DID)
 
 # FIXME: This should be part of a common Makefile in $(LINUXHEADERSDIR)/.git
 descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
@@ -104,5 +94,5 @@ descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
 descriptors_strings.inc: $(LINUXHEADERSDIR)/.git descriptors.strings
 	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
 
-descriptors.h: date.h descriptors_strings.h
+descriptors.h: version_data.h descriptors_strings.h
 descriptors.c: descriptors_strings.h descriptors_strings.inc

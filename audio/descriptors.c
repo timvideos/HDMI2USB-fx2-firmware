@@ -19,7 +19,7 @@
  **/
 
 #include "descriptors.h"
-#include "date.h"
+#include "version_data.h"
 
 __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
     .device = {
