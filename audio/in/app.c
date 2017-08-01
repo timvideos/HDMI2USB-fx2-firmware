@@ -18,15 +18,20 @@
  * device and the host. Supports USB IN and generates a constant tone.
  */
 
+/**
+ * No specific setup required
+ */
+void TD_Init(void) { }
+
 extern BYTE alt_setting;
 
 /**
- * sets the interface in use.
- * 0,0 - default control
- * 1,0 - streaming, no endpoint. this is used for when the device is not
+ * Sets the interface in use.
+ * 0,0 - Default control
+ * 1,0 - Streaming, no endpoint. This is used for when the device is not
  *       streaming
- * 1,1 - streaming with endpoint 8.
- * see trm section 2.3.7
+ * 1,1 - Streaming with endpoint 8.
+ * See TRM Section 2.3.7
  * http://www.cypress.com/file/126446/download#g5.1043536
  */
 BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {

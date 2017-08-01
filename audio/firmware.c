@@ -43,6 +43,9 @@
 #ifdef FIRMWARE_out
 #include "out/app.c"
 #endif
+#ifdef FIRMWARE_fifo
+#include "fifo/app.c"
+#endif
 
 volatile __bit got_sud;
 extern BYTE alt_setting;
@@ -67,6 +70,8 @@ void main() {
     ENABLE_USBRESET();
     ENABLE_HISPEED();
     d1off();
+
+    TD_Init();
 
     /**
      * No valid endpoints by default, thus clear the valid bit and set the
