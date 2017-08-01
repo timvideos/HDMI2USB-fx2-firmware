@@ -37,6 +37,13 @@
 
 #define SYNCDELAY SYNCDELAY4
 
+#ifdef FIRMWARE_in
+#include "in/app.c"
+#endif
+#ifdef FIRMWARE_out
+#include "out/app.c"
+#endif
+
 volatile __bit got_sud;
 extern BYTE alt_setting;
 
@@ -89,17 +96,7 @@ void main() {
             handle_setupdata();
             got_sud = FALSE;
         }
-        /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-        if ((EP8CFG & bmTYPE) == bmTYPE0) {
-            while (!(EP2468STAT & bmEP8FULL)) {
-                d1on();
-                /* Send max data. Larger than 0x30 causes an EOVERFLOW */
-                EP8BCH = 0x00;
-                SYNCDELAY;
-                EP8BCL = 0x30;
-            }
-            d1off();
-        }
+        TD_Poll();
     }
 }
 

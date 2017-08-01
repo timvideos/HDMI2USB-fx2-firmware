@@ -63,54 +63,6 @@ BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
 }
 
 /**
- * Sets the interface in use.
- * 0,0 - Default control
- * 1,0 - Streaming, no endpoint. This is used for when the device is not
- *       streaming
- * 1,1 - Streaming with endpoint 8.
- * See TRM section 2.3.7
- * http://www.cypress.com/file/126446/download#G5.1043536
- */
-BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
-    printf("Set interface %d to alt: %d\n", ifc, alt_ifc);
-
-    if (ifc == 0 && alt_ifc == 0) {
-        alt_setting = 0;
-        /*
-         * Restore endpoints to default condition with valid bit cleared
-         * (invalid, bulk, out, double)
-         */
-        EP2CFG = 0x7F;
-        SYNCDELAY; EP4CFG = 0x7F;
-        SYNCDELAY; EP6CFG = 0x7F;
-        SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
-        return TRUE;
-    } else if (ifc == 1 && alt_ifc == 0) {
-        alt_setting = 0;
-        EP2CFG = 0x7F;
-        SYNCDELAY; EP4CFG = 0x7F;
-        SYNCDELAY; EP6CFG = 0x7F;
-        SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
-        /* reset toggles */
-        SYNCDELAY; RESETTOGGLE(0x82);
-        return TRUE;
-    } else if (ifc == 1 && alt_ifc == 1) {
-        alt_setting = 1;
-        /* Reset audio streaming endpoint */
-        EP8CFG = (bmVALID | bmDIR | bmTYPE0);
-        SYNCDELAY; EP2CFG = 0x7F;
-        SYNCDELAY; EP4CFG = 0x7F;
-        SYNCDELAY; EP6CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
-        SYNCDELAY; RESETTOGGLE(0x82);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-/**
  * Descriptor requests are handled by fx2lib.
  */
 BOOL handle_get_descriptor() {

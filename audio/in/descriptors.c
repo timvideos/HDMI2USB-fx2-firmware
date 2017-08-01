@@ -297,5 +297,5 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             },
         },
     },
-    #include "descriptors_strings.inc"
+    #include "../descriptors_strings.inc"
 };

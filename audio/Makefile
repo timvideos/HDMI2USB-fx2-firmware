@@ -33,6 +33,7 @@
 # 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
 TARGET := audio
+FIRMWARE ?= in
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
@@ -42,8 +43,9 @@ INCS := -I$(LINUXHEADERSDIR)
 # 0x3c00
 CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
+CFLAGS += -DFIRMWARE_$(FIRMWARE)
 
-CC_SRCS := descriptors.c debug.c audiodata.c firmware.c version_data.c
+CC_SRCS := debug.c $(FIRMWARE)/descriptors.c audiodata.c firmware.c version_data.c
 
 include $(COMMON_DIR)/common.mk
 
@@ -68,30 +70,8 @@ endif
 endif
 endif
 
-<<<<<<< HEAD
 check-descriptors: descriptors.c
 	gcc -I${FX2LIBDIR}/include -I$(LINUXHEADERSDIR) descriptors.c
-=======
-CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 --std-c99 -DSDCC -Wa"-p" $(FLAGS)
-CFLAGS += -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
-CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
-
-# Use make V=1 for a verbose build.
-ifndef V
-    Q_CC=@echo      '      CC ' $@;
-    Q_AS=@echo      '      AS ' $@;
-    Q_LINK=@echo    '    LINK ' $@;
-    Q_RM=@echo      '   CLEAN ';
-    Q_OBJCOPY=@echo ' OBJCOPY ' $@;
-    Q_GEN=@echo     '     GEN ' $@;
-endif
-
-.PHONY: all clean check check_int2jt
-
-all: $(TARGET).hex
-
-$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib $(LINUXHEADERSDIR)/.git
->>>>>>> audio: Place descriptors after the interrupt vector in memory
 
 $(CC_SRCS): $(LINUXHEADERSDIR)/.git
 
@@ -105,6 +85,9 @@ $(LINUXHEADERSDIR)/.git: ../.gitmodules
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r ../.gitmodules
 
+$(FIRMWARE)/descriptors.rel: $(FIRMWARE)/descriptors.c descriptors.h
+	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 -o $(FIRMWARE)/descriptors.rel $(INCS) $<
+
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
 
@@ -112,11 +95,16 @@ version_data.h: Makefile
 	$(Q_GEN) $(COMMON_DIR)/version_data.sh $(VID) $(PID) $(DID)
 
 # FIXME: This should be part of a common Makefile in $(LINUXHEADERSDIR)/.git
-descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
-	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
+descriptors_strings.h: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < $(FIRMWARE)/descriptors.strings > descriptors_strings.h
 
-descriptors_strings.inc: $(LINUXHEADERSDIR)/.git descriptors.strings
-	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
+descriptors_strings.inc: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < $(FIRMWARE)/descriptors.strings > descriptors_strings.inc
 
+<<<<<<< HEAD
 descriptors.h: version_data.h descriptors_strings.h
 descriptors.c: descriptors_strings.h descriptors_strings.inc
+=======
+descriptors.h: date.h descriptors_strings.h
+$(FIRMWARE)/descriptors.c: descriptors_strings.h descriptors_strings.inc
+>>>>>>> audio: Use a common base for audio firmware
