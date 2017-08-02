@@ -21,7 +21,10 @@
 /**
  * No specific setup required
  */
-void TD_Init(void) { }
+void TD_Init(void) {
+    /* Enable clock output */
+    IFCONFIG |= bmIFCLKOE;
+}
 
 extern BYTE alt_setting;
 

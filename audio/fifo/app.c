@@ -18,12 +18,18 @@
  * device and the host. Supports USB IN from the endpoint 2 FIFO buffer.
  */
 
+#include "fx2regs.h"
+
 /**
  * Initialises the FIFO slave interface
  */
 void TD_Init(void) {
-    /* Use 48MHz clock for slave FIFO */
-    IFCONFIG |= bm3048MHZ;
+    /* Use external clock for slave interface */
+    IFCONFIG &= ~(bmIFCLKSRC | bmIFCLKOE);
+    /* Enable slave FIFO mode */
+    SYNCDELAY; IFCONFIG |= (bmIFCFG1 | bmIFCFG0);
+    /* Use word wide data transfer */
+    SYNCDELAY; EP2FIFOCFG |= bmWORDWIDE;
 }
 
 extern BYTE alt_setting;
