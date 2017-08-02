@@ -7,6 +7,15 @@ VID=0x$1
 PID=0x$2
 DID=0x$3
 
+git fetch --unshallow && git fetch --tags
+if [ z"$TRAVIS_BRANCH" != z ]; then
+	echo "Fixing detached head"
+	git branch -v
+	git branch -D $TRAVIS_BRANCH || true
+	git checkout $TRAVIS_COMMIT -b $TRAVIS_BRANCH
+	git branch -v
+fi
+
 # These must be outside the heredoc below otherwise the script won't error.
 COMMIT="$(git log --abbrev-commit --format="%h" -n 1)"
 BRANCH="$(git symbolic-ref --short HEAD)"
