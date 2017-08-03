@@ -15,5 +15,7 @@ a.out
 date.h
 descriptors_strings.h
 descriptors_strings.inc
+version_data.h
+version_data.c
 docs/html/
 docs/latex/
