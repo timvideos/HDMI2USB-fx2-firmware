@@ -101,10 +101,5 @@ descriptors_strings.h: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
 descriptors_strings.inc: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
 	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < $(FIRMWARE)/descriptors.strings > descriptors_strings.inc
 
-<<<<<<< HEAD
 descriptors.h: version_data.h descriptors_strings.h
-descriptors.c: descriptors_strings.h descriptors_strings.inc
-=======
-descriptors.h: date.h descriptors_strings.h
 $(FIRMWARE)/descriptors.c: descriptors_strings.h descriptors_strings.inc
->>>>>>> audio: Use a common base for audio firmware

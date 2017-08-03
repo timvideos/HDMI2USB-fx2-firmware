@@ -283,19 +283,6 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bDelay             = 1,
             .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
         },
-        .endpoints = {
-            {
-                .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
-                .bDescriptorType    = USB_DT_ENDPOINT,
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(0x2) | USB_DIR_OUT,
-                /* Isynchronous endpoint */
-                .bmAttributes       = 0x1,
-                .wMaxPacketSize     = 512,
-                .bInterval          = 1,
-                .bRefresh           = 0,
-                .bSynchAddress      = 0,
-            },
-        },
     },
     #include "../descriptors_strings.inc"
 };
