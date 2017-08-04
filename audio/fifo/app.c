@@ -24,12 +24,12 @@
  * Initialises the FIFO slave interface
  */
 void TD_Init(void) {
-    /* Use external clock for slave interface */
-    IFCONFIG &= ~(bmIFCLKSRC | bmIFCLKOE);
-    /* Enable slave FIFO mode */
-    SYNCDELAY; IFCONFIG |= (bmIFCFG1 | bmIFCFG0);
-    /* Use word wide data transfer */
-    SYNCDELAY; EP2FIFOCFG |= bmWORDWIDE;
+    /* Use internal 48MHz clock for slave FIFO interface */
+    IFCONFIG |= (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
+    /* Reset FIFO as the auto in change needs to be seen by the processor */
+    SYNCDELAY; EP2FIFOCFG = 0;
+    /* Use auto in, word wide data transfer */
+    SYNCDELAY; EP2FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
 }
 
 extern BYTE alt_setting;
@@ -60,7 +60,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
-        /* Reset audio streaming endpoint */
+        /* Reset audio streaming endpoint to IN, ISOC, x4 buffer */
         EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
         SYNCDELAY; EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
         SYNCDELAY; RESETFIFO(0x02);
