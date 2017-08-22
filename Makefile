@@ -134,6 +134,8 @@ clean-docs:
 clean: clean-docs clean-fx2 clean-audio-fx2 clean-unconfigured clean-microload
 	@true
 
+all: conda firmware-fx2 firmware-audio-fx2 microload
+
 # We depend on the .git file inside the directory as git creates an empty dir
 # for us.
 $(FX2LIBDIR)/.git: .gitmodules
@@ -142,3 +144,4 @@ $(FX2LIBDIR)/.git: .gitmodules
 	touch $@ -r .gitmodules
 
 .PHONY: docs clean-docs help-fx2 gateware-fx2 firmware-fx2 load-fx2 clean-fx2 view
+.DEFAULT_GOAL := all
