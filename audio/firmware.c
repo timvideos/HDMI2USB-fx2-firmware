@@ -62,11 +62,23 @@ void main() {
     ENABLE_HISPEED();
     d1off();
 
-    /* No valid endpoints by default */
-    EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
+    /**
+     * No valid endpoints by default, thus clear the valid bit and set the
+     * reset to default
+     * Invalid
+     * Type: Bulk
+     * Direction: out
+     * Buffer: Double
+     */
+    EP2CFG = 0x7F;
+    SYNCDELAY; EP4CFG = 0x7F;
+    SYNCDELAY; EP6CFG = 0x7F;
+    SYNCDELAY; EP8CFG = 0x7F;
 
     /* Enable global interrupts */
-    EA=1;
+    EA = 1;
+    /* Disable serial interrupts */
+    ES0 = 0;
     d2off();
 
     printf("Initialisation complete\n");
@@ -78,13 +90,13 @@ void main() {
             got_sud = FALSE;
         }
         /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-        if ((EP2CFG & bmTYPE) == bmTYPE0) {
-            while (!(EP2468STAT & bmEP2FULL)) {
+        if ((EP8CFG & bmTYPE) == bmTYPE0) {
+            while (!(EP2468STAT & bmEP8FULL)) {
                 d1on();
                 /* Send max data. Larger than 0x30 causes an EOVERFLOW */
-                EP2BCH = 0x00;
+                EP8BCH = 0x00;
                 SYNCDELAY;
-                EP2BCL = 0x30;
+                EP8BCL = 0x30;
             }
             d1off();
         }

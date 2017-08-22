@@ -49,7 +49,7 @@ BYTE alt_setting = 0;
  */
 BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
     printf("Get Interface\n");
-    if (ifc == 0 || ifc == 2) {
+    if (ifc == 0 || ifc == 1) {
         *alt_ifc = alt_setting;
         return TRUE;
     }
@@ -61,7 +61,7 @@ BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
  * 0,0 - Default control
  * 1,0 - Streaming, no endpoint. This is used for when the device is not
  *       streaming
- * 1,1 - Streaming with endpoint 2.
+ * 1,1 - Streaming with endpoint 4.
  * SEE TRM 2.3.7
  */
 BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
@@ -70,8 +70,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     if (ifc == 0 && alt_ifc == 0) {
         alt_setting = 0;
         /* restore endpoints to default condition (invalid, bulk, out, double)*/
-        EP1INCFG = 0x7F;
-        SYNCDELAY; EP2CFG = 0x7F;
+        EP2CFG = 0x7F;
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
@@ -79,8 +78,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
-        EP1INCFG = 0x7F;
-        SYNCDELAY; EP2CFG = 0x7F;
+        EP2CFG = 0x7F;
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
@@ -91,10 +89,10 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
         /* Reset audio streaming endpoint */
-        EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
+        EP8CFG = (bmVALID | bmDIR | bmTYPE0);
+        SYNCDELAY; EP2CFG = 0x7F;
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
-        SYNCDELAY; EP8CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x02);
         SYNCDELAY; RESETTOGGLE(0x82);
         return TRUE;
