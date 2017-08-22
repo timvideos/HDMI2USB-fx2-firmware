@@ -33,6 +33,9 @@
 # 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
 # Common rules
+MAKEFILE_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+export PATH := $(MAKEFILE_PATH)../conda/bin:$(PATH)
+
 LIBS ?= $(FX2LIBDIR)/lib/fx2.lib
 INCS += -I sdcc -I$(FX2LIBDIR)/include -I. -I$(COMMON_DIR)/boards
 
