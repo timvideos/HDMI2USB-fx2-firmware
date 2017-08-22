@@ -69,13 +69,21 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 
     if (ifc == 0 && alt_ifc == 0) {
         alt_setting = 0;
-        /* restore endpoints to default condition */
-        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        /* restore endpoints to default condition (invalid, bulk, out, double)*/
+        EP1INCFG = 0x7F;
+        SYNCDELAY; EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; EP8CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x02);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
-        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        EP1INCFG = 0x7F;
+        SYNCDELAY; EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; EP8CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x02);
         /* reset toggles */
         SYNCDELAY; RESETTOGGLE(0x82);
@@ -84,7 +92,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         alt_setting = 1;
         /* Reset audio streaming endpoint */
         EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
-        SYNCDELAY; EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; EP8CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x02);
         SYNCDELAY; RESETTOGGLE(0x82);
         return TRUE;
