@@ -130,6 +130,10 @@ docs:
 clean-docs:
 	rm -fr docs/html docs/latex
 
+# Global
+clean: clean-docs clean-fx2 clean-audio-fx2 clean-unconfigured clean-microload
+	@true
+
 # We depend on the .git file inside the directory as git creates an empty dir
 # for us.
 $(FX2LIBDIR)/.git: .gitmodules

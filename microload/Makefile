@@ -11,8 +11,8 @@ i2c:
 	cat i2c-prod.hex
 
 clean:
-	rm microload-i2c-prod.a51
-	rm *.hex *.lst
+	rm microload-i2c-prod.a51 || true
+	rm *.hex *.lst || true
 
 #	sdas8051 -l -o -s -p out.ihx microload.a51
 #	objcopy -I ihex -O binary out.ihx out.hex
