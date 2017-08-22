@@ -3,7 +3,10 @@ sudo: required
 
 install:
     - # Install sdcc and as31
-    - sudo apt-get install --force-yes -y as31 doxygen sdcc
+    - sudo apt-get install --force-yes -y as31 doxygen
+    - make conda
+    - export PATH=$PWD/conda/bin:$PATH
+    - which sdcc
     - sdcc --version
 
 script:
