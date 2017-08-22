@@ -19,3 +19,5 @@ version_data.h
 version_data.c
 docs/html/
 docs/latex/
+conda
+Miniconda3-*.sh
