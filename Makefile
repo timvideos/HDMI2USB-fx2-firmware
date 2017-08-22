@@ -19,6 +19,38 @@ FX2LIBDIR = ./third_party/fx2lib
 
 TARGETS += fx2
 
+# conda - self contained environment.
+export PATH := $(shell pwd)/conda/bin:$(PATH)
+
+Miniconda3-latest-Linux-x86_64.sh:
+	@echo
+	@echo " Download conda..."
+	@echo "-----------------------------"
+	wget -c https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	@chmod a+x Miniconda3-latest-Linux-x86_64.sh
+
+conda: Miniconda3-latest-Linux-x86_64.sh
+	@echo
+	@echo " Setting up conda"
+	@echo "-----------------------------"
+	@./Miniconda3-latest-Linux-x86_64.sh -p $@ -b
+	@conda config --set always_yes yes --set changeps1 no
+	@conda update -q conda
+	@conda config --add channels timvideos
+	@echo
+	@echo " Install sdcc (compiler)"
+	@echo "-----------------------------"
+	@conda install sdcc
+	@echo
+	@echo " Install HDMI2USB-mode-switch"
+	@echo "-----------------------------"
+	@pip install --upgrade git+https://github.com/timvideos/HDMI2USB-mode-switch.git
+
+conda-clean:
+	rm -rf conda
+	rm Miniconda3-*.sh || true
+
+# ???
 help-fx2:
 	@echo " make load-fx2"
 	@echo " make view"
