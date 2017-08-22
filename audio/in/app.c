@@ -44,7 +44,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETFIFO(0x08);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
@@ -52,9 +52,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETFIFO(0x08);
         /* reset toggles */
-        SYNCDELAY; RESETTOGGLE(0x82);
+        SYNCDELAY; RESETTOGGLE(0x88);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
@@ -63,8 +63,8 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP2CFG = 0x7F;
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
-        SYNCDELAY; RESETTOGGLE(0x82);
+        SYNCDELAY; RESETFIFO(0x08);
+        SYNCDELAY; RESETTOGGLE(0x88);
         return TRUE;
     }
     return FALSE;

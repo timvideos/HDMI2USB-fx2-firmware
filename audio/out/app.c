@@ -15,7 +15,7 @@
 
 /** \file app.c
  * Contains definitions for firmware specific USB traffic between the
- * device and the host. Supports USB OUT to the endpoint 2 FIFO buffer.
+ * device and the host. Supports USB OUT to the endpoint 8 FIFO buffer.
  */
 
 /**
@@ -47,7 +47,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETFIFO(0x08);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
@@ -55,24 +55,25 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; EP8CFG = 0x7F;
-        SYNCDELAY; RESETFIFO(0x02);
-        SYNCDELAY; RESETFIFO(0x02);
+        SYNCDELAY; RESETFIFO(0x08);
         /* reset toggles */
-        SYNCDELAY; RESETTOGGLE(0x82);
+        SYNCDELAY; RESETTOGGLE(0x88);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
         /* Reset audio streaming endpoint */
-        EP8CFG = (bmVALID | bmDIR | bmTYPE0);
-        SYNCDELAY; EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
-        SYNCDELAY; RESETFIFO(0x02);
-        SYNCDELAY; RESETTOGGLE(0x02);
+        EP8CFG = (bmVALID | bmTYPE0);
+        SYNCDELAY; EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; RESETFIFO(0x08);
+        SYNCDELAY; RESETTOGGLE(0x88);
         /**
          * Arm endpoint two, as OUT endpoints do not come up armed. Arm by
          * writing bit count with skip=1
          */
-        SYNCDELAY; EP2BCH = 0x80;
-        SYNCDELAY; EP2BCL = 0x80;
+        SYNCDELAY; EP8BCH = 0x80;
+        SYNCDELAY; EP8BCL = 0x80;
         return TRUE;
     }
     return FALSE;
@@ -80,10 +81,10 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 
 void TD_Poll() {
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP2CFG & bmTYPE) == bmTYPE0) {
-        while (!(EP2468STAT & bmEP2EMPTY)) {
+    if ((EP8CFG & bmTYPE) == bmTYPE0) {
+        while (!(EP2468STAT & bmEP8EMPTY)) {
             d1on();
-            EP2BCL = 0x80;
+            EP8BCL = 0x80;
         }
         d1off();
     }

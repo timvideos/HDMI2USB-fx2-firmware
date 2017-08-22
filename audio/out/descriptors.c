@@ -173,7 +173,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(2) | USB_DIR_OUT,
+                .bEndpointAddress   = USB_ENDPOINT_NUMBER(8) | USB_DIR_OUT,
                 .bmAttributes       = (USB_ENDPOINT_XFER_ISOC | USB_ENDPOINT_SYNC_NONE),
                 .wMaxPacketSize     = 512,
                 .bInterval          = 4,

@@ -15,7 +15,7 @@
 
 /** \file app.c
  * Contains definitions for firmware specific USB traffic between the
- * device and the host. Supports USB IN from the endpoint 2 FIFO buffer.
+ * device and the host. Supports USB IN from the endpoint 8 FIFO buffer.
  */
 
 #include "fx2regs.h"
@@ -27,9 +27,9 @@ void TD_Init(void) {
     /* Use internal 48MHz clock for slave FIFO interface */
     IFCONFIG |= (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
     /* Reset FIFO as the auto in change needs to be seen by the processor */
-    SYNCDELAY; EP2FIFOCFG = 0;
+    SYNCDELAY; EP8FIFOCFG = 0;
     /* Use auto in, word wide data transfer */
-    SYNCDELAY; EP2FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
+    SYNCDELAY; EP8FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
 }
 
 extern BYTE alt_setting;
@@ -48,23 +48,31 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     if (ifc == 0 && alt_ifc == 0) {
         alt_setting = 0;
         /* restore endpoints to default condition */
-        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
-        SYNCDELAY; RESETFIFO(0x02);
+        EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; EP8CFG = 0x7F;
+        SYNCDELAY; RESETFIFO(0x08);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 0) {
         alt_setting = 0;
-        EP1INCFG = EP1OUTCFG = EP2CFG = EP4CFG = EP6CFG = EP8CFG = 0;
-        SYNCDELAY; RESETFIFO(0x02);
+        EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; EP8CFG = 0x7F;
+        SYNCDELAY; RESETFIFO(0x08);
         /* reset toggles */
-        SYNCDELAY; RESETTOGGLE(0x82);
+        SYNCDELAY; RESETTOGGLE(0x88);
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
         /* Reset audio streaming endpoint to IN, ISOC, x4 buffer */
-        EP2CFG |= (bmVALID | bmDIR | bmTYPE0);
-        SYNCDELAY; EP1INCFG = EP1OUTCFG = EP4CFG = EP6CFG = EP8CFG = 0;
-        SYNCDELAY; RESETFIFO(0x02);
-        SYNCDELAY; RESETTOGGLE(0x82);
+        EP8CFG = (bmVALID | bmDIR | bmTYPE0);
+        SYNCDELAY; EP2CFG = 0x7F;
+        SYNCDELAY; EP4CFG = 0x7F;
+        SYNCDELAY; EP6CFG = 0x7F;
+        SYNCDELAY; RESETFIFO(0x08);
+        SYNCDELAY; RESETTOGGLE(0x88);
         return TRUE;
     }
     return FALSE;
@@ -72,13 +80,13 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 
 void TD_Poll(void) {
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP2CFG & bmTYPE) == bmTYPE0) {
-        while (!(EP2468STAT & bmEP2FULL)) {
+    if ((EP8CFG & bmTYPE) == bmTYPE0) {
+        while (!(EP2468STAT & bmEP8FULL)) {
             d1on();
             /* Send max data. Larger than 0x30 causes an EOVERFLOW */
-            EP2BCH = 0x00;
+            EP8BCH = 0x00;
             SYNCDELAY;
-            EP2BCL = 0x30;
+            EP8BCL = 0x30;
         }
         d1off();
     }
