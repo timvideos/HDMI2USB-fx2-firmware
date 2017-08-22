@@ -11,11 +11,11 @@ install:
     - ./.travis/setup.sh
 
 script:
-    - make firmware-fx2
-    - make firmware-audio-fx2
-    - make firmware-unconfigured
-    - make microload
-    - make docs
+    - make BOARD=opsis
+    - make clean
+    - make BOARD=atlys
+    - make clean
+    - make BOARD=fx2miniboard firmware-audio-fx2
 
 after_success:
     - ./.travis/push-docs.sh
