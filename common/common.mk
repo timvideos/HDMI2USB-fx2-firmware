@@ -82,8 +82,8 @@ check: check_int2jt
 
 clean:
 	$(Q_RM)$(RM) *.adb *.asm *.cdb *.iic *.lk *.lnk *.lst *.omf *.map \
-		*.mem *.rel *.rst *.sym descriptors_strings.* a.out date.h \
-		date.inc progOffsets.h ${TARGET}.hex $(FIRMWARE)/*.asm \
+		*.mem *.rel *.rst *.sym descriptors_strings.* version_data.* a.out \
+		date.h date.inc progOffsets.h ${TARGET}.hex $(FIRMWARE)/*.asm \
 		$(FIRMWARE)/*.lst $(FIRMWARE)/*.rel $(FIRMWARE)/*.rst $(FIRMWARE)/*.sym
 	cd $(FX2LIBDIR) && make clean
 
