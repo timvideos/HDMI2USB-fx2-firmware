@@ -32,8 +32,8 @@
 # 	You will need HDMI2USB-mode-switch from
 # 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
-TARGET := audio
 FIRMWARE ?= in
+TARGET := audio_$(FIRMWARE)
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
