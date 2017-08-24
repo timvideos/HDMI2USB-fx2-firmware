@@ -24,8 +24,14 @@
  * Initialises the FIFO slave interface
  */
 void TD_Init(void) {
+    /* Return FIFO settings back to default */
+	SYNCDELAY; PINFLAGSAB   = 0x00;
+	SYNCDELAY; PINFLAGSCD   = 0x00;
+	SYNCDELAY; FIFOPINPOLAR = 0x00;
     /* Use internal 48MHz clock for slave FIFO interface */
     IFCONFIG |= (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
+    /* Set FLAGD to be EP8 Full Flag */
+    SYNCDELAY; PINFLAGSCD = 0xF0;
     /* Reset FIFO as the auto in change needs to be seen by the processor */
     SYNCDELAY; EP8FIFOCFG = 0;
     /* Use auto in, word wide data transfer */
@@ -66,6 +72,8 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
+        IFCONFIG |= (bmIFCFG1 | bmIFCFG0);
+        SYNCDELAY; REVCTL |= (bmNOAUTOARM | bmSKIPCOMMIT);
         /* Reset audio streaming endpoint to IN, ISOC, x4 buffer */
         EP8CFG = (bmVALID | bmDIR | bmTYPE0);
         SYNCDELAY; EP2CFG = 0x7F;
@@ -73,21 +81,14 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x08);
         SYNCDELAY; RESETTOGGLE(0x88);
+        SYNCDELAY; EP8FIFOCFG |= bmAUTOIN;
+        SYNCDELAY; EP8AUTOINLENH = 0x20;
+        SYNCDELAY; EP8AUTOINLENL = 0x00;
         return TRUE;
     }
     return FALSE;
 }
 
 void TD_Poll(void) {
-    /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP8CFG & bmTYPE) == bmTYPE0) {
-        while (!(EP2468STAT & bmEP8FULL)) {
-            d1on();
-            /* Send max data. Larger than 0x30 causes an EOVERFLOW */
-            EP8BCH = 0x00;
-            SYNCDELAY;
-            EP8BCL = 0x30;
-        }
-        d1off();
-    }
+/* Data sent automatically when FIFO is full*/
 }
