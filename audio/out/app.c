@@ -39,6 +39,8 @@ void TD_Init(void) {
     SYNCDELAY; OEA = (bmBIT3 | bmBIT4 | bmBIT5 | bmBIT6);
     SYNCDELAY; OEB = 0xFF;
     SYNCDELAY; OED = 0xFF;
+    /* Automatically commit packets to the FIFO */
+    SYNCDELAY; EP8FIFOCFG |= (bmAUTOOUT | bmWORDWIDE);
     /* Clear all FIFO control signals */
     SYNCDELAY; SLWR = 1;
     SYNCDELAY; PKTEND = 1;
@@ -106,17 +108,24 @@ void TD_Poll() {
         FIFOADD0 = 1;
         FIFOADD1 = 1;
         SYNCDELAY3;
-        while ((EP2468STAT & bmEP8FULL)) {
+        while (!(EP8CS & bmEPEMPTY)) {
             d1on();
             /* FLAGS are active low */
-            if (!FULL_FLAG) {
+            if (FULL_FLAG) {
                 SLWR = 1;
             } else {
                 FDL = EP8FIFOBUF[position++];
                 FDH = EP8FIFOBUF[position++];
                 SLWR = 0;
                 SLWR = 1;
-                position = (position < 512) ? position : 0;
+                usart_send_byte_hex(FDH);
+                usart_send_byte_hex(FDL);
+            }
+            if (position > 511) {
+                /* Rearm EP8OUT */
+                printf("\n");
+                EP8BCL = 0x80;
+                position = 0;
             }
         }
         /* Signal end of packet */

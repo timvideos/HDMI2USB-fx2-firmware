@@ -25,18 +25,18 @@
  */
 void TD_Init(void) {
     /* Return FIFO settings back to default */
-	SYNCDELAY; PINFLAGSAB   = 0x00;
-	SYNCDELAY; FIFOPINPOLAR = 0x00;
-    /* Use internal 48MHz clock for slave FIFO interface */
-    IFCONFIG |= (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
+    SYNCDELAY; PINFLAGSAB   = 0x00;
+    SYNCDELAY; PINFLAGSCD   = 0x00;
+    /* Make Full Flag active high */
+    SYNCDELAY; FIFOPINPOLAR = bmBIT0;
+    /* Use internal 48MHz clock and enable slave FIFO */
+    IFCONFIG = (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
+    SYNCDELAY; IFCONFIG &= ~bmIFCLKSRC;
     SYNCDELAY; REVCTL = (bmNOAUTOARM | bmSKIPCOMMIT);
-    /* Set FLAGD to be EP8 Full Flag */
-    SYNCDELAY; PINFLAGSCD = 0xF0;
     /* Reset auto out if set by other firmware */
     SYNCDELAY; EP8FIFOCFG &= ~(bmAUTOOUT);
     /* Use auto in, word wide data transfer */
     SYNCDELAY; EP8FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
-    PORTACFG |= bmFLAGD;
 }
 
 extern BYTE alt_setting;
