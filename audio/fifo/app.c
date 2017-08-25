@@ -26,16 +26,17 @@
 void TD_Init(void) {
     /* Return FIFO settings back to default */
 	SYNCDELAY; PINFLAGSAB   = 0x00;
-	SYNCDELAY; PINFLAGSCD   = 0x00;
 	SYNCDELAY; FIFOPINPOLAR = 0x00;
     /* Use internal 48MHz clock for slave FIFO interface */
     IFCONFIG |= (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
+    SYNCDELAY; REVCTL = (bmNOAUTOARM | bmSKIPCOMMIT);
     /* Set FLAGD to be EP8 Full Flag */
     SYNCDELAY; PINFLAGSCD = 0xF0;
-    /* Reset FIFO as the auto in change needs to be seen by the processor */
-    SYNCDELAY; EP8FIFOCFG = 0;
+    /* Reset auto out if set by other firmware */
+    SYNCDELAY; EP8FIFOCFG &= ~(bmAUTOOUT);
     /* Use auto in, word wide data transfer */
     SYNCDELAY; EP8FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
+    PORTACFG |= bmFLAGD;
 }
 
 extern BYTE alt_setting;
@@ -73,15 +74,13 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
         IFCONFIG |= (bmIFCFG1 | bmIFCFG0);
-        SYNCDELAY; REVCTL |= (bmNOAUTOARM | bmSKIPCOMMIT);
-        /* Reset audio streaming endpoint to IN, ISOC, x4 buffer */
+        /* Reset audio streaming endpoint to IN, ISOC, x2 buffer */
         EP8CFG = (bmVALID | bmDIR | bmTYPE0);
         SYNCDELAY; EP2CFG = 0x7F;
         SYNCDELAY; EP4CFG = 0x7F;
         SYNCDELAY; EP6CFG = 0x7F;
         SYNCDELAY; RESETFIFO(0x08);
         SYNCDELAY; RESETTOGGLE(0x88);
-        SYNCDELAY; EP8FIFOCFG |= bmAUTOIN;
         SYNCDELAY; EP8AUTOINLENH = 0x20;
         SYNCDELAY; EP8AUTOINLENL = 0x00;
         return TRUE;
@@ -90,5 +89,11 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 }
 
 void TD_Poll(void) {
+    int i;
+    while (i < 512)
+        usart_send_byte_hex(EP8FIFOBUF[i++]);
+    printf("\n");
+    RESETFIFO(0x08);
+
 /* Data sent automatically when FIFO is full*/
 }
