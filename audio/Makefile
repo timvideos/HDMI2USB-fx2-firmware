@@ -38,7 +38,8 @@ LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
 INCS := -I$(LINUXHEADERSDIR)
 
-# Descriptors require more space in memory
+# Audio descriptors require more space, so using 3d00 rather than the normal
+# 0x3c00
 CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 

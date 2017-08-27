@@ -34,7 +34,7 @@
 #define SYNCDELAY SYNCDELAY4
 
 /**
- * Returns the configuration. We only support cfg 1
+ * Returns the configuration. We only have one configuration.
  */
 BYTE handle_get_configuration() {
     return 1;
@@ -42,7 +42,7 @@ BYTE handle_get_configuration() {
 
 /**
  * Sets the configuration. Successful if setting it to cfg 1, otherwise fail
- * as that is the only one supported
+ * as the descriptors only provide one configuration.
  */
 BOOL handle_set_configuration(BYTE cfg) {
     return cfg==1 ? TRUE : FALSE;
