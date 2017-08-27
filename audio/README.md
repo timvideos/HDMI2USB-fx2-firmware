@@ -39,3 +39,11 @@ and can be cleaned using
 `make BOARD=fx2miniboard FIRMWARE=in clean`
 
 `load` works in the same way.
+
+# Serial
+
+ * Baud rate of 115200
+ * Serial device /dev/ttyUSB0 (default on linux)
+ * Connections
+  - RXD -> PD3
+  - GND -> GND
