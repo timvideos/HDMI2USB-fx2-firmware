@@ -38,10 +38,12 @@ LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
 INCS := -I$(LINUXHEADERSDIR)
 
-CFLAGS := -DDSCR_AREA=0x3e00 --code-size 0x3c00 --xram-size 0x0200
+# Audio descriptors require more space, so using 3d00 rather than the normal
+# 0x3c00
+CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
 
-CC_SRCS := descriptors.c firmware.c version_data.c
+CC_SRCS := descriptors.c debug.c audiodata.c firmware.c version_data.c
 
 include $(COMMON_DIR)/common.mk
 
