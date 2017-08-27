@@ -20,16 +20,16 @@
 #include <fx2regs.h>
 #include "debug.h"
 
-#define USART PA1
-#define _USART _PA1
+#define USART PD1
+#define _USART _PD1
 #define BAUD 32
 
 /**
- * Initialises the usart interface. It supports output from the FX2 on pin PA1
+ * Initialises the usart interface. It supports output from the FX2 on pin D1
  */
 void usart_init(void) {
     USART = 1;
-    /* Enable output on pin A1 */
+    /* Enable output on pin D1 */
     OED |= bmBIT3;
 }
 

@@ -40,7 +40,7 @@ void TD_Init(void) {
     SYNCDELAY; OEB = 0xFF;
     SYNCDELAY; OED = 0xFF;
     /* Automatically commit packets to the FIFO */
-    SYNCDELAY; EP8FIFOCFG |= (bmAUTOOUT | bmWORDWIDE);
+    SYNCDELAY; EP8FIFOCFG |= bmAUTOOUT;
     /* Clear all FIFO control signals */
     SYNCDELAY; SLWR = 1;
     SYNCDELAY; PKTEND = 1;

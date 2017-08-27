@@ -65,13 +65,16 @@ void main() {
     SETIF48MHZ();
     usart_init();
 
+    /* Set all FIFO buffers to 8 bit by default */
+    EP2FIFOCFG &= ~bmWORDWIDE;
+    EP4FIFOCFG &= ~bmWORDWIDE;
+    EP6FIFOCFG &= ~bmWORDWIDE;
+    EP8FIFOCFG &= ~bmWORDWIDE;
+
     USE_USB_INTS();
     ENABLE_SUDAV();
     ENABLE_USBRESET();
     ENABLE_HISPEED();
-    d1off();
-
-    TD_Init();
 
     /**
      * No valid endpoints by default, thus clear the valid bit and set the
@@ -91,6 +94,9 @@ void main() {
     EA = 1;
     /* Disable serial interrupts */
     ES0 = 0;
+    d1off();
+
+    TD_Init();
     d2off();
 
     printf("Initialisation complete\n");

@@ -35,8 +35,8 @@ void TD_Init(void) {
     SYNCDELAY; REVCTL = (bmNOAUTOARM | bmSKIPCOMMIT);
     /* Reset auto out if set by other firmware */
     SYNCDELAY; EP8FIFOCFG &= ~(bmAUTOOUT);
-    /* Use auto in, word wide data transfer */
-    SYNCDELAY; EP8FIFOCFG |= (bmAUTOIN | bmWORDWIDE);
+    /* Automatically commit packets to the FIFO */
+    SYNCDELAY; EP8FIFOCFG |= bmAUTOIN;
 }
 
 extern BYTE alt_setting;
