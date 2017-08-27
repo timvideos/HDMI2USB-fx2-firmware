@@ -27,8 +27,7 @@
 #define FIFOADD1 PA5
 #define PKTEND PA6
 #define FULL_FLAG PA7
-#define FDL IOB
-#define FDH IOD
+#define FD IOB
 
 void TD_Init(void) {
     /* Use internal 48MHz clock */
@@ -114,11 +113,9 @@ void TD_Poll() {
             if (FULL_FLAG) {
                 SLWR = 1;
             } else {
-                FDL = EP8FIFOBUF[position++];
-                FDH = EP8FIFOBUF[position++];
+                FD = EP8FIFOBUF[position++];
                 SLWR = 0;
                 SLWR = 1;
-                usart_send_byte_hex(FDH);
                 usart_send_byte_hex(FDL);
             }
             if (position > 511) {
