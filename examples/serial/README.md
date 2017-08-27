@@ -6,8 +6,7 @@ uses the same setup as the HDMI2USB firmware, which is:
  * Baud rate of 115200
  * Serial device /dev/ttyUSB0 (default on linux)
  * Connections
-  - RXD -> PD3   (FIXME: Unused?)
-  - TXD -> RDY0
+  - RXD -> PD3
   - GND -> GND
 
 This example prints "This is the serial example for the HDMI2USB firmware" to
