@@ -207,7 +207,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
-            .bMaxPower              = 0x32,
+            .bMaxPower              = 100 / 2,
         },
         .control = {
             .standard = {
