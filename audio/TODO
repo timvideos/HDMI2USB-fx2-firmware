@@ -4,4 +4,3 @@
   http://www.usb.org/developers/docs/whitepapers/iadclasscode_r10.pdf
   http://www.usb.org/developers/docs/InterfaceAssociationDescriptor_ecn.pdf
 * Add more supported frequencies (descriptors.h descripts.highspeed.format)
-* Add interrupts
