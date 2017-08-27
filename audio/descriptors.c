@@ -1,6 +1,6 @@
- //Copyright (C) 2009 Ubixum, Inc. 
- //Copyright (C) 2014 Tim 'mithro' Ansell
- //Copyright (C) 2017 Kyle Robbertze
+//Copyright (C) 2009 Ubixum, Inc. 
+//Copyright (C) 2014 Tim 'mithro' Ansell
+//Copyright (C) 2017 Kyle Robbertze
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -14,10 +14,12 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+// 02110-1301  USA
 
 /** \file descriptors.c
- * Describes the device according to Section 4 of the USB Audio Spec
+ * Describes the audio capture device according to Section 4 of the USB Audio
+ * Spec
  */
 
 #include "descriptors.h"
@@ -28,12 +30,15 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bLength            = USB_DT_DEVICE_SIZE,
         .bDescriptorType    = USB_DT_DEVICE,
         .bcdUSB             = USB_BCD_V20,
-        /* Class defined per interface */
+        /* Zero indicates class defined per interface */
         .bDeviceClass       = 0, 
         .bDeviceSubClass    = 0,
-        /* Protocol defined per interface */
+        /* Zero indicates protocol defined per interface */
         .bDeviceProtocol    = 0,
-        /* packet size is in bytes */
+        /*
+         * 64 bytes is the maximum size of a control buffer, which endpoint 0
+         * is.
+         */
         .bMaxPacketSize0    = 64,
         .idVendor           = VID,
         .idProduct          = PID,
@@ -55,7 +60,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         /* packet size is in kB */
         .bMaxPacketSize0    = 64,
         .bNumConfigurations = 1,
-        /* Must be zero */
+        /* Must be zero according to the USB Audio spec */
         .bRESERVED          = 0,
     },
     .highspeed = {
@@ -68,7 +73,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .iConfiguration         = 0,
             .bmAttributes           = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
-            .bMaxPower              = 0x32,
+            .bMaxPower              = 100 / 2,
         },
         .control = {
             .standard = {
@@ -79,7 +84,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bNumEndpoints      = 0,
                 .bInterfaceClass    = USB_CLASS_AUDIO,
                 .bInterfaceSubClass = USB_SUBCLASS_AUDIOCONTROL,
-                /* Must be zero */
+                /* Must be zero according to the USB Audio spec */
                 .bInterfaceProtocol = 0,
                 /* Unused */
                 .iInterface         = 0,
@@ -93,7 +98,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                     sizeof(descriptors.highspeed.control.classspec) +
                     sizeof(descriptors.highspeed.input) +
                     sizeof(descriptors.highspeed.output),
-                /* Number of streaming interfaces */
+                /* Number of data streaming interfaces */
                 .bInCollection      = 1,
                 /* The first streaming interface belongs to this control */
                 .baInterfaceNr[0]   = 1,
@@ -173,6 +178,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             {
                 .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
                 .bDescriptorType    = USB_DT_ENDPOINT,
+                /* Endpoint 8 is unused in the video firmware */
                 .bEndpointAddress   = USB_ENDPOINT_NUMBER(8) | USB_DIR_IN,
                 .bmAttributes       = (USB_ENDPOINT_XFER_ISOC | USB_ENDPOINT_SYNC_NONE),
                 .wMaxPacketSize     = 512,
@@ -186,7 +192,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .bDescriptorType    = USB_DT_CS_ENDPOINT,
             .bDescriptorSubtype = UAC_AS_GENERAL,
             .bmAttributes       = 0,
-            /* Unused */
+            /* These attributes are unused */
             .bLockDelayUnits    = 0,
             .wLockDelay         = 0,
         },

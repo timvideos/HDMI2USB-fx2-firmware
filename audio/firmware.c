@@ -64,7 +64,8 @@ void main() {
 
     /**
      * No valid endpoints by default, thus clear the valid bit and set the
-     * reset to default
+     * rest to default.
+     * http://www.cypress.com/file/126446/download#G11.1057794
      * Invalid
      * Type: Bulk
      * Direction: out
