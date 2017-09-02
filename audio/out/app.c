@@ -29,7 +29,7 @@
 #define FULL_FLAG PA7
 #define FD IOB
 #define IFCLK PD1
-#define SKIP(X) EP ## X ## BCL = 0x80
+#define SKIP_FIFO bmBIT7
 
 void TD_Init(void) {
     /* Use internal 48MHz clock */
@@ -128,7 +128,7 @@ void TD_Poll() {
             }
         }
         /* Discard byte from the EP8 FIFO */
-        SKIP(8);
+        EP8BCL = SKIP_FIFO;
         /* DEBUG */
         printf("\n");
         /* Signal end of packet */
