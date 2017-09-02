@@ -29,6 +29,7 @@
 #define FULL_FLAG PA7
 #define FD IOB
 #define IFCLK PD1
+#define SKIP(X) EP ## X ## BCL = 0x80
 
 void TD_Init(void) {
     /* Use internal 48MHz clock */
@@ -126,8 +127,8 @@ void TD_Poll() {
                 usart_send_byte_hex(FD);
             }
         }
-        /* Discard byte from the FIFO */
-        EP8BCL = 0x80;
+        /* Discard byte from the EP8 FIFO */
+        SKIP(8);
         /* DEBUG */
         printf("\n");
         /* Signal end of packet */
