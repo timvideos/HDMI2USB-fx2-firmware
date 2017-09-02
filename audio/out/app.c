@@ -28,6 +28,7 @@
 #define PKTEND PA6
 #define FULL_FLAG PA7
 #define FD IOB
+#define IFCLK PD1
 
 void TD_Init(void) {
     /* Use internal 48MHz clock */
@@ -38,11 +39,10 @@ void TD_Init(void) {
     SYNCDELAY; OEA = (bmBIT3 | bmBIT4 | bmBIT5 | bmBIT6);
     SYNCDELAY; OEB = 0xFF;
     SYNCDELAY; OED = 0xFF;
-    /* Automatically commit packets to the FIFO */
-    SYNCDELAY; EP8FIFOCFG |= bmAUTOOUT;
     /* Clear all FIFO control signals */
     SYNCDELAY; SLWR = 1;
-    SYNCDELAY; PKTEND = 1;
+    PKTEND = 1;
+    IFCLK = 0;
 }
 
 extern BYTE alt_setting;
@@ -101,34 +101,38 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 
 void TD_Poll() {
     int position = 0;
+    WORD buflen;
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP8CFG & bmTYPE) == bmTYPE0) {
+    //TODO: Only write when not empty
+    if ((EP8CFG & bmTYPE) == bmTYPE0) {// && !(EP8CS & bmEPEMPTY)) { (is not ever true)
         /* Write to Endpoint 8 FIFO */
+        IFCLK = 1;
         FIFOADD0 = 1;
         FIFOADD1 = 1;
-        SYNCDELAY3;
-        while (!(EP8CS & bmEPEMPTY)) {
-            d1on();
+        /* Setup is completed on the rising edge of the clock */
+        IFCLK = 0; SYNCDELAY16; IFCLK = 1;
+        buflen = MAKEWORD(EP8BCH, EP8BCL);
+        for (position = 0; position < buflen; position++) {
             /* FLAGS are active low */
             if (FULL_FLAG) {
                 SLWR = 1;
             } else {
-                FD = EP8FIFOBUF[position++];
+                IFCLK = 0; 
+                FD = EP8FIFOBUF[position];
                 SLWR = 0;
+                SYNCDELAY16; IFCLK = 1;
                 SLWR = 1;
-                usart_send_byte_hex(FDL);
-            }
-            if (position > 511) {
-                /* Rearm EP8OUT */
-                printf("\n");
-                EP8BCL = 0x80;
-                position = 0;
+                /* DEBUG */
+                usart_send_byte_hex(FD);
             }
         }
+        /* Discard byte from the FIFO */
+        EP8BCL = 0x80;
+        /* DEBUG */
+        printf("\n");
         /* Signal end of packet */
         PKTEND = 0;
-        SYNCDELAY3;
+        IFCLK = 0; SYNCDELAY16; IFCLK = 1;
         PKTEND = 1;
-        d1off();
     }
 }
