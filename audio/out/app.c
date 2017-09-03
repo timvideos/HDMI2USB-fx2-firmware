@@ -17,6 +17,12 @@
  * Contains definitions for firmware specific USB traffic between the
  * device and the host. Supports USB OUT to the endpoint 8 FIFO buffer.
  */
+#ifdef DEBUG
+#include <stdio.h>
+#include "debug.h"
+#else
+#define printf(...)
+#endif
 
 #include <fx2types.h>
 #include <fx2macros.h>
@@ -39,7 +45,7 @@ void TD_Init(void) {
     /* Enable outputs for FIFO */
     SYNCDELAY; OEA = (bmBIT3 | bmBIT4 | bmBIT5 | bmBIT6);
     SYNCDELAY; OEB = 0xFF;
-    SYNCDELAY; OED = 0xFF;
+    SYNCDELAY; OED |= bmBIT0;
     /* Clear all FIFO control signals */
     SYNCDELAY; SLWR = 1;
     PKTEND = 1;
@@ -125,10 +131,12 @@ void TD_Poll() {
                 SLWR = 1;
                 /* DEBUG */
                 usart_send_byte_hex(FD);
+                SYNCDELAY16;
             }
         }
         /* Discard byte from the EP8 FIFO */
         EP8BCL = SKIP_FIFO;
+        SYNCDELAY;
         /* DEBUG */
         printf("\n");
         /* Signal end of packet */
