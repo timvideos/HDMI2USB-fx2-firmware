@@ -8,6 +8,7 @@ install:
     - export PATH=$PWD/conda/bin:$PATH
     - which sdcc
     - sdcc --version
+    - ./.travis/setup.sh
 
 script:
     - make firmware-fx2
@@ -17,4 +18,4 @@ script:
     - make docs
 
 after_success:
-    - ./.travis-push-docs.sh
+    - ./.travis/push-docs.sh
