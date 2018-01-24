@@ -29,12 +29,12 @@ void TD_Init(void) {
     SYNCDELAY; PINFLAGSCD   = 0x00;
     /* Make Full Flag active high */
     SYNCDELAY; FIFOPINPOLAR = bmBIT0;
-    /* Use internal 48MHz clock and enable slave FIFO */
-    IFCONFIG = (bmIFCLKSRC | bm3048MHZ | bmIFCFG1 | bmIFCFG0);
-    SYNCDELAY; IFCONFIG &= ~bmIFCLKSRC;
+    /* Use external clock and enable slave FIFO */
+    IFCONFIG &= ~bmIFCLKSRC;
+    SYNCDELAY; IFCONFIG = (bmIFCFG1 | bmIFCFG0);
     SYNCDELAY; REVCTL = (bmNOAUTOARM | bmSKIPCOMMIT);
     /* Reset auto out if set by other firmware */
-    SYNCDELAY; EP8FIFOCFG &= ~(bmAUTOOUT);
+    SYNCDELAY; EP8FIFOCFG &= ~bmAUTOOUT;
     /* Automatically commit packets to the FIFO */
     SYNCDELAY; EP8FIFOCFG |= bmAUTOIN;
 }
@@ -89,7 +89,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 }
 
 void TD_Poll(void) {
-    int i;
+    int i = 0;
     while (i < 512)
         usart_send_byte_hex(EP8FIFOBUF[i++]);
     printf("\n");
