@@ -1,9 +1,14 @@
 language: c
-sudo: required
+sudo: false
+
+addons:
+    apt:
+        packages:
+            - doxygen
 
 install:
-    - # Install sdcc and as31
-    - sudo apt-get install --force-yes -y as31 doxygen
+    - export BOARD="$B" && echo "BOARD='$BOARD'"
+    - export TARGETS="$T" && echo "TARGETS='$TARGETS'"
     - make conda
     - export PATH=$PWD/conda/bin:$PATH
     - which sdcc
@@ -11,11 +16,41 @@ install:
     - ./.travis/setup.sh
 
 script:
-    - make firmware-fx2
-    - make firmware-audio-fx2
-    - make firmware-unconfigured
-    - make microload
-    - make docs
+    - make $TARGETS
 
-after_success:
-    - ./.travis/push-docs.sh
+jobs:
+    fail_fast: true
+    include:
+        #-----------------------------------------
+        # Video targets
+        #-----------------------------------------
+        - stage: Build
+          env: B=opsis T="firmware-fx2"
+        - stage: Build
+          env: B=atlys T="firmware-fx2"
+
+        #-----------------------------------------
+        # Audio targets
+        #-----------------------------------------
+        - stage: Build
+          env: B=opsis T="firmware-audio-fx2"
+        - stage: Build
+          env: B=atlys T="firmware-audio-fx2"
+        - stage: Build
+          env: B=fx2miniboard T="firmware-audio-fx2"
+
+        #-----------------------------------------
+        # Unconfigured targets
+        #-----------------------------------------
+        - stage: Build
+          env: B=opsis T="firmware-unconfigured"
+        - stage: Build
+          env: B=atlys T="firmware-unconfigured"
+
+        #-----------------------------------------
+        # Build and deploy docs
+        #-----------------------------------------
+        - stage: Deploy docs
+          script:
+              - make docs
+              - ./.travis/push-docs.sh
