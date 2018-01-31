@@ -26,7 +26,7 @@
 #
 # To build a firmware suitable for loading from EEPROM:
 #   make FLAGS="-DEEPROM"
-#   
+#
 # To load a firmware:
 # 	make load
 # 	You will need HDMI2USB-mode-switch from
