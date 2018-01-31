@@ -20,9 +20,8 @@
 #include <fx2regs.h>
 #include "debug.h"
 
-#define PD3 0xB3
-/* Serial write uses pin D3 */
-__sbit __at PD3 USART;
+#define USART PD3
+#define _USART _PD3
 #define BAUD 32
 
 /**

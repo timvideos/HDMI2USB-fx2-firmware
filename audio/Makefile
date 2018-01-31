@@ -26,13 +26,14 @@
 #
 # To build a firmware suitable for loading from EEPROM:
 #   make FLAGS="-DEEPROM"
-#   
+#
 # To load a firmware:
 # 	make load
 # 	You will need HDMI2USB-mode-switch from
 # 	https://github.com/timvideos/HDMI2USB-mode-switch
 #
-TARGET := audio
+FIRMWARE ?= in
+TARGET := audio_$(FIRMWARE)
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 COMMON_DIR := ../common
@@ -42,8 +43,9 @@ INCS := -I$(LINUXHEADERSDIR)
 # 0x3c00
 CFLAGS := -DDSCR_AREA=0x3d00 --code-size 0x3c00 --xram-size 0x0200
 CFLAGS += --xram-loc 0x3c00 -Wl"-b INT2JT=0x3f00"
+CFLAGS += -DFIRMWARE_$(FIRMWARE)
 
-CC_SRCS := descriptors.c debug.c audiodata.c firmware.c version_data.c
+CC_SRCS := debug.c $(FIRMWARE)/descriptors.c audiodata.c firmware.c version_data.c
 
 include $(COMMON_DIR)/common.mk
 
@@ -83,6 +85,9 @@ $(LINUXHEADERSDIR)/.git: ../.gitmodules
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r ../.gitmodules
 
+$(FIRMWARE)/descriptors.rel: $(FIRMWARE)/descriptors.c descriptors.h
+	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 -o $(FIRMWARE)/descriptors.rel $(INCS) $<
+
 %.rel: %.c descriptors.h
 	$(Q_CC)$(CC) $(CFLAGS) -c --disable-warning 85 $(INCS) $<
 
@@ -90,11 +95,11 @@ version_data.h: Makefile
 	$(Q_GEN) $(COMMON_DIR)/version_data.sh $(VID) $(PID) $(DID)
 
 # FIXME: This should be part of a common Makefile in $(LINUXHEADERSDIR)/.git
-descriptors_strings.h: $(LINUXHEADERSDIR)/.git descriptors.strings
-	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < descriptors.strings > descriptors_strings.h
+descriptors_strings.h: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --header < $(FIRMWARE)/descriptors.strings > descriptors_strings.h
 
-descriptors_strings.inc: $(LINUXHEADERSDIR)/.git descriptors.strings
-	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < descriptors.strings > descriptors_strings.inc
+descriptors_strings.inc: $(LINUXHEADERSDIR)/.git $(FIRMWARE)/descriptors.strings
+	@python2 $(LINUXHEADERSDIR)/descriptors_string_table.py --cfile < $(FIRMWARE)/descriptors.strings > descriptors_strings.inc
 
 descriptors.h: version_data.h descriptors_strings.h
-descriptors.c: descriptors_strings.h descriptors_strings.inc
+$(FIRMWARE)/descriptors.c: descriptors_strings.h descriptors_strings.inc
