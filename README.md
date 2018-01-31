@@ -1,7 +1,7 @@
 # HDMI2USB-fx2-firmware
 [![Build Status](https://api.travis-ci.org/timvideos/HDMI2USB-fx2-firmware.svg?branch=master)](https://travis-ci.org/timvideos/HDMI2USB-fx2-firmware)
 
-This repository contains the firmware used in the 
+This repository contains the firmware used in the
 [HDMI2USB project](https://hdmi2usb.tv) on the Cypress FX2 chip found on boards
 such as the [Numato Opsis](https://opsis.hdmi2usb.tv) and the Digilent Atlys
 boards.
@@ -81,12 +81,13 @@ FIXME: Put some documentation about the FX2 here.
 
 # Building
 
-    make -f Makefile.fx2 load-fx2
+    make load-fx2
 
 will build and flash the FX2 firmware. This requires the `hdmi2usb-mode-switch`
-command, which on Debian Sid and Stretch can be installed using the
+command, which on Debian Stretch and later can be installed using the
 `hdmi2usb-mode-switch` package, otherwise see
-[HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch).
+[HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch). It
+also requires [SDCC](http://sdcc.sourceforge.net/).
 
 There are three ways to run `hdmi2usb-mode-switch`:
 
