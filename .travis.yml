@@ -1,9 +1,16 @@
 language: c
-sudo: required
+sudo: false
+
+addons:
+    apt:
+        package:
+            - build-essential
+            - as31
+            - doxygen
 
 install:
-    - # Install sdcc and as31
-    - sudo apt-get install --force-yes -y as31 doxygen
+    - export BOARD="$B" && echo "BOARD='$BOARD'"
+    - export TARGETS="$T" && echo "TARGETS='$TARGETS'"
     - make conda
     - export PATH=$PWD/conda/bin:$PATH
     - which sdcc
@@ -11,11 +18,37 @@ install:
     - ./.travis/setup.sh
 
 script:
-    - make BOARD=opsis
-    - make clean
-    - make BOARD=atlys
-    - make clean
-    - make BOARD=fx2miniboard firmware-audio-fx2
+    - make $TARGETS
+
+jobs:
+    fail_fast: true
+    include:
+        #-----------------------------------------
+        # Video targets
+        #-----------------------------------------
+        - stage: Targets - Video
+          env: B=opsis T="firmware-fx2"
+        - stage: Targets - Video
+          env: B=atlys T="firmware-fx2"
+
+        #-----------------------------------------
+        # Audio targets
+        #-----------------------------------------
+        - stage: Targets - Audio
+          env: B=opsis T="firmware-audio-fx2"
+        - stage: Targets - Audio
+          env: B=atlys T="firmware-audio-fx2"
+        - stage: Targets - Audio
+          env: B=fx2miniboard T="firmware-audio-fx2"
+
+        #-----------------------------------------
+        # Unconfigured targets
+        #-----------------------------------------
+        - stage: Targets - Unconfigured
+          env: B=opsis T="firmware-unconfigured"
+        - stage: Targets - Unconfigured
+          env: B=atlys T="firmware-unconfigured"
 
 after_success:
+    - make docs
     - ./.travis/push-docs.sh
