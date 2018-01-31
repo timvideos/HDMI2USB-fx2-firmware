@@ -3,9 +3,7 @@ sudo: false
 
 addons:
     apt:
-        package:
-            - build-essential
-            - as31
+        packages:
             - doxygen
 
 install:
@@ -26,29 +24,33 @@ jobs:
         #-----------------------------------------
         # Video targets
         #-----------------------------------------
-        - stage: Targets - Video
+        - stage: Build
           env: B=opsis T="firmware-fx2"
-        - stage: Targets - Video
+        - stage: Build
           env: B=atlys T="firmware-fx2"
 
         #-----------------------------------------
         # Audio targets
         #-----------------------------------------
-        - stage: Targets - Audio
+        - stage: Build
           env: B=opsis T="firmware-audio-fx2"
-        - stage: Targets - Audio
+        - stage: Build
           env: B=atlys T="firmware-audio-fx2"
-        - stage: Targets - Audio
+        - stage: Build
           env: B=fx2miniboard T="firmware-audio-fx2"
 
         #-----------------------------------------
         # Unconfigured targets
         #-----------------------------------------
-        - stage: Targets - Unconfigured
+        - stage: Build
           env: B=opsis T="firmware-unconfigured"
-        - stage: Targets - Unconfigured
+        - stage: Build
           env: B=atlys T="firmware-unconfigured"
 
-after_success:
-    - make docs
-    - ./.travis/push-docs.sh
+        #-----------------------------------------
+        # Build and deploy docs
+        #-----------------------------------------
+        - stage: Deploy docs
+          script:
+              - make docs
+              - ./.travis/push-docs.sh
