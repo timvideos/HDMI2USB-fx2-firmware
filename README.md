@@ -89,6 +89,15 @@ command, which on Debian Stretch and later can be installed using the
 [HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch). It
 also requires [SDCC](http://sdcc.sourceforge.net/).
 
+By default the firmware will be built for the Opsis board. This can be changed
+by passing `BOARD=atlys` to make to build for the Atlys boards. The audio
+firmware also supports `BOARD=fx2miniboard` for building for the Cypress EZ-USB
+FX2LP.
+
+To build the docs, doxygen is required. Then run
+
+    make docs
+
 There are three ways to run `hdmi2usb-mode-switch`:
 
  1. As root
