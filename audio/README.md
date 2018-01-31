@@ -49,3 +49,20 @@ and can be cleaned using
  * Connections
   - RXD -> PD3
   - GND -> GND
+
+# FIFO
+
+The FIFO setup currently does not work. It uses two FX2 miniboards - one with
+the `fifo` firmware and one with the `out` firmware.
+
+Connections are as follows (`out` on the left and `fifo` on the right):
+
+ - PA1 (FULL\_FLAG) <- CTL1
+ - PA2 (EMPTY\_FLAG) <- CTL2
+ - PA4 (SLWR) -> RDY1
+ - PA4 (FIFOADD0) -> PA4
+ - PA5 (FIFOADD1) -> PA5
+ - PA6 (PKTEND) -> PA6
+ - IOB (FD[7:0]) -> IOB
+ - PD1 (IFCLK) -> IFCLK
+ - GND -> GND
