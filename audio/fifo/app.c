@@ -25,8 +25,8 @@
  */
 void TD_Init(void) {
     /* Return FIFO settings back to default */
-    SYNCDELAY; PINFLAGSAB   = 0x00;
-    SYNCDELAY; PINFLAGSCD   = 0x00;
+    SYNCDELAY; PINFLAGSAB = 0x00;
+    SYNCDELAY; PINFLAGSCD = 0x00;
     /* Make Full Flag active high */
     SYNCDELAY; FIFOPINPOLAR = bmBIT0;
     /* Use external clock and enable slave FIFO */
@@ -37,6 +37,8 @@ void TD_Init(void) {
     SYNCDELAY; EP8FIFOCFG &= ~bmAUTOOUT;
     /* Automatically commit packets to the FIFO */
     SYNCDELAY; EP8FIFOCFG |= bmAUTOIN;
+    /* Use 8 bit wide FIFO */
+    SYNCDELAY; EP8FIFOCFG &= ~bmWORDWIDE;
 }
 
 extern BYTE alt_setting;
@@ -73,7 +75,6 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         return TRUE;
     } else if (ifc == 1 && alt_ifc == 1) {
         alt_setting = 1;
-        IFCONFIG |= (bmIFCFG1 | bmIFCFG0);
         /* Reset audio streaming endpoint to IN, ISOC, x2 buffer */
         EP8CFG = (bmVALID | bmDIR | bmTYPE0);
         SYNCDELAY; EP2CFG = 0x7F;
@@ -83,6 +84,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
         SYNCDELAY; RESETTOGGLE(0x88);
         SYNCDELAY; EP8AUTOINLENH = 0x20;
         SYNCDELAY; EP8AUTOINLENL = 0x00;
+        TD_Init();
         return TRUE;
     }
     return FALSE;

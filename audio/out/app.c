@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Kyle Robbertze <krobbertze@gmail.com>
+// Copyright (C) 2017-2018 Kyle Robbertze <krobbertze@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -22,17 +22,19 @@
 #include "debug.h"
 #else
 #define printf(...)
+#define usart_send_byte_hex(...)
 #endif
 
 #include <fx2types.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
 
+#define FULL_FLAG PA1
+#define EMPTY_FLAG PA2
 #define SLWR PA3
 #define FIFOADD0 PA4
 #define FIFOADD1 PA5
 #define PKTEND PA6
-#define FULL_FLAG PA7
 #define FD IOB
 #define IFCLK PD1
 #define SKIP_FIFO bmBIT7
@@ -43,13 +45,15 @@ void TD_Init(void) {
     /* Enable auto out from computer to FIFO */
     SYNCDELAY; REVCTL = (bmNOAUTOARM | bmSKIPCOMMIT);
     /* Enable outputs for FIFO */
-    SYNCDELAY; OEA = (bmBIT3 | bmBIT4 | bmBIT5 | bmBIT6);
+    SYNCDELAY; OEA |= (bmBIT1 | bmBIT2 | bmBIT3 | bmBIT4 | bmBIT5 | bmBIT6 | bmBIT7);
     SYNCDELAY; OEB = 0xFF;
-    SYNCDELAY; OED |= bmBIT0;
+    SYNCDELAY; OED |= bmBIT1;
+    /* Enable inputs for FIFO */
+    SYNCDELAY; OEA &= ~(bmBIT0 | bmBIT1);
     /* Clear all FIFO control signals */
     SYNCDELAY; SLWR = 1;
-    PKTEND = 1;
-    IFCLK = 0;
+    SYNCDELAY; PKTEND = 1;
+    SYNCDELAY; IFCLK = 0;
 }
 
 extern BYTE alt_setting;
@@ -107,41 +111,41 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
 }
 
 void TD_Poll() {
-    int position = 0;
+    WORD position;
     WORD buflen;
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    //TODO: Only write when not empty
-    if ((EP8CFG & bmTYPE) == bmTYPE0) {// && !(EP8CS & bmEPEMPTY)) { (is not ever true)
+    if ((EP8CFG & bmTYPE) == bmTYPE0 & (EP8CS & bmEPEMPTY) != bmEPEMPTY) {
         /* Write to Endpoint 8 FIFO */
         IFCLK = 1;
         FIFOADD0 = 1;
         FIFOADD1 = 1;
+        SLWR = 1;
+        PKTEND = 1;
         /* Setup is completed on the rising edge of the clock */
         IFCLK = 0; SYNCDELAY16; IFCLK = 1;
         buflen = MAKEWORD(EP8BCH, EP8BCL);
         for (position = 0; position < buflen; position++) {
             /* FLAGS are active low */
-            if (FULL_FLAG) {
+            if (!FULL_FLAG) {
                 SLWR = 1;
             } else {
                 IFCLK = 0; 
                 FD = EP8FIFOBUF[position];
-                SLWR = 0;
+                SYNCDELAY16; SLWR = 0;
                 SYNCDELAY16; IFCLK = 1;
-                SLWR = 1;
                 /* DEBUG */
                 usart_send_byte_hex(FD);
-                SYNCDELAY16;
+                SYNCDELAY16; IFCLK = 0;
+                SYNCDELAY16; IFCLK = 1;
+                SYNCDELAY16; SLWR = 1;
             }
         }
-        /* Discard byte from the EP8 FIFO */
-        EP8BCL = SKIP_FIFO;
-        SYNCDELAY;
         /* DEBUG */
         printf("\n");
         /* Signal end of packet */
         PKTEND = 0;
-        IFCLK = 0; SYNCDELAY16; IFCLK = 1;
-        PKTEND = 1;
+        SYNCDELAY16; IFCLK = 0;
+        SYNCDELAY16; IFCLK = 1;
+        SYNCDELAY16; PKTEND = 1;
     }
 }
