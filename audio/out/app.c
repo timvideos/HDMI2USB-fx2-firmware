@@ -114,7 +114,7 @@ void TD_Poll() {
     WORD position;
     WORD buflen;
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP8CFG & bmTYPE) == bmTYPE0 & (EP8CS & bmEPEMPTY) != bmEPEMPTY) {
+    if ((EP8CFG & bmTYPE) == bmTYPE0 && (EP8CS & bmEPEMPTY) != bmEPEMPTY) {
         /* Write to Endpoint 8 FIFO */
         IFCLK = 1;
         FIFOADD0 = 1;
