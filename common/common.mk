@@ -36,8 +36,11 @@
 MAKEFILE_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 export PATH := $(MAKEFILE_PATH)../conda/bin:$(PATH)
 
-LIBS ?= $(FX2LIBDIR)/lib/fx2.lib
+LIBS ?= $(FX2LIBDIR)/lib/fx2.lib $(LIBFX2DIR)/lib/fx2_tmp.lib
 INCS += -I sdcc -I$(FX2LIBDIR)/include -I. -I$(COMMON_DIR)/boards
+# temporarily add third_party/ to avoid name collisions between fx2lib and libfx2
+# include libfx2 headers by full path, e.g. libfx2/firmware/library/include/fx2delay.h
+INCS += -I$(LIBFX2DIR)/../../..  
 
 # Settings specific for the TimVideo hdmi2usb firmware
 BOARD ?= opsis
@@ -85,17 +88,97 @@ clean:
 		*.mem *.rel *.rst *.sym descriptors_strings.* a.out date.h \
 		date.inc progOffsets.h version_data.h version_data.c ${TARGET}.hex
 	cd $(FX2LIBDIR) && make clean
+	cd $(LIBFX2DIR) && make clean
 
 distclean: clean
 	$(RM) -r $(FX2LIBDIR)
+	$(RM) -r $(LIBFX2DIR)/../..
 
 load: $(TARGET).hex
 	hdmi2usb-mode-switch --load-fx2-firmware $(TARGET).hex
 
-$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib
+$(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib $(LIBFX2DIR)/lib/fx2_tmp.lib
 
 $(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
 	cd $(dir $@) && make -j1
+
+$(LIBFX2DIR)/lib/fx2_tmp.lib: $(LIBFX2DIR)/lib/$(LIBFX2_MODEL)/fx2.lib
+	cd $(LIBFX2DIR)/lib && sdcclib fx2_tmp.lib \
+		../build/$(LIBFX2_MODEL)/autovec.rel \
+		../build/$(LIBFX2_MODEL)/bswap.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP0ACK.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP0IN.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP0OUT.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP0PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP1IN.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP1OUT.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP1PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2EF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2FF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2ISOERR.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2PF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP2PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4EF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4FF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4ISOERR.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4PF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP4PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6EF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6FF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6ISOERR.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6PF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP6PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8EF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8FF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8ISOERR.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8PF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_EP8PING.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_ERRLIMIT.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_GPIFDONE.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_GPIFWF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_HISPEED.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_IBN.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_SOF.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_SUDAV.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_SUSPEND.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_SUTOK.rel \
+		../build/$(LIBFX2_MODEL)/defautoisr_USBRESET.rel \
+		../build/$(LIBFX2_MODEL)/defisr_I2C.rel \
+		../build/$(LIBFX2_MODEL)/defisr_IE0.rel \
+		../build/$(LIBFX2_MODEL)/defisr_IE1.rel \
+		../build/$(LIBFX2_MODEL)/defisr_IE5.rel \
+		../build/$(LIBFX2_MODEL)/defisr_IE6.rel \
+		../build/$(LIBFX2_MODEL)/defisr_RESUME.rel \
+		../build/$(LIBFX2_MODEL)/defisr_RI_TI_0.rel \
+		../build/$(LIBFX2_MODEL)/defisr_RI_TI_1.rel \
+		../build/$(LIBFX2_MODEL)/defisr_TF0.rel \
+		../build/$(LIBFX2_MODEL)/defisr_TF1.rel \
+		../build/$(LIBFX2_MODEL)/defisr_TF2.rel \
+		../build/$(LIBFX2_MODEL)/defusbdesc.rel \
+		../build/$(LIBFX2_MODEL)/defusbgetconfig.rel \
+		../build/$(LIBFX2_MODEL)/defusbgetiface.rel \
+		../build/$(LIBFX2_MODEL)/defusbhalt.rel \
+		../build/$(LIBFX2_MODEL)/defusbsetconfig.rel \
+		../build/$(LIBFX2_MODEL)/defusbsetiface.rel \
+		../build/$(LIBFX2_MODEL)/defusbsetup.rel \
+		../build/$(LIBFX2_MODEL)/delay.rel \
+		../build/$(LIBFX2_MODEL)/i2c.rel \
+		../build/$(LIBFX2_MODEL)/syncdelay.rel \
+		../build/$(LIBFX2_MODEL)/uf2fat.rel \
+		../build/$(LIBFX2_MODEL)/uf2scsi.rel \
+		../build/$(LIBFX2_MODEL)/usb.rel \
+		../build/$(LIBFX2_MODEL)/usbdfu.rel \
+		../build/$(LIBFX2_MODEL)/usbmassstor.rel \
+		../build/$(LIBFX2_MODEL)/xmemclr.rel \
+		../build/$(LIBFX2_MODEL)/xmemcpy.rel \
+		# ../build/$(LIBFX2_MODEL)/eeprom.rel \
+
+$(LIBFX2DIR)/lib/$(LIBFX2_MODEL)/fx2.lib: $(LIBFX2DIR)/../../.git
+	cd $(LIBFX2DIR) && make -j1
 
 # We depend on a file inside the directory as git creates an
 # empty dir for us.
@@ -103,6 +186,11 @@ $(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
 # Note that although we have the variable FX2LIBDIR, the submodule
 # magic will always check it out in fx2lib/
 $(FX2LIBDIR)/.git: ../.gitmodules
+	git submodule sync --recursive -- $$(dirname $@)
+	git submodule update --recursive --init $$(dirname $@)
+	touch $@ -r ../.gitmodules
+
+$(LIBFX2DIR)/../../.git:../.gitmodules
 	git submodule sync --recursive -- $$(dirname $@)
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r ../.gitmodules
