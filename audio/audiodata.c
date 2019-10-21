@@ -26,13 +26,11 @@
 #define printf(...)
 #endif
 
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
 #include <fx2regs.h>
 
 #include "audiodata.h"
-
-#define SYNCDELAY SYNCDELAY4
 
 /**
  * Returns the configuration. We only have one configuration.

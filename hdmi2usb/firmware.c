@@ -27,14 +27,12 @@
 #endif
 
 #include <autovector.h>
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <fx2ints.h>
 #include <fx2macros.h>
 #include <setupdat.h>
 
 #include "cdc.h"
-
-#define SYNCDELAY SYNCDELAY4
 
 volatile __bit dosud = FALSE;
 volatile __bit dosuspend = FALSE;

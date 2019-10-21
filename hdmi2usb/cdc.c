@@ -1,11 +1,9 @@
 
 #include "cdc.h"
 
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
-
-#define SYNCDELAY SYNCDELAY4
 
 volatile WORD cdc_queued_bytes = 0;
 

@@ -23,7 +23,7 @@
  * Opsis it is D2
  */
 
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <fx2regs.h>
 #include <fx2types.h>
 

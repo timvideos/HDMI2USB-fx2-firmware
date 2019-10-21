@@ -27,7 +27,7 @@
 #endif
 
 #include <autovector.h>
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
@@ -36,8 +36,6 @@
 
 #include "audiodata.h"
 #include "fx2lights.h"
-
-#define SYNCDELAY SYNCDELAY4
 
 volatile __bit got_sud;
 extern BYTE alt_setting;

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  **/
 #include <autovector.h>
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
@@ -26,8 +26,6 @@
 #include <stdio.h>
 
 #include "cdc.h"
-
-#define SYNCDELAY SYNCDELAY4
 
 // -----------------------------------------------------------------------
 

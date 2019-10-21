@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>

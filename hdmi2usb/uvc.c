@@ -10,12 +10,11 @@
 
 #include "uvc.h"
 
-#include <delay.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
 #include <setupdat.h>
-#define SYNCDELAY SYNCDELAY4
 
 #include "cdc-config.h"
 

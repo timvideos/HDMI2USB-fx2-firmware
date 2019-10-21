@@ -58,6 +58,7 @@ AS := $(AS8051)
 
 CFLAGS += -DDATE=0x$(FIRMWARE_VERSION) -mmcs51 $(FLAGS)
 CFLAGS += --std-c99 -DSDCC -Wa"-p" --xram-size 0x0200 
+CFLAGS += -DSYNCDELAYLEN=$(SYNCDELAYLEN)
 
 # Use make V=1 for a verbose build.
 ifndef V

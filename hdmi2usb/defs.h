@@ -17,9 +17,6 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-// Make SYNCDELAY look like the Cypress code
-#define SYNCDELAY SYNCDELAY4;
-
 // Size of endpoint zero buffer
 #define EP0BUF_SIZE 0x40
 
