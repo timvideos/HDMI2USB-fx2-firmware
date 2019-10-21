@@ -19,6 +19,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+
 #include "debug.h"
 #else
 #define printf(...)
@@ -33,8 +34,8 @@
 #include <fx2types.h>
 #include <setupdat.h>
 
-#include "fx2lights.h"
 #include "audiodata.h"
+#include "fx2lights.h"
 
 #define SYNCDELAY SYNCDELAY4
 
@@ -42,27 +43,27 @@ volatile __bit got_sud;
 extern BYTE alt_setting;
 
 void main() {
-    d1on();
-    d2on();
-    /* Not using advanced endpoint controls */
-    REVCTL=0;
+  d1on();
+  d2on();
+  /* Not using advanced endpoint controls */
+  REVCTL = 0;
 
-    got_sud = FALSE;
+  got_sud = FALSE;
 
-    /* renumerate */
-    RENUMERATE_UNCOND();
+  /* renumerate */
+  RENUMERATE_UNCOND();
 
-    SETCPUFREQ(CLK_48M);
-    SETIF48MHZ();
-    usart_init();
+  SETCPUFREQ(CLK_48M);
+  SETIF48MHZ();
+  usart_init();
 
-    USE_USB_INTS();
-    ENABLE_SUDAV();
-    ENABLE_USBRESET();
-    ENABLE_HISPEED();
-    d1off();
+  USE_USB_INTS();
+  ENABLE_SUDAV();
+  ENABLE_USBRESET();
+  ENABLE_HISPEED();
+  d1off();
 
-    /**
+  /**
      * No valid endpoints by default, thus clear the valid bit and set the
      * rest to default.
      * http://www.cypress.com/file/126446/download#G11.1057794
@@ -71,37 +72,36 @@ void main() {
      * Direction: out
      * Buffer: Double
      */
-    EP2CFG = 0x7F;
-    SYNCDELAY; EP4CFG = 0x7F;
-    SYNCDELAY; EP6CFG = 0x7F;
-    SYNCDELAY; EP8CFG = 0x7F;
+  EP2CFG = 0x7F;
+  SYNCDELAY; EP4CFG = 0x7F;
+  SYNCDELAY; EP6CFG = 0x7F;
+  SYNCDELAY; EP8CFG = 0x7F;
 
-    /* Enable global interrupts */
-    EA = 1;
-    /* Disable serial interrupts */
-    ES0 = 0;
-    d2off();
+  /* Enable global interrupts */
+  EA = 1;
+  /* Disable serial interrupts */
+  ES0 = 0;
+  d2off();
 
-    printf("Initialisation complete\n");
+  printf("Initialisation complete\n");
 
-    while(TRUE) {
-        if (got_sud) {
-            printf("Handle setup data\n");
-            handle_setupdata();
-            got_sud = FALSE;
-        }
-        /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-        if ((EP8CFG & bmTYPE) == bmTYPE0) {
-            while (!(EP2468STAT & bmEP8FULL)) {
-                d1on();
-                /* Send max data. Larger than 0x30 causes an EOVERFLOW */
-                EP8BCH = 0x00;
-                SYNCDELAY;
-                EP8BCL = 0x30;
-            }
-            d1off();
-        }
+  while (TRUE) {
+    if (got_sud) {
+      printf("Handle setup data\n");
+      handle_setupdata();
+      got_sud = FALSE;
     }
+    /* ISO endpoint config type is 01 in the enpoint configuration buffer */
+    if ((EP8CFG & bmTYPE) == bmTYPE0) {
+      while (!(EP2468STAT & bmEP8FULL)) {
+        d1on();
+        /* Send max data. Larger than 0x30 causes an EOVERFLOW */
+        EP8BCH = 0x00;
+        SYNCDELAY; EP8BCL = 0x30;
+      }
+      d1off();
+    }
+  }
 }
 
 /**
@@ -109,23 +109,23 @@ void main() {
  * Copied usb jt routines from usbjt.h
  */
 void sudav_isr() __interrupt SUDAV_ISR {
-    got_sud=TRUE;
-    CLEAR_SUDAV();
+  got_sud = TRUE;
+  CLEAR_SUDAV();
 }
 
 /**
  * Interrupt called when a reset is requested.
  */
 void usbreset_isr() __interrupt USBRESET_ISR {
-    /* By default the USB is in full speed mode when reset */
-    handle_hispeed(FALSE);
-    CLEAR_USBRESET();
+  /* By default the USB is in full speed mode when reset */
+  handle_hispeed(FALSE);
+  CLEAR_USBRESET();
 }
 
 /**
  * Interrupt called when hispeed mode is requested.
  */
 void hispeed_isr() __interrupt HISPEED_ISR {
-    handle_hispeed(TRUE);
-    CLEAR_HISPEED();
+  handle_hispeed(TRUE);
+  CLEAR_HISPEED();
 }

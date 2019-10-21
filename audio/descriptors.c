@@ -1,4 +1,4 @@
-//Copyright (C) 2009 Ubixum, Inc. 
+//Copyright (C) 2009 Ubixum, Inc.
 //Copyright (C) 2014 Tim 'mithro' Ansell
 //Copyright (C) 2017 Kyle Robbertze
 //
@@ -14,7 +14,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301  USA
 
 /** \file descriptors.c
@@ -23,6 +23,7 @@
  */
 
 #include "descriptors.h"
+
 #include "version_data.h"
 
 __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
@@ -31,7 +32,7 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
         .bDescriptorType    = USB_DT_DEVICE,
         .bcdUSB             = USB_BCD_V20,
         /* Zero indicates class defined per interface */
-        .bDeviceClass       = 0, 
+        .bDeviceClass       = 0,
         .bDeviceSubClass    = 0,
         /* Zero indicates protocol defined per interface */
         .bDeviceProtocol    = 0,
@@ -65,15 +66,15 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
     },
     .highspeed = {
         .config = {
-            .bLength                = USB_DT_CONFIG_SIZE,
-            .bDescriptorType        = USB_DT_CONFIG,
-            .wTotalLength           = sizeof(descriptors.highspeed),
-            .bNumInterfaces         = 2,
-            .bConfigurationValue    = 1,
-            .iConfiguration         = 0,
-            .bmAttributes           = USB_CONFIG_ATT_ONE,
+            .bLength             = USB_DT_CONFIG_SIZE,
+            .bDescriptorType     = USB_DT_CONFIG,
+            .wTotalLength        = sizeof(descriptors.highspeed),
+            .bNumInterfaces      = 2,
+            .bConfigurationValue = 1,
+            .iConfiguration      = 0,
+            .bmAttributes        = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
-            .bMaxPower              = 100 / 2,
+            .bMaxPower           = 100 / 2,
         },
         .control = {
             .standard = {
@@ -94,8 +95,8 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bDescriptorType    = USB_DT_CS_INTERFACE,
                 .bDescriptorSubtype = UAC_MS_HEADER,
                 .bcdADC             = UAC_BCD_V10,
-                .wTotalLength       =
-                    sizeof(descriptors.highspeed.control.classspec) +
+                .wTotalLength       = 
+                    sizeof(descriptors.highspeed.control.classspec) + 
                     sizeof(descriptors.highspeed.input) +
                     sizeof(descriptors.highspeed.output),
                 /* Number of data streaming interfaces */
@@ -172,19 +173,19 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             /* Frequencies supported */
             .bSamFreqType       = 1,
             /* 8000Hz, little endian */
-            .tSamFreq[0]        = { 0x40, 0x1F, 0x00 },
+            .tSamFreq[0]        = {0x40, 0x1F, 0x00},
         },
         .endpoints = {
             {
-                .bLength            = USB_DT_ENDPOINT_AUDIO_SIZE,
-                .bDescriptorType    = USB_DT_ENDPOINT,
+                .bLength          = USB_DT_ENDPOINT_AUDIO_SIZE,
+                .bDescriptorType  = USB_DT_ENDPOINT,
                 /* Endpoint 8 is unused in the video firmware */
-                .bEndpointAddress   = USB_ENDPOINT_NUMBER(8) | USB_DIR_IN,
-                .bmAttributes       = (USB_ENDPOINT_XFER_ISOC | USB_ENDPOINT_SYNC_NONE),
-                .wMaxPacketSize     = 512,
-                .bInterval          = 4,
-                .bRefresh           = 0,
-                .bSynchAddress      = 0,
+                .bEndpointAddress = USB_ENDPOINT_NUMBER(8) | USB_DIR_IN,
+                .bmAttributes     = (USB_ENDPOINT_XFER_ISOC | USB_ENDPOINT_SYNC_NONE),
+                .wMaxPacketSize   = 512,
+                .bInterval        = 4,
+                .bRefresh         = 0,
+                .bSynchAddress    = 0,
             },
         },
         .isoendpoint = {
@@ -199,15 +200,15 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
     },
     .fullspeed = {
         .config = {
-            .bLength                = USB_DT_CONFIG_SIZE,
-            .bDescriptorType        = USB_DT_CONFIG,
-            .wTotalLength           = sizeof(descriptors.fullspeed),
-            .bNumInterfaces         = 2,
-            .bConfigurationValue    = 1,
-            .iConfiguration         = 0,
-            .bmAttributes           = USB_CONFIG_ATT_ONE,
+            .bLength             = USB_DT_CONFIG_SIZE,
+            .bDescriptorType     = USB_DT_CONFIG,
+            .wTotalLength        = sizeof(descriptors.fullspeed),
+            .bNumInterfaces      = 2,
+            .bConfigurationValue = 1,
+            .iConfiguration      = 0,
+            .bmAttributes        = USB_CONFIG_ATT_ONE,
             /* bMaxPower has a resolution of 2mA */
-            .bMaxPower              = 100 / 2,
+            .bMaxPower           = 100 / 2,
         },
         .control = {
             .standard = {
@@ -228,9 +229,9 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
                 .bDescriptorType    = USB_DT_CS_INTERFACE,
                 .bDescriptorSubtype = UAC_MS_HEADER,
                 .bcdADC             = UAC_BCD_V10,
-                .wTotalLength       =
+                .wTotalLength       = 
                     sizeof(descriptors.fullspeed.control.classspec) +
-                    sizeof(descriptors.fullspeed.input) + 
+                    sizeof(descriptors.fullspeed.input) +
                     sizeof(descriptors.fullspeed.output),
                 /* Number of streaming interfaces */
                 .bInCollection      = 1,
@@ -284,5 +285,5 @@ __code __at(DSCR_AREA) struct usb_descriptors code_descriptors = {
             .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
         },
     },
-    #include "descriptors_strings.inc"
+#include "descriptors_strings.inc"
 };

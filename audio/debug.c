@@ -17,8 +17,9 @@
 /** \file debug.c
  * Implements writing to serial for debugging purposes
  */
-#include <fx2regs.h>
 #include "debug.h"
+
+#include <fx2regs.h>
 
 #define PD3 0xB3
 /* Serial write uses pin D3 */
@@ -29,96 +30,96 @@ __sbit __at PD3 USART;
  * Initialises the usart interface. It supports output from the FX2 on pin D3
  */
 void usart_init(void) {
-    USART = 1;
-    /* Enable output on pin D3 */
-    OED |= bmBIT3;
+  USART = 1;
+  /* Enable output on pin D3 */
+  OED |= bmBIT3;
 }
 
 /**
  * Bit banging serial output
  */
 void usart_send_byte(BYTE c) {
-    (void)c; /* argument passed in DPL */
-    __asm
-        mov a, dpl
-        mov r1, #9
-        clr c
-    loop:
-        mov _USART, c
-        rrc a
-        mov r0, #BAUD
-        djnz r0, .
-        nop
-        djnz r1, loop
+  (void)c; /* argument passed in DPL */
+  __asm
+    mov a, dpl
+    mov r1, #9
+    clr c
+  loop:
+    mov _USART, c
+    rrc a
+    mov r0, #BAUD
+    djnz r0, .
+    nop
+    djnz r1, loop
 
-        ;; Stop bit
-        setb _USART
-        mov r0, #BAUD
-        djnz r0, .
-    __endasm;
+    ;; Stop bit
+    setb _USART
+    mov r0, #BAUD
+    djnz r0, .
+  __endasm;
 }
 
 /**
  * Send a byte encoded as hexadecimal
  */
 void usart_send_byte_hex(BYTE byte) {
-    __xdata BYTE ch;
-    ch = (byte >> 4) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = byte & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
+  __xdata BYTE ch;
+  ch = (byte >> 4) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = byte & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
 }
 
 /**
  * Send a word width of data as hexadecimal
  */
 void usart_send_word_hex(WORD word) {
-    __xdata BYTE ch;
-    ch = (word >> 12) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 8) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 4) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 0) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
+  __xdata BYTE ch;
+  ch = (word >> 12) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 8) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 4) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 0) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
 }
 
 /**
  * Send a long word as hexadecimal
  */
 void usart_send_long_hex(DWORD word) {
-    __xdata BYTE ch;
-    ch = (word >> 28) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 24) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 20) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 16) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 12) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 8) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 4) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
-    ch = (word >> 0) & 0x0F;
-    ch += (ch < 10 ) ? '0' : 'A' - 10;
-    usart_send_byte(ch);
+  __xdata BYTE ch;
+  ch = (word >> 28) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 24) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 20) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 16) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 12) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 8) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 4) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
+  ch = (word >> 0) & 0x0F;
+  ch += (ch < 10) ? '0' : 'A' - 10;
+  usart_send_byte(ch);
 }
 
 /**
@@ -126,25 +127,25 @@ void usart_send_long_hex(DWORD word) {
  * \n and \r for ease of programming
  */
 void usart_send_string(const char *s) {
-    while (*s) {
-        switch (*s) {
-            case '\r':
-            case '\n':
-                usart_send_newline();
-                break;
-            default:
-                usart_send_byte(*s);
-        }
-        *s++;
+  while (*s) {
+    switch (*s) {
+      case '\r':
+      case '\n':
+        usart_send_newline();
+        break;
+      default:
+        usart_send_byte(*s);
     }
+    *s++;
+  }
 }
 
 /**
  * Ease of use for sending a new line.
  */
 void usart_send_newline(void) {
-    usart_send_byte('\n');
-    usart_send_byte('\r');
+  usart_send_byte('\n');
+  usart_send_byte('\r');
 }
 
 /**
@@ -152,19 +153,19 @@ void usart_send_newline(void) {
  * be used for debug messages.
  */
 void putchar(char c) {
-    switch (c) {
-        case '\r':
-        case '\n':
-            usart_send_newline();
-            break;
-        default:    
-            usart_send_byte(c);
-    }
+  switch (c) {
+    case '\r':
+    case '\n':
+      usart_send_newline();
+      break;
+    default:
+      usart_send_byte(c);
+  }
 }
 
 /**
  * Not implemented
  */
 char getchar(void) {
-    return '0';
+  return '0';
 }

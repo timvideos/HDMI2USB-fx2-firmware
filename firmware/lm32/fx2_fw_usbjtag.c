@@ -2,16 +2,16 @@
 #include <stdint.h>
 
 #ifndef __bswap_constant_16
-#define __bswap_constant_16(x)     ((unsigned short int) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8)))
+#define __bswap_constant_16(x) ((unsigned short int)((((x) >> 8) & 0xff) | (((x)&0xff) << 8)))
 #endif
 
 // Constant versions of the htobe functions for use in the structures
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-# define htobe16c(x) __bswap_constant_16(x)
-# define htole16c(x) (x)
+#define htobe16c(x) __bswap_constant_16(x)
+#define htole16c(x) (x)
 #else
-# define htobe16c(x) (x)
-# define htole16c(x) __bswap_constant_16(x)
+#define htobe16c(x) (x)
+#define htole16c(x) __bswap_constant_16(x)
 #endif
 
 typedef uint8_t __u8;
@@ -22,307 +22,307 @@ typedef __u8 __le8;
 typedef __u8 __be8;
 #define htobe8c(x) (x)
 #define htole8c(x) (x)
-#define FX2_MBFW_USBJTAG_END offsetof(union fx2_mbfw_usbjtag_t, data58)+1
+#define FX2_MBFW_USBJTAG_END offsetof(union fx2_mbfw_usbjtag_t, data58) + 1
 
 union fx2_mbfw_usbjtag_t {
+  struct {
     struct {
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[6];
-        } __attribute__ ((packed)) data0;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data1;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data2;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data3;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data4;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data5;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data6;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data7;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data8;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data9;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data10;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data11;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data12;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[1];
-        } __attribute__ ((packed)) data13;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[56];
-        } __attribute__ ((packed)) data14;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data15;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data16;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data17;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data18;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data19;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data20;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data21;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data22;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data23;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data24;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data25;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data26;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data27;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data28;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data29;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data30;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data31;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data32;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data33;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data34;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data35;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data36;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data37;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data38;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data39;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data40;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data41;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data42;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data43;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data44;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data45;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data46;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data47;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data48;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data49;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[83];
-        } __attribute__ ((packed)) data50;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[19];
-        } __attribute__ ((packed)) data51;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[3];
-        } __attribute__ ((packed)) data52;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[127];
-        } __attribute__ ((packed)) data53;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[2];
-        } __attribute__ ((packed)) data54;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[88];
-        } __attribute__ ((packed)) data55;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[11];
-        } __attribute__ ((packed)) data56;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[6];
-        } __attribute__ ((packed)) data57;
-        struct {
-            __be8  len;
-            __be16  addr;
-            __u8    data[0];
-        } __attribute__ ((packed)) data58;
-    };
-    __u8 bytes[5060];
+      __be8 len;
+      __be16 addr;
+      __u8 data[6];
+    } __attribute__((packed)) data0;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data1;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data2;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data3;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data4;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data5;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data6;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data7;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data8;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data9;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data10;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data11;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data12;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[1];
+    } __attribute__((packed)) data13;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[56];
+    } __attribute__((packed)) data14;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data15;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data16;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data17;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data18;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data19;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data20;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data21;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data22;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data23;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data24;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data25;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data26;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data27;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data28;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data29;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data30;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data31;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data32;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data33;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data34;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data35;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data36;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data37;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data38;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data39;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data40;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data41;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data42;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data43;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data44;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data45;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data46;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data47;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data48;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data49;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[83];
+    } __attribute__((packed)) data50;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[19];
+    } __attribute__((packed)) data51;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[3];
+    } __attribute__((packed)) data52;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[127];
+    } __attribute__((packed)) data53;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[2];
+    } __attribute__((packed)) data54;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[88];
+    } __attribute__((packed)) data55;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[11];
+    } __attribute__((packed)) data56;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[6];
+    } __attribute__((packed)) data57;
+    struct {
+      __be8 len;
+      __be16 addr;
+      __u8 data[0];
+    } __attribute__((packed)) data58;
+  };
+  __u8 bytes[5060];
 } fx2_mbfw_usbjtag = {
     .data0 = {
         .len        = htobe8c(0x06),

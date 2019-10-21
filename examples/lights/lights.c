@@ -23,55 +23,55 @@
  * Opsis it is D2
  */
 
+#include <delay.h>
 #include <fx2regs.h>
 #include <fx2types.h>
-#include <delay.h>
 
 #include "fx2lights.h"
 
 void init_lights(void) {
-    // Set pins to port mode instead of GPIF master/slave mode
-    IFCONFIG &= ~(bmIFCFGMASK);
-    // No alternate functions
+  // Set pins to port mode instead of GPIF master/slave mode
+  IFCONFIG &= ~(bmIFCFGMASK);
+  // No alternate functions
 #ifdef BOARD_fx2miniboard
-    PORTACFG = 0x00;
-#endif // BOARD_fx2miniboard
+  PORTACFG = 0x00;
+#endif  // BOARD_fx2miniboard
 #ifdef BOARD_opsis
-    PORTECFG = 0x00;
-#endif // BOARD_opsis
+  PORTECFG = 0x00;
+#endif  // BOARD_opsis
 }
 
 void main(void) {
-    BYTE n=0;
+  BYTE n = 0;
 
-    init_lights();
+  init_lights();
 
-    while(TRUE) {
-       switch(n) {
-       case 0:
-           /**
+  while (TRUE) {
+    switch (n) {
+      case 0:
+        /**
            * d1 is the LED labelled LD14 on the Atlys and the LED labelled
            * D1 on the FX2LP CY7C68013A mini-board. It is not connected on
            * the Opsis
            */
-           d1on();
-           break;
-       case 1:
-          /**
+        d1on();
+        break;
+      case 1:
+        /**
            * d2 is the LED labelled D2 on the Numato Opsis and the LED
            * labelled D2 on the FX2LP CY7C68013A mini-board. It is not
            * connected on the Atlys
            */
-           d2on();
-           break;
-       case 2:
-           d1off();
-           break;
-       default:
-           d2off();
-           break;
-       }
-       delay(250);
-       n = (n + 1) % 4;
+        d2on();
+        break;
+      case 2:
+        d1off();
+        break;
+      default:
+        d2off();
+        break;
     }
+    delay(250);
+    n = (n + 1) % 4;
+  }
 }

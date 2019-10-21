@@ -21,85 +21,85 @@
 #include <stddef.h>
 
 #ifndef __cplusplus
-	#ifdef WIN32
-		typedef char bool;
-		enum {
-			false = 0,
-			true = 1
-		};
-	#else
-		#include <stdbool.h>
-	#endif
+  #ifdef WIN32
+    typedef char bool;
+    enum {
+      false = 0,
+      true = 1
+    };
+  #else
+    #include <stdbool.h>
+  #endif
 #endif
 
 #ifdef WIN32
-	#define WARN_UNUSED_RESULT
-	#define DLLEXPORT(t) __declspec(dllexport) t __stdcall
-	#define PFSZD "%Iu"
-	#ifdef _WIN64
-		#define PFSZH "%016IX"
-		#define WORD_LENGTH 64
-	#else
-		#define PFSZH "%08IX"
-		#define WORD_LENGTH 32
-	#endif
+  #define WARN_UNUSED_RESULT
+  #define DLLEXPORT(t) __declspec(dllexport) t __stdcall
+  #define PFSZD "%Iu"
+  #ifdef _WIN64
+    #define PFSZH "%016IX"
+    #define WORD_LENGTH 64
+  #else
+    #define PFSZH "%08IX"
+    #define WORD_LENGTH 32
+  #endif
 #else
-	#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-	#define DLLEXPORT(t) t
-	#define PFSZD "%zu"
-	#ifdef __LP64__
-		#define PFSZH "%016zX"
-		#define WORD_LENGTH 64
-	#else
-		#define PFSZH "%08zX"
-		#define WORD_LENGTH 32
-	#endif
+  #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+  #define DLLEXPORT(t) t
+  #define PFSZD "%zu"
+  #ifdef __LP64__
+    #define PFSZH "%016zX"
+    #define WORD_LENGTH 64
+  #else
+    #define PFSZH "%08zX"
+    #define WORD_LENGTH 32
+  #endif
 #endif
 
 #ifndef NULL
-	#define NULL ((void*)0)
+  #define NULL ((void*)0)
 #endif
 
-typedef unsigned char      uint8;
-typedef unsigned short     uint16;
+typedef unsigned char    uint8;
+typedef unsigned short   uint16;
 #ifndef __cplusplus
-	#ifndef SDCC
-		typedef unsigned long long uint64;
-	#endif
+  #ifndef SDCC
+    typedef unsigned long long uint64;
+  #endif
 #endif
 
-typedef signed char        int8;
-typedef signed short       int16;
+typedef signed char  int8;
+typedef signed short int16;
 
 #if (defined __AVR__ && defined __GNUC__) || defined SDCC
-	// The embedded platforms have sizeof(int) = 2, so use long
-	typedef signed long    int32;
-	typedef unsigned long  uint32;
+  // The embedded platforms have sizeof(int) = 2, so use long
+  typedef signed long   int32;
+  typedef unsigned long uint32;
 #else
-	// The i686 & x86_64 have sizeof(int) = 4
-	typedef signed int     int32;
-	typedef unsigned int   uint32;
+  // The i686 & x86_64 have sizeof(int) = 4
+  typedef signed int   int32;
+  typedef unsigned int uint32;
 #endif
 
 #ifndef __cplusplus
-	#ifndef SDCC
-		typedef signed long long int64;
-	#endif
+  #ifndef SDCC
+    typedef signed long long int64;
+  #endif
 #endif
 
-typedef unsigned int       bitfield;
+typedef unsigned int bitfield;
 
 #if defined __GNUC__
-	#define swap32(x) __builtin_bswap32(x)
+  #define swap32(x) __builtin_bswap32(x)
 #elif defined WIN32
-	#ifdef __cplusplus
-		extern "C"
-	#endif
-	unsigned long  __cdecl _byteswap_ulong(unsigned long);
-	#define swap32(x) _byteswap_ulong(x)
-	#ifndef __cplusplus
-		#define inline __inline
-	#endif
+  #ifdef __cplusplus
+    extern "C"
+  #endif
+  unsigned long  __cdecl _byteswap_ulong(unsigned long);
+  #define swap32(x) _byteswap_ulong(x)
+  #ifndef __cplusplus
+    #define inline __inline
+  #endif
 #endif
 #define swap16(x) ((uint16)((((x) & 0x00FF) << 8) | (((x) >> 8) & 0x00FF)))
 
@@ -125,37 +125,37 @@ typedef unsigned int       bitfield;
 #define CHECK_STATUS(...) VA_EXPAND(CONCAT(CHECK_INTERNAL, VA_NARGS(__VA_ARGS__))(__VA_ARGS__))
 
 #ifdef BYTE_ORDER
-	#if BYTE_ORDER == 1234
-		// Little-endian machines
-		static inline uint16 bigEndian16(uint16 x) {
-			return swap16(x);
-		}
-		static inline uint32 bigEndian32(uint32 x) {
-			return swap32(x);
-		}
-		static inline uint16 littleEndian16(uint16 x) {
-			return x;
-		}
-		static inline uint32 littleEndian32(uint32 x) {
-			return x;
-		}
-	#elif BYTE_ORDER == 4321
-		// Big-endian machines
-		static inline uint16 bigEndian16(uint16 x) {
-			return x;
-		}
-		static inline uint32 bigEndian32(uint32 x) {
-			return x;
-		}
-		static inline uint16 littleEndian16(uint16 x) {
-			return swap16(x);
-		}
-		static inline uint32 littleEndian32(uint32 x) {
-			return swap32(x);
-		}
-	#else
-		#error Unsupported BYTE_ORDER
-	#endif
+  #if BYTE_ORDER == 1234
+    // Little-endian machines
+    static inline uint16 bigEndian16(uint16 x) {
+      return swap16(x);
+    }
+    static inline uint32 bigEndian32(uint32 x) {
+      return swap32(x);
+    }
+    static inline uint16 littleEndian16(uint16 x) {
+      return x;
+    }
+    static inline uint32 littleEndian32(uint32 x) {
+      return x;
+    }
+  #elif BYTE_ORDER == 4321
+    // Big-endian machines
+    static inline uint16 bigEndian16(uint16 x) {
+      return x;
+    }
+    static inline uint32 bigEndian32(uint32 x) {
+      return x;
+    }
+    static inline uint16 littleEndian16(uint16 x) {
+      return swap16(x);
+    }
+    static inline uint32 littleEndian32(uint32 x) {
+      return swap32(x);
+    }
+  #else
+    #error Unsupported BYTE_ORDER
+  #endif
 #endif
 
 #endif

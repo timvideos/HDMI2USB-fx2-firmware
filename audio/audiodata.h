@@ -30,4 +30,4 @@ BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc);
 BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc);
 BOOL handle_get_descriptor();
 
-#endif // AUDIO_DATA_H
+#endif  // AUDIO_DATA_H

@@ -20,55 +20,55 @@
 #include <fx2types.h>
 
 #define PD3 0xB3
-#define BAUD 32 // FIXME: Figure out why this is 32
+#define BAUD 32  // FIXME: Figure out why this is 32
 
-__sbit __at PD3 USART; // USART slave send from port D3
+__sbit __at PD3 USART;  // USART slave send from port D3
 
 void usart_init(void) {
-    SETCPUFREQ(CLK_48M);
-    USART = 1;
-    OED |= 0xff; // Set all pins' outputs enabled
+  SETCPUFREQ(CLK_48M);
+  USART = 1;
+  OED |= 0xff;  // Set all pins' outputs enabled
 }
 
 void usart_send_byte(BYTE c) {
-    (void)c; /* argument passed in DPL */
-    __asm
-        mov a, dpl
-        mov r1, #9      // Move 9 into r1 for loop to execute 8 times (byte)
-        clr c
-    loop:
-        mov _USART, c   // Move c into USART register
-        rrc a           // Rotate accumulator 1 bit right
-        mov r0, #BAUD   // Indicate ready to send
-        djnz r0, .      // Wait for r0 to be cleared
-        nop
-        djnz r1, loop   // Reduce r1 and start loop again
+  (void)c;                     /* argument passed in DPL */
+  __asm
+    mov a, dpl
+    mov r1, #9      // Move 9 into r1 for loop to execute 8 times (byte)
+    clr c
+  loop:
+    mov _USART, c   // Move c into USART register
+    rrc a           // Rotate accumulator 1 bit right
+    mov r0, #BAUD   // Indicate ready to send
+    djnz r0, .      // Wait for r0 to be cleared
+    nop
+    djnz r1, loop   // Reduce r1 and start loop again
 
-        setb _USART     // Stop bit
-        mov r0, #BAUD   // Indicate ready to send
-        djnz r0, .      // Wait to be sent
-    __endasm;
+    setb _USART     // Stop bit
+    mov r0, #BAUD   // Indicate ready to send
+    djnz r0, .      // Wait to be sent
+  __endasm;
 }
 
 void usart_send_string(const char *s) {
-    while (*s) {
-        switch (*s) {
-            case '\r': // Send new line and carriage return so there is less
-            case '\n': // configuration of serial software needed.
-                usart_send_byte('\n');
-                usart_send_byte('\r');
-                break;
-            default:
-                usart_send_byte(*s);
-        }
-        *s++;
+  while (*s) {
+    switch (*s) {
+      case '\r':  // Send new line and carriage return so there is less
+      case '\n':  // configuration of serial software needed.
+        usart_send_byte('\n');
+        usart_send_byte('\r');
+        break;
+      default:
+        usart_send_byte(*s);
     }
+    *s++;
+  }
 }
 
 void main(void) {
-    usart_init();
-    while (1) {
-        usart_send_string("This is the serial example for the HDMI2USB firmware\n");
-        delay(2000);
-    }
+  usart_init();
+  while (1) {
+    usart_send_string("This is the serial example for the HDMI2USB firmware\n");
+    delay(2000);
+  }
 }

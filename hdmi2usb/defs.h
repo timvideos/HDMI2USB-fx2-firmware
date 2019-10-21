@@ -28,7 +28,7 @@
 
 // IFCONFIG bits
 #define bmPORTS 0
-#define bmGPIF  (bmIFCFG1)
+#define bmGPIF (bmIFCFG1)
 #define bmFIFOS (bmIFCFG1 | bmIFCFG0)
 
 // EPxCFG bits
@@ -45,8 +45,8 @@
 #define bmAPTR2INC bmBIT2
 
 // REVCTL bits
-#define bmDYN_OUT (1<<1)
-#define bmENH_PKT (1<<0)
+#define bmDYN_OUT (1 << 1)
+#define bmENH_PKT (1 << 0)
 
 // USB command macros, copied from Dean Camera's LUFA package
 #define REQDIR_DEVICETOHOST (1 << 7)

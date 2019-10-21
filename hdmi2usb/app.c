@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <fx2regs.h>
-#include <fx2macros.h>
-#include <eputils.h>
 #include <delay.h>
-#include <setupdat.h>
+#include <eputils.h>
+#include <fx2macros.h>
+#include <fx2regs.h>
 #include <makestuff.h>
-#include "defs.h"
-#include "debug.h"
+#include <setupdat.h>
 
 #include "cdc.h"
-#include "uvc.h"
+#include "debug.h"
+#include "defs.h"
 #include "read-serialno.h"
+#include "uvc.h"
 
 extern const uint8 dev_strings[];
 void TD_Init(void);
@@ -36,85 +36,85 @@ void TD_Poll(void);
 extern void uart_init();
 void mainInit(void) {
 #ifdef BOARD_opsis
-	patch_usb_serial_number_with_eeprom_macaddress();
+  patch_usb_serial_number_with_eeprom_macaddress();
 #endif
 
-	// This is only necessary for cases where you want to load firmware into the RAM of an FX2 that
-	// has already loaded firmware from an EEPROM. It should definitely be removed for firmwares
-	// which are themselves to be loaded from EEPROM.
+  // This is only necessary for cases where you want to load firmware into the RAM of an FX2 that
+  // has already loaded firmware from an EEPROM. It should definitely be removed for firmwares
+  // which are themselves to be loaded from EEPROM.
 #ifndef EEPROM
-	RENUMERATE_UNCOND();
+  RENUMERATE_UNCOND();
 #endif
 
-	// Clear wakeup (see AN15813: http://www.cypress.com/?docID=4633)
-	WAKEUPCS = bmWU | bmDPEN | bmWUEN;
-	WAKEUPCS = bmWU | bmDPEN | bmWUEN;
+  // Clear wakeup (see AN15813: http://www.cypress.com/?docID=4633)
+  WAKEUPCS = bmWU | bmDPEN | bmWUEN;
+  WAKEUPCS = bmWU | bmDPEN | bmWUEN;
 
-	// Disable alternate functions for PORTA 0,1,3 & 7.
-	PORTACFG = 0x00;
+  // Disable alternate functions for PORTA 0,1,3 & 7.
+  PORTACFG = 0x00;
 
-	I2CTL |= bm400KHZ;
+  I2CTL |= bm400KHZ;
 
-	TD_Init();
-	
-	uart_init();
+  TD_Init();
+
+  uart_init();
 
 #ifdef DEBUG
-	usartInit();
-	{
-		const uint8 *s = dev_strings;
-		uint8 len;
-		s = s + *s;
-		len = (*s)/2 - 1;
-		s += 2;
-		while ( len ) {
-			usartSendByte(*s);
-			s += 2;
-			len--;
-		}
-		usartSendByte(' ');
-		len = (*s)/2 - 1;
-		s += 2;
-		while ( len ) {
-			usartSendByte(*s);
-			s += 2;
-			len--;
-		}
-		usartSendByte('\r');
-	}
+  usartInit();
+  {
+    const uint8 *s = dev_strings;
+    uint8 len;
+    s = s + *s;
+    len = (*s) / 2 - 1;
+    s += 2;
+    while (len) {
+      usartSendByte(*s);
+      s += 2;
+      len--;
+    }
+    usartSendByte(' ');
+    len = (*s) / 2 - 1;
+    s += 2;
+    while (len) {
+      usartSendByte(*s);
+      s += 2;
+      len--;
+    }
+    usartSendByte('\r');
+  }
 #endif
 }
 
 // Called repeatedly while the device is idle
 //
 void mainLoop(void) {
-	TD_Poll();
-	cdc_receive_poll();
+  TD_Poll();
+  cdc_receive_poll();
 }
 
 // Called when a vendor command is received
 //
 uint8 handleVendorCommand(uint8 cmd) {
-	if (handleUVCCommand(cmd))
-            return true;
-	if (cdc_handle_command(cmd))
-            return true;
+  if (handleUVCCommand(cmd))
+    return true;
+  if (cdc_handle_command(cmd))
+    return true;
 
-	return false;  // unrecognised command
+  return false;  // unrecognised command
 }
 
-void TD_Init(void)             // Called once at startup
+void TD_Init(void)  // Called once at startup
 {
-	// Return FIFO setings back to default just in case previous firmware messed with them.
-	SYNCDELAY; PINFLAGSAB   = 0x00;
-	SYNCDELAY; PINFLAGSCD   = 0x00;
-	SYNCDELAY; FIFOPINPOLAR = 0x00;
-	
-	// Global settings
-	//SYNCDELAY; REVCTL = 0x03;
-	SYNCDELAY; CPUCS  = ((CPUCS & ~bmCLKSPD) | bmCLKSPD1);  // 48MHz
-	
-    /* IFCONFIG Register
+  // Return FIFO setings back to default just in case previous firmware messed with them.
+  SYNCDELAY; PINFLAGSAB = 0x00;
+  SYNCDELAY; PINFLAGSCD = 0x00;
+  SYNCDELAY; FIFOPINPOLAR = 0x00;
+
+  // Global settings
+  //SYNCDELAY; REVCTL = 0x03;
+  SYNCDELAY; CPUCS = ((CPUCS & ~bmCLKSPD) | bmCLKSPD1);  // 48MHz
+
+  /* IFCONFIG Register
      *      Structure: 
      *          BIT 7   : IFCLKSRC, FIFO/GPIF Clock Source, 
      *                      Selects b/w internal and external sources: 0 = external, 1 = internal
@@ -132,13 +132,13 @@ void TD_Init(void)             // Called once at startup
      *          BIT 1-0 : IFCFG, Select Interface Mode (Ports, GPIF, or Slave FIFO)
      *                      Required to be 0b11 for Slave FIFO. See Page 15-16 TRM
      */
-     
-    // Internal Clock, 48MHz, IFCLK output enable to pin, Normal Polarity, 
-	// Synchronous FIFO, Nothing to do with GSTATE, Set interface mode to Slave FIFO.
-    SYNCDELAY; IFCONFIG = 0xE3; 
-    
-	// EP1OUT & EP1IN
-    /* 
+
+  // Internal Clock, 48MHz, IFCLK output enable to pin, Normal Polarity,
+  // Synchronous FIFO, Nothing to do with GSTATE, Set interface mode to Slave FIFO.
+  SYNCDELAY; IFCONFIG = 0xE3;
+
+  // EP1OUT & EP1IN
+  /* 
      * Endpoint 1 IN/OUT Configuration Registers
      *      Structure:
      *          BIT 7   : VALID, Activate an Endpoint. Set VALID=1 to activate an endpoint, and VALID=0 to de-activate it.
@@ -156,12 +156,12 @@ void TD_Init(void)             // Called once at startup
      *          BIT 3-0 : Unused
      */
 
-    // Used by the CDC serial port (Polling / Interrupt?)
-    SYNCDELAY; EP1OUTCFG = 0x00;  // Disable Endpoint1 OUT
-	SYNCDELAY; EP1INCFG  = 0xA0;  // Activate Endpoint1 IN,BULK Type
-    
-    // VALID DIR TYPE1 TYPE0 SIZE 0 BUF1 BUF0
-    /* EPxCGF Register for configuring Endpoints
+  // Used by the CDC serial port (Polling / Interrupt?)
+  SYNCDELAY; EP1OUTCFG = 0x00;  // Disable Endpoint1 OUT
+  SYNCDELAY; EP1INCFG = 0xA0;  // Activate Endpoint1 IN,BULK Type
+
+  // VALID DIR TYPE1 TYPE0 SIZE 0 BUF1 BUF0
+  /* EPxCGF Register for configuring Endpoints
      * 
      * EPxCGF, x = 2, 4, 6 & 8
      * 
@@ -192,47 +192,47 @@ void TD_Init(void)             // Called once at startup
      *                      |______|______|___________|
      */
 
-    // Used by the video data
-	SYNCDELAY; EP6CFG = 0xDA;  // Activate, IN  Direction, ISO  Type, 1024 bytes Size, Double buffered
-	SYNCDELAY; EP8CFG = 0x00;  // Disable Endpoint 8
-	
-	// 0 INFM1 OEP1 AUTOOUT AUTOIN ZEROLENIN 0 WORDWIDE
-	SYNCDELAY; EP2FIFOCFG = 0x00;
-	SYNCDELAY; EP4FIFOCFG = 0x00;
-	SYNCDELAY; EP6FIFOCFG = 0x0C;
-	SYNCDELAY; EP8FIFOCFG = 0x00;
+  // Used by the video data
+  SYNCDELAY; EP6CFG = 0xDA;  // Activate, IN  Direction, ISO  Type, 1024 bytes Size, Double buffered
+  SYNCDELAY; EP8CFG = 0x00;  // Disable Endpoint 8
 
-	//SYNCDELAY; EP4AUTOINLENH = 0x02;
-	//SYNCDELAY; EP4AUTOINLENL = 0x00;
+  // 0 INFM1 OEP1 AUTOOUT AUTOIN ZEROLENIN 0 WORDWIDE
+  SYNCDELAY; EP2FIFOCFG = 0x00;
+  SYNCDELAY; EP4FIFOCFG = 0x00;
+  SYNCDELAY; EP6FIFOCFG = 0x0C;
+  SYNCDELAY; EP8FIFOCFG = 0x00;
 
-	SYNCDELAY; EP6AUTOINLENH = 0x04;
-	SYNCDELAY; EP6AUTOINLENL = 0x00;
-	
-	//SYNCDELAY; REVCTL = 0x00; // REVCTL.0 and REVCTL.1 set to 1
-	SYNCDELAY; REVCTL = 0x00; // REVCTL.0 and REVCTL.1 set to 1
-	SYNCDELAY; FIFORESET = 0x80; // Reset the FIFO
-	SYNCDELAY; FIFORESET = 0x82;
-	SYNCDELAY; FIFORESET = 0x84;
-	SYNCDELAY; FIFORESET = 0x86;
-	SYNCDELAY; FIFORESET = 0x00;
-	//RESETFIFOS();
+  //SYNCDELAY; EP4AUTOINLENH = 0x02;
+  //SYNCDELAY; EP4AUTOINLENL = 0x00;
+
+  SYNCDELAY; EP6AUTOINLENH = 0x04;
+  SYNCDELAY; EP6AUTOINLENL = 0x00;
+
+  //SYNCDELAY; REVCTL = 0x00; // REVCTL.0 and REVCTL.1 set to 1
+  SYNCDELAY; REVCTL = 0x00;  // REVCTL.0 and REVCTL.1 set to 1
+  SYNCDELAY; FIFORESET = 0x80;  // Reset the FIFO
+  SYNCDELAY; FIFORESET = 0x82;
+  SYNCDELAY; FIFORESET = 0x84;
+  SYNCDELAY; FIFORESET = 0x86;
+  SYNCDELAY; FIFORESET = 0x00;
+  //RESETFIFOS();
 }
 
-void TD_Poll(void)             // Called repeatedly while the device is idle
+void TD_Poll(void)  // Called repeatedly while the device is idle
 {
-	// CDC Polling?
-	if (!(EP1INCS & 0x02))      // check if EP1IN is available
- 	{
-		EP1INBUF[0] = 0x0A;       // if it is available, then fill the first 10 bytes of the buffer with 
-		EP1INBUF[1] = 0x20;       // appropriate data. 
-		EP1INBUF[2] = 0x00;
-		EP1INBUF[3] = 0x00;
-		EP1INBUF[4] = 0x00;
-		EP1INBUF[5] = 0x00;
-		EP1INBUF[6] = 0x00;
-		EP1INBUF[7] = 0x02;
-		EP1INBUF[8] = 0x00;
-		EP1INBUF[9] = 0x00;
-		EP1INBC = 10;            // manually commit once the buffer is filled
-	}
+  // CDC Polling?
+  if (!(EP1INCS & 0x02))  // check if EP1IN is available
+  {
+    EP1INBUF[0] = 0x0A;  // if it is available, then fill the first 10 bytes of the buffer with
+    EP1INBUF[1] = 0x20;  // appropriate data.
+    EP1INBUF[2] = 0x00;
+    EP1INBUF[3] = 0x00;
+    EP1INBUF[4] = 0x00;
+    EP1INBUF[5] = 0x00;
+    EP1INBUF[6] = 0x00;
+    EP1INBUF[7] = 0x02;
+    EP1INBUF[8] = 0x00;
+    EP1INBUF[9] = 0x00;
+    EP1INBC = 10;  // manually commit once the buffer is filled
+  }
 }

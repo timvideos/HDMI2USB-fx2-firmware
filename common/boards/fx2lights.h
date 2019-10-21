@@ -1,4 +1,4 @@
-// Copyright (C) 2009 Ubixum, Inc. 
+// Copyright (C) 2009 Ubixum, Inc.
 // Copyright (C) 2017 Kyle Robbertze <krobbertze@gmail.com>
 //
 // This library is free software; you can redistribute it and/or
@@ -38,31 +38,47 @@
 #ifndef FX2_LIGHTS_H
 #define FX2_LIGHTS_H
 
-#include "fx2types.h"
 #include "fx2regs.h"
+#include "fx2types.h"
 
 // Digilent Atlys - https://www.digilentinc.com/atlys
 #ifdef BOARD_atlys
-#define d1on() OED |= bmBIT7; IOD |= bmBIT7;
-#define d1off() OED |= bmBIT7; IOD &= ~bmBIT7; 
+#define d1on()   \
+  OED |= bmBIT7; \
+  IOD |= bmBIT7;
+#define d1off()  \
+  OED |= bmBIT7; \
+  IOD &= ~bmBIT7;
 #define d2on()  // D2 is not connected
-#define d2off() 
-#endif // BOARD_atlys
+#define d2off()
+#endif  // BOARD_atlys
 
 // FX2 "miniboard" board
 #ifdef BOARD_fx2miniboard
-#define d1on() OEA |= bmBIT0; IOA &= ~bmBIT0;
-#define d1off() OEA |= bmBIT0; IOA |= bmBIT0; 
-#define d2on() OEA |= bmBIT1; IOA &= ~bmBIT1;
-#define d2off() OEA |= bmBIT1; IOA |= bmBIT1; 
-#endif // BOARD_fx2miniboard
+#define d1on()   \
+  OEA |= bmBIT0; \
+  IOA &= ~bmBIT0;
+#define d1off()  \
+  OEA |= bmBIT0; \
+  IOA |= bmBIT0;
+#define d2on()   \
+  OEA |= bmBIT1; \
+  IOA &= ~bmBIT1;
+#define d2off()  \
+  OEA |= bmBIT1; \
+  IOA |= bmBIT1;
+#endif  // BOARD_fx2miniboard
 
 // Numato Opsis board - https://opsis.hdmi2usb.tv
 #ifdef BOARD_opsis
 #define d1on()  // D1 not connected
 #define d1off()
-#define d2on() OEE |= bmBIT5; IOE &= ~bmBIT5;
-#define d2off() OEE |= bmBIT5; IOE |= bmBIT5; 
-#endif // BOARD_opsis
+#define d2on()   \
+  OEE |= bmBIT5; \
+  IOE &= ~bmBIT5;
+#define d2off()  \
+  OEE |= bmBIT5; \
+  IOE |= bmBIT5;
+#endif  // BOARD_opsis
 
-#endif // FX2_LIGHTS_H
+#endif  // FX2_LIGHTS_H
