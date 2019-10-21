@@ -4,3 +4,6 @@
 [submodule "third_party/fx2lib-linux-headers"]
 	path = third_party/fx2lib-linux-headers
 	url = https://github.com/mithro/fx2lib-linux-headers
+[submodule "third_party/libfx2"]
+	path = third_party/libfx2
+	url = git@dev.antmicro.com:fpga-ecosystem-libfx2.git
