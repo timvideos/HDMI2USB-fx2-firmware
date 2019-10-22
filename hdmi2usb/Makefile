@@ -34,7 +34,7 @@
 TARGET := hdmi2usb
 FX2LIBDIR := ../third_party/fx2lib
 LIBFX2DIR := ../third_party/libfx2/firmware/library
-LIBFX2_MODEL := medium
+LIBFX2_MODEL := small
 SYNCDELAYLEN = 4
 COMMON_DIR := ../common
 USE_16K := 1

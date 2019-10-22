@@ -36,7 +36,7 @@ TARGET := audio
 FX2LIBDIR := ../third_party/fx2lib
 LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 LIBFX2DIR := ../third_party/libfx2/firmware/library
-LIBFX2_MODEL := medium
+LIBFX2_MODEL := small
 COMMON_DIR := ../common
 INCS := -I$(LINUXHEADERSDIR)
 
