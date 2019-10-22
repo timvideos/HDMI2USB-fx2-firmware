@@ -100,8 +100,19 @@ load: $(TARGET).hex
 
 $(CC_SRCS) $(AS_SRCS): $(FX2LIBDIR)/lib/fx2.lib $(LIBFX2DIR)/lib/fx2_tmp.lib
 
+FX2LIB_INTERRUPTS_SOURCES = $(wildcard $(FX2LIBDIR)/lib/interrupts/*.c)
+
+FX2LIB_SOURCES = \
+	serial.c \
+	i2c.c \
+	delay.c \
+	setupdat.c \
+	gpif.c \
+	eputils.c \
+	$(FX2LIB_INTERRUPTS_SOURCES:$(FX2LIBDIR)/lib/%=%)
+
 $(FX2LIBDIR)/lib/fx2.lib: $(FX2LIBDIR)/.git
-	cd $(dir $@) && make -j1
+	cd $(dir $@) && make -j1 SOURCES="$(FX2LIB_SOURCES)"
 
 $(LIBFX2DIR)/lib/fx2_tmp.lib: $(LIBFX2DIR)/lib/$(LIBFX2_MODEL)/fx2.lib
 	cd $(LIBFX2DIR)/lib && sdcclib fx2_tmp.lib \
