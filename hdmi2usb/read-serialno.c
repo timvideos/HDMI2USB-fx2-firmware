@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <i2c.h>
+#include <libfx2/firmware/library/include/fx2eeprom.h>
 
 // Convert a byte into the ASCII hex equivalent.
-char hex(BYTE value) {
+char hex(uint8_t value) {
   if (value > 0x0f) {
     return '?';
   } else if (value > 0x09) {
@@ -30,7 +29,7 @@ char hex(BYTE value) {
 
 // Patch the serial number in the device descriptor table.
 extern __xdata char dev_serial[];
-void patch_serial_number(BYTE index, BYTE value) {
+void patch_serial_number(uint8_t index, uint8_t value) {
   dev_serial[index * 4] = hex(value >> 4);
   dev_serial[index * 4 + 2] = hex(value & 0xf);
 }
@@ -41,14 +40,14 @@ void patch_serial_number(BYTE index, BYTE value) {
 
 // Patch the USB serial number with information from the MAC address EEPROM.
 void patch_usb_serial_number_with_eeprom_macaddress() {
-  BYTE tempbyte = 0;
-  BYTE i = 0;
+  uint8_t tempbyte = 0;
+  uint8_t i = 0;
 
   dev_serial[0] = 'f';
   //pSerial[2] = ((WORD)'e') << 8;
 
   for (i = 0; i < PROM_ID_SIZE; i++) {
-    eeprom_read(PROM_ADDRESS, PROM_ID_OFFSET + i, 1, &tempbyte);
+    eeprom_read(PROM_ADDRESS, PROM_ID_OFFSET + i, &tempbyte, 1, false);
     patch_serial_number(i, tempbyte);
   }
 }

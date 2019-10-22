@@ -20,7 +20,6 @@
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
-#include <i2c.h>
 #include <serial.h>
 #include <setupdat.h>
 #include <stdio.h>
