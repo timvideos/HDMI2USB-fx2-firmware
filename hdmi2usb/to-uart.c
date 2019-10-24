@@ -20,10 +20,10 @@
 #include <libfx2/firmware/library/include/fx2regs.h>
 
 #include "cdc-config.h"
+#include "macros.h"
 
-#define LSB(word) ((uint8_t) ((word) & 0xff))
-#define MSB(word) ((uint8_t) (((word) >> 8) & 0xff))
-#define CPUCLKSPD ((CPUCS & (_CLKSPD0 | _CLKSPD1)) >> 3)  // clockl speed: 0b00 = 12MHz, 0b01 = 24MHz, 0b10 = 48MHz
+// clockl speed: 0b00 = 12MHz, 0b01 = 24MHz, 0b10 = 48MHz
+#define CPUCLKSPD ((CPUCS & (_CLKSPD0 | _CLKSPD1)) >> 3)
 
 // buffer counter for CDC transfers
 extern volatile uint16_t cdc_queued_bytes;
