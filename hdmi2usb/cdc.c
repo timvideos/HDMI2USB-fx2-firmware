@@ -4,14 +4,12 @@
 
 volatile uint16_t cdc_queued_bytes = 0;
 
-struct usb_cdc_line_coding cdc_current_line_coding = {
-    .bDTERate0 = LSB(2400),
-    .bDTERate1 = MSB(2400),
-    .bDTERate2 = 0,
-    .bDTERate3 = 0,
-    .bCharFormat = USB_CDC_1_STOP_BITS,
-    .bParityType = USB_CDC_NO_PARITY,
-    .bDataBits = 8};
+struct usb_cdc_req_line_coding cdc_current_line_coding = {
+    .dwDTERate = MAKEDWORD(0, MAKEDWORD(2400, 2400)),
+    .bCharFormat = USB_CDC_REQ_LINE_CODING_STOP_BITS_1,
+    .bParityType = USB_CDC_REQ_LINE_CODING_PARITY_NONE,
+    .bDataBits = 8
+};
 
 void cdc_receive_poll() {
   if (!(EP2468STAT & bmCDC_H2D_EP(E))) {
@@ -28,7 +26,7 @@ bool cdc_handle_command(uint8_t cmd) {
   uint32_t baud_rate = 0;
 
   switch (cmd) {
-    case USB_CDC_REQ_SET_LINE_CODING:
+    case USB_CDC_PSTN_REQ_SET_LINE_CODING:
       EUSB = 0;
       SUDPTRCTL = 0x01;
       EP0BCL = 0x00;
@@ -55,7 +53,7 @@ bool cdc_handle_command(uint8_t cmd) {
 
       return true;
 
-    case USB_CDC_REQ_GET_LINE_CODING:
+    case USB_CDC_PSTN_REQ_GET_LINE_CODING:
       SUDPTRCTL = 0x01;
 
       for (i = 0; i < 7; i++)
@@ -71,7 +69,7 @@ bool cdc_handle_command(uint8_t cmd) {
 
       return true;
 
-    case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
+    case USB_CDC_PSTN_REQ_SET_CONTROL_LINE_STATE:
       return true;
 
     default:
