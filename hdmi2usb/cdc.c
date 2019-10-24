@@ -1,11 +1,8 @@
-
 #include "cdc.h"
 
-#include <libfx2/firmware/library/include/fx2delay.h>
-#include <fx2macros.h>
-#include <fx2regs.h>
+#include "macros.h"
 
-volatile WORD cdc_queued_bytes = 0;
+volatile uint16_t cdc_queued_bytes = 0;
 
 struct usb_cdc_line_coding cdc_current_line_coding = {
     .bDTERate0 = LSB(2400),
@@ -17,18 +14,18 @@ struct usb_cdc_line_coding cdc_current_line_coding = {
     .bDataBits = 8};
 
 void cdc_receive_poll() {
-  if (!(EP2468STAT & bmCDC_H2D_EP(EMPTY))) {
-    WORD bytes = MAKEWORD(CDC_H2D_EP(BCH), CDC_H2D_EP(BCL));
+  if (!(EP2468STAT & bmCDC_H2D_EP(E))) {
+    uint16_t bytes = MAKEWORD(CDC_H2D_EP(BCH), CDC_H2D_EP(BCL));
     cdcuser_receive_data(CDC_H2D_EP(FIFOBUF), bytes);
     CDC_H2D_EP(BCL) = 0x80;  // Mark us ready to receive again.
   }
   // FIXME: Send the interrupt thingy
 }
 
-BOOL cdc_handle_command(BYTE cmd) {
+bool cdc_handle_command(uint8_t cmd) {
   int i;
-  BYTE* line_coding = (BYTE*)&cdc_current_line_coding;
-  DWORD baud_rate = 0;
+  uint8_t* line_coding = (uint8_t*)&cdc_current_line_coding;
+  uint32_t baud_rate = 0;
 
   switch (cmd) {
     case USB_CDC_REQ_SET_LINE_CODING:
@@ -56,7 +53,7 @@ BOOL cdc_handle_command(BYTE cmd) {
       if (!cdcuser_set_line_rate(baud_rate))
         ;  //EP0STALL();
 
-      return TRUE;
+      return true;
 
     case USB_CDC_REQ_GET_LINE_CODING:
       SUDPTRCTL = 0x01;
@@ -72,12 +69,12 @@ BOOL cdc_handle_command(BYTE cmd) {
         ;
       SUDPTRCTL = 0x00;
 
-      return TRUE;
+      return true;
 
     case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
-      return TRUE;
+      return true;
 
     default:
-      return FALSE;
+      return false;
   }
 }

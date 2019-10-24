@@ -34,6 +34,9 @@
 
 #include "cdc.h"
 
+// TODO: remove when fx2regs.h from libfx2 will be used in this file
+#define _EP4F        (1u<<3) ///< Bit 3
+
 volatile __bit dosud = FALSE;
 volatile __bit dosuspend = FALSE;
 

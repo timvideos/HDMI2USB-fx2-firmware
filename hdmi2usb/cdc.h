@@ -2,15 +2,17 @@
 #ifndef CDC_H
 #define CDC_H
 
-#include <fx2types.h>
+#include <stdbool.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
+#include <libfx2/firmware/library/include/fx2regs.h>
 
 #include "cdc-config.h"
 
-void cdcuser_receive_data(BYTE* data, WORD length);
-BOOL cdcuser_set_line_rate(DWORD baud_rate);
+void cdcuser_receive_data(uint8_t* data, uint16_t length);
+bool cdcuser_set_line_rate(uint32_t baud_rate);
 
 // Handles the "vendor commands" for a CDC device.
-BOOL cdc_handle_command(BYTE cmd);
+bool cdc_handle_command(uint8_t cmd);
 
 //void cdc_setup();
 
@@ -18,13 +20,13 @@ BOOL cdc_handle_command(BYTE cmd);
 void cdc_receive_poll();
 
 // You are able to send data.
-//BOOL cdc_can_send();
+//bool cdc_can_send();
 #define cdc_can_send() \
-  !(EP2468STAT & bmCDC_D2H_EP(FULL))
+  !(EP2468STAT & bmCDC_D2H_EP(F))
 
-extern volatile WORD cdc_queued_bytes;
+extern volatile uint16_t cdc_queued_bytes;
 // Queue a byte in the output CDC data queue.
-//void cdc_queue_data(BYTE data);
+//void cdc_queue_data(uint8_t data);
 #define cdc_queue_data(data) \
   CDC_D2H_EP(FIFOBUF)        \
   [cdc_queued_bytes++] = data;
@@ -48,9 +50,9 @@ extern volatile WORD cdc_queued_bytes;
  * naturally, instead the endian comes from the compiler. sdcc choses to be
  * little endian, as does the USB specification.
  */
-#define __u8 BYTE
-#define __le16 WORD
-#define __le32 DWORD
+#define __u8 uint8_t
+#define __le16 uint16_t
+#define __le32 uint32_t
 
 // #define USB_CDC_SUBCLASS_ACM                    0x02
 // #define USB_CDC_PROTO_NONE                      0
