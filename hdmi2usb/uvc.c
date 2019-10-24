@@ -10,15 +10,16 @@
 
 #include "uvc.h"
 
-#include <libfx2/firmware/library/include/fx2delay.h>
 #include <eputils.h>
-#include <fx2macros.h>
-#include <fx2regs.h>
-#include <setupdat.h>
+#include <libfx2/firmware/library/include/fx2delay.h>
+#include <libfx2/firmware/library/include/fx2regs.h>
+#include <libfx2/firmware/library/include/fx2usb.h>
 
 #include "cdc-config.h"
 
-BYTE valuesArray[26] =
+#define bmRESETTOGGLE  bmBIT5  // TODO: remove when eputils.h have been ported
+
+uint8_t valuesArray[26] =
     {
         0x01, 0x00,             /* bmHint : No fixed parameters */
         0x01,                   /* Use 1st Video format index */
@@ -36,22 +37,22 @@ BYTE valuesArray[26] =
         0x00, 0x04, 0x00, 0x00  /* No. of bytes device can rx in single payload (1024) */
 };
 
-BYTE fps[2][4] = {{0x2A, 0x2C, 0x0A, 0x00}, {0x54, 0x58, 0x14, 0x00}};        // 15 ,7
-BYTE frameSize[2][4] = {{0x00, 0x00, 0x18, 0x00}, {0x00, 0x20, 0x1C, 0x00}};  // Dvi , HDMI
+uint8_t fps[2][4] = {{0x2A, 0x2C, 0x0A, 0x00}, {0x54, 0x58, 0x14, 0x00}};        // 15 ,7
+uint8_t frameSize[2][4] = {{0x00, 0x00, 0x18, 0x00}, {0x00, 0x20, 0x1C, 0x00}};  // Dvi , HDMI
 
-BOOL handleUVCCommand(BYTE cmd) {
+bool handleUVCCommand(uint8_t cmd) {
   int i;
 
   switch (cmd) {
-    case CLEAR_FEATURE:
+    case USB_REQ_CLEAR_FEATURE:
       // FIXME: WTF is 0x21 !?
       if (SETUPDAT[0] != 0x21)
-        return FALSE;
+        return false;
 
       EP0BCH = 0;
       EP0BCL = 26;
       SYNCDELAY;
-      while (EP0CS & bmEPBUSY)
+      while (EP0CS & _BUSY)
         ;
       while (EP0BCL != 26)
         ;
@@ -72,7 +73,7 @@ BOOL handleUVCCommand(BYTE cmd) {
 
       EP0BCH = 0;  // ACK
       EP0BCL = 0;  // ACK
-      return TRUE;
+      return true;
 
     case UVC_GET_CUR:
     case UVC_GET_MIN:
@@ -85,7 +86,7 @@ BOOL handleUVCCommand(BYTE cmd) {
       EP0BCH = 0x00;
       SYNCDELAY;
       EP0BCL = 26;
-      return TRUE;
+      return true;
 
       // FIXME: What do these do????
       // case UVC_SET_CUR:
@@ -99,31 +100,31 @@ BOOL handleUVCCommand(BYTE cmd) {
       // Unhandled Vendor Command: 87
 
     default:
-      return FALSE;
+      return false;
   }
 }
 
-BYTE Configuration;         // Current configuration
-BYTE AlternateSetting = 0;  // Alternate settings
+uint8_t Configuration;         // Current configuration
+uint8_t AlternateSetting = 0;  // Alternate settings
 
-BYTE handle_get_configuration() {
+uint8_t handle_get_configuration() {
   return Configuration;
 }
 
-BOOL handle_set_configuration(BYTE cfg) {
+bool handle_set_configuration(uint8_t cfg) {
   Configuration = SETUPDAT[2];  //cfg;
-  return TRUE;
+  return true;
 }
 
-BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
+bool handle_get_interface(uint8_t ifc, uint8_t* alt_ifc) {
   *alt_ifc = AlternateSetting;
   //EP0BUF[0] = AlternateSetting;
   //EP0BCH = 0;
   //EP0BCL = 1;
-  return TRUE;
+  return true;
 }
 
-BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
+bool handle_set_interface(uint8_t ifc, uint8_t alt_ifc) {
   AlternateSetting = SETUPDAT[2];
 
   if (ifc == 0 && alt_ifc == 0) {
@@ -145,9 +146,9 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     SYNCDELAY; FIFORESET = 0x00;
   }
 
-  return TRUE;
+  return true;
 }
 
-BOOL handle_get_descriptor() {
-  return FALSE;
+bool handle_get_descriptor() {
+  return false;
 }

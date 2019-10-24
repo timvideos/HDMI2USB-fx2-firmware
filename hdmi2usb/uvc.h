@@ -1,7 +1,8 @@
 #ifndef UVC_H
 #define UVC_H
 
-#include <fx2types.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 //----------------------------------------------------------------------------
 //	UVC definitions
@@ -15,6 +16,6 @@
 //#define UVC_GET_INFO                                    (0x86)
 //#define UVC_GET_DEF                                     (0x87)
 
-BOOL handleUVCCommand(BYTE cmd);
+bool handleUVCCommand(uint8_t cmd);
 
 #endif  // UVC_H
