@@ -4,6 +4,9 @@
 #include <fx2lib.h>
 #include <fx2delay.h>
 
+#include <fx2debug.h>
+DEFINE_DEBUG_FN(bitbang_uart_send_byte, PB0, 115200)
+
 volatile bool pending_ep6_in = false;
 
 bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
@@ -12,7 +15,7 @@ bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   // Linux will send us other requests we explicitly declare to not support, but those just fail.
   if (req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_OUT) &&
       req->bRequest == USB_CDC_PSTN_REQ_SET_CONTROL_LINE_STATE &&
-      req->wIndex == 0 && req->wLength == 0) 
+      req->wIndex == 0 && req->wLength == 0)
   {
     ACK_EP0();
     return true;
@@ -22,7 +25,7 @@ bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   // but Windows sends it anyway and this results in errors propagating to userspace.
   if(req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_IN) &&
      req->bRequest == USB_CDC_PSTN_REQ_GET_LINE_CODING &&
-     req->wIndex == 0 && req->wLength == 7) 
+     req->wIndex == 0 && req->wLength == 7)
   {
     __xdata struct usb_cdc_req_line_coding *line_coding =
         (__xdata struct usb_cdc_req_line_coding *)EP0BUF;
@@ -38,7 +41,7 @@ bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   // but Windows sends it anyway and this results in errors propagating to userspace.
   if(req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_OUT) &&
      req->bRequest == USB_CDC_PSTN_REQ_SET_LINE_CODING &&
-     req->wIndex == 0 && req->wLength == 7) 
+     req->wIndex == 0 && req->wLength == 7)
   {
     SETUP_EP0_BUF(0);
     return true;
@@ -56,7 +59,6 @@ void cdc_handle_IBN() {
 
 void cdc_poll() {
   static uint16_t length = 0;
-  static uint16_t ticker = 0;
 
   if(length == 0 && !(EP2CS & _EMPTY)) {
     length = (EP2BCH << 8) | EP2BCL;
@@ -72,6 +74,10 @@ void cdc_poll() {
         if(isupper(c)) c = tolower(c);
         else if(islower(c)) c = toupper(c);
         scratch[i] = c;
+
+        __critical {
+          bitbang_uart_send_byte(scratch[i]);
+        }
       }
     }
   }
@@ -84,5 +90,5 @@ void cdc_poll() {
 
     length = 0;
     pending_ep6_in = false;
-  } 
+  }
 }
