@@ -11,17 +11,6 @@ void handle_usb_setup(__xdata struct usb_req_setup *req) {
   STALL_EP0();
 }
 
-void isr_IBN() __interrupt {
-  CLEAR_USB_IRQ();
-
-  // handle specific enpoints
-  // each handle should inspect given endpoint's bit in IBNIRQ, 
-  // and if needed perform actions then clear that bit
-  cdc_handle_IBN();
-
-  NAKIRQ = _IBN;
-}
-
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
@@ -48,10 +37,6 @@ int main() {
   EP4CFG &= ~_VALID;
   EP8CFG &= ~_VALID;
 
-  // Enable IN-BULK-NAK interrupt for EP6.
-  IBNIE = _IBNI_EP6;
-  NAKIE = _IBN;
-
   // Reset and prime EP2, and reset EP6.
   SYNCDELAY;
   FIFORESET = _NAKALL|2;
@@ -66,6 +51,8 @@ int main() {
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
+
+  cdc_init();
 
   while (1) {
     cdc_poll();
