@@ -3,25 +3,34 @@
 #include <fx2lib.h>
 #include <fx2delay.h>
 
+#include <stdio.h>
+#include <string.h>
 #include <fx2debug.h>
-DEFINE_DEBUG_FN(bitbang_uart_send_byte, PB0, 115200)
 
-volatile bool pending_ep6_in = false;
-uint32_t scratch_buf_len = 0;
+volatile bool pending_ie0 = false;
+static uint32_t scratch_buf_len = 0;
 
-static void permute_data(uint8_t *data, uint16_t length) {
-  uint16_t i;
-  for (i = 0; i < length; ++i) {
-    // translate a-zA-Z by N characters
-    if ((data[i] >= 'a' && data[i] <= 'z') || (data[i] >= 'A' && data[i] <= 'Z')) {
-      data[i] += 1;
-    }
-  }
+static void permute_data(uint8_t *data, uint16_t length);
+static void init_uart_ext_int();
+
+
+// blocking software uart
+#define BAUDRATE 115200
+DEFINE_DEBUG_FN(bitbang_uart_send_byte, PB0, BAUDRATE)
+
+int putchar(int c) {
+  bitbang_uart_send_byte(c);
+  return c;
 }
 
+// external interrupt on pin INT0
+void isr_IE0() __interrupt(_INT_IE0) {
+  // IE0 is automatically cleared by hardware
+  pending_ie0 = true;
+}
 
 void cdc_init() {
-
+  init_uart_ext_int();
 }
 
 bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
@@ -65,8 +74,27 @@ bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   return false;
 }
 
+void cdc_print(const char *string) {
+  uint16_t i;
+  uint16_t len = strlen(string);
+  if (len > 512)
+    len = 512;
+
+  __critical {
+    printf("string = %s\n", string);
+  }
+
+  for (i = 0; i < len; ++i) {
+    EP6FIFOBUF[i] = ((uint8_t *) string)[i];
+  }
+  EP6BCH = len >> 8;
+  SYNCDELAY;
+  EP6BCL = len;
+}
+
 void cdc_poll() {
 
+  // receive CDC-ACM data on EP2
   if(!(EP2CS & _EMPTY)) {
     uint16_t length = (EP2BCH << 8) | EP2BCL;
 
@@ -107,4 +135,33 @@ void cdc_poll() {
 
     scratch_buf_len = 0;
   }
+
+  // indicate when we receive something on RX pin (INT0)
+  if (pending_ie0) {
+    pending_ie0 = false;
+    __critical {
+      printf("got pending_ie0\r\n");
+    }
+  }
+
+}
+
+void permute_data(uint8_t *data, uint16_t length) {
+  uint16_t i;
+  for (i = 0; i < length; ++i) {
+    // translate a-zA-Z by N characters
+    if ((data[i] >= 'a' && data[i] <= 'z') || (data[i] >= 'A' && data[i] <= 'Z')) {
+      data[i] += 1;
+    }
+  }
+}
+
+void init_uart_ext_int() {
+  // configure PA0 as alternate function INT0
+  PORTACFG |= 1;
+  
+  // configure external interrupt on INT0 for uart rx, negative edge (start bit)
+  IT0 = 1;
+  IP |= 1; // high priority
+  IE |= 1; // enable interrupt
 }
