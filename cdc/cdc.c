@@ -18,10 +18,9 @@ static void init_uart_ext_int();
 #define BAUDRATE 115200
 DEFINE_DEBUG_FN(bitbang_uart_send_byte, PB0, BAUDRATE)
 
-int putchar(int c) {
-  bitbang_uart_send_byte(c);
-  return c;
-}
+#include <stdio.h>
+DEFINE_DEBUG_PUTCHAR_FN(PB1, BAUDRATE)
+
 
 // external interrupt on pin INT0
 void isr_IE0() __interrupt(_INT_IE0) {
@@ -92,37 +91,38 @@ void cdc_print(const char *string) {
   EP6BCL = len;
 }
 
-void cdc_poll() {
+
+void cdc_poll_loopback() {
 
   // receive CDC-ACM data on EP2
   if(!(EP2CS & _EMPTY)) {
     uint16_t length = (EP2BCH << 8) | EP2BCL;
-
+  
     // if scratch buffer is full, ignore subsequent data
     if (scratch_buf_len < ARRAYSIZE(scratch)) {
       // store in data up to available scratch length, ignore rest
       if (length + scratch_buf_len > ARRAYSIZE(scratch)) {
         length = ARRAYSIZE(scratch) - scratch_buf_len;
       }
-
+  
       // length bytes from EP2 buf to scratch+scratch_buf_len
       xmemcpy(scratch + scratch_buf_len, EP2FIFOBUF, length);
       scratch_buf_len += length;
     }
-
+  
     // signalize we are ready for new data
     EP2BCL = 0;
   }
-
+  
   // send data to EP6 if it is not full
   if (scratch_buf_len != 0 && !(EP6CS & _FULL)) {
     permute_data(scratch, scratch_buf_len);
-
+  
     xmemcpy(EP6FIFOBUF, scratch, scratch_buf_len);
     EP6BCH = scratch_buf_len >> 8;
     SYNCDELAY;
     EP6BCL = scratch_buf_len;
-
+  
     // simultaneously send the data over uart
     {
       uint16_t i;
@@ -132,15 +132,39 @@ void cdc_poll() {
         }
       }
     }
-
+  
     scratch_buf_len = 0;
+  }
+
+}
+
+void cdc_poll() {
+
+  // cdc_poll_loopback();
+
+
+  static uint32_t counter = 0;
+
+  if (counter++ > 10000UL * 8) {
+    counter = 0;
+
+    __critical {
+      printf("sending byte...\r\n");
+    }
+
+    // send a byte over uart which will loop back to us
+    // IE0 = 0;
+    __critical {
+      bitbang_uart_send_byte('q');
+    }
+    // IE0 = 1;
   }
 
   // indicate when we receive something on RX pin (INT0)
   if (pending_ie0) {
     pending_ie0 = false;
     __critical {
-      printf("got pending_ie0\r\n");
+      printf("got pending_ie0, counter = %ld\r\n", counter);
     }
   }
 
