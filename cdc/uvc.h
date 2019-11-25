@@ -1,6 +1,7 @@
 #ifndef UVC_H
 #define UVC_H
 
+#include <fx2delay.h>
 #include <fx2usb.h>
 
 // UVC definitions

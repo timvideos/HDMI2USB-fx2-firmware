@@ -1,6 +1,6 @@
-#include "uvc.c"
+#include "uvc.h"
 
-uint8_t valuesArray[26] =
+__xdata uint8_t valuesArray[26] =
     {
         0x01, 0x00,             /* bmHint : No fixed parameters */
         0x01,                   /* Use 1st Video format index */
@@ -18,8 +18,8 @@ uint8_t valuesArray[26] =
         0x00, 0x04, 0x00, 0x00  /* No. of bytes device can rx in single payload (1024) */
 };
 
-uint8_t fps[2][4] = {{0x2A, 0x2C, 0x0A, 0x00}, {0x54, 0x58, 0x14, 0x00}};        // 15 ,7
-uint8_t frameSize[2][4] = {{0x00, 0x00, 0x18, 0x00}, {0x00, 0x20, 0x1C, 0x00}};  // Dvi , HDMI
+__xdata uint8_t fps[2][4] = {{0x2A, 0x2C, 0x0A, 0x00}, {0x54, 0x58, 0x14, 0x00}};        // 15 ,7
+__xdata uint8_t frameSize[2][4] = {{0x00, 0x00, 0x18, 0x00}, {0x00, 0x20, 0x1C, 0x00}};  // Dvi , HDMI
 
 bool uvc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   if (req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_OUT) &&
@@ -53,7 +53,7 @@ bool uvc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   }
 
   if (req->bRequest == USB_UVC_GET_CUR || req->bRequest == USB_UVC_GET_MIN || 
-      req-> USB_UVC_GET_MAX) 
+      req->bRequest == USB_UVC_GET_MAX) 
   {
     int i;
     SUDPTRCTL = 0x01;

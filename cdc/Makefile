@@ -4,7 +4,7 @@ MODEL     = small
 BOARD = atlys
 
 LIBFX2  = ../third_party/libfx2/firmware/library
-SOURCES = main descriptors cdc
+SOURCES = main descriptors cdc uvc
 
 SYNCDELAYLEN = 4
 

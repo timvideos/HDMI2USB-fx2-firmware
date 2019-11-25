@@ -30,6 +30,8 @@ usb_desc_device_c usb_device = {
   .bNumConfigurations   = 1,
 };
 
+// CDC
+
 usb_desc_interface_c usb_iface_cic = {
   .bLength              = sizeof(struct usb_desc_interface),
   .bDescriptorType      = USB_DESC_INTERFACE,
@@ -103,6 +105,302 @@ usb_desc_endpoint_c usb_endpoint_ep6_in = {
   .wMaxPacketSize       = 512,
   .bInterval            = 0,
 };
+
+// UVC
+
+struct usb_desc_if_assoc {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bFirstInterface;
+  uint8_t bInterfaceCount;
+  uint8_t bFunctionClass;
+  uint8_t bFunctionSubClass;
+  uint8_t bFunctionProtocol;
+  uint8_t iFunction;
+};
+
+typedef __code const struct usb_desc_if_assoc
+  usb_desc_if_assoc_c;
+
+struct usb_desc_vc_if_header {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint16_t bcdUVC;
+  uint16_t wTotalLength;
+  uint32_t dwClockFrequency;
+  uint8_t bInCollection;
+  uint8_t baInterfaceNr[];
+};
+
+typedef __code const struct usb_desc_vc_if_header
+  usb_desc_vc_if_header_c;
+
+struct usb_desc_uvc_input_terminal {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t bAssocTerminal;
+  uint8_t iTerminal;
+  uint8_t _tail[]; // additional fields depends on Terminal type
+};
+
+typedef __code const struct usb_desc_uvc_input_terminal
+  usb_desc_uvc_input_terminal_c;
+
+struct usb_desc_uvc_output_terminal {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t bAssocTerminal;
+  uint8_t bSourceID;
+  uint8_t iTerminal;
+  uint8_t _tail[]; // additional fields depends on Terminal type
+};
+
+typedef __code const struct usb_desc_uvc_output_terminal
+  usb_desc_uvc_output_terminal_c;
+
+struct usb_desc_uvc_camera_terminal {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t bAssocTerminal;
+  uint8_t iTerminal;
+  uint16_t wObjectiveFocalLengthMin;
+  uint16_t wObjectiveFocalLengthMax;
+  uint16_t wOcularFocalLength;
+  uint8_t bControlSize;
+  uint8_t bmControls[];
+};
+
+typedef __code const struct usb_desc_uvc_camera_terminal
+  usb_desc_uvc_camera_terminal_c;
+
+struct usb_desc_uvc_processing_unit {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bUnitID;
+  uint8_t bSourceID;
+  uint16_t wMaxMultiplier;
+  uint8_t bControlSize;
+  uint8_t _tail[];
+  // put those in '_tail'
+  /* uint8_t bmControls[]; */
+  /* uint8_t iProcessing; */
+  /* uint8_t bmVideoStandards; */
+};
+
+typedef __code const struct usb_desc_uvc_processing_unit
+  usb_desc_uvc_processing_unit_c;
+
+struct usb_desc_uvc_extension_unit {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bUnitID;
+  uint8_t guidExtensionCode[16];
+  uint8_t bNumControls;
+  uint8_t bNrInPins;
+  uint8_t _tail[];
+  // put these in '_tail'
+  /* uint8_t baSourceID[]; */
+  /* uint8_t bControlSize; */
+  /* uint8_t bmControls[]; */
+  /* uint8_t iExtension; */
+};
+
+typedef __code const struct usb_desc_uvc_extension_unit
+  usb_desc_uvc_extension_unit_c;
+
+struct usb_desc_vs_if_in_header {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bNumFormats;
+  uint16_t wTotalLength;
+  uint8_t bEndpointAddress;
+  uint8_t bmInfo;
+  uint8_t bTerminalLink;
+  uint8_t bStillCaptureMethod;
+  uint8_t bTriggerSupport;
+  uint8_t bTriggerUsage;
+  uint8_t bControlSize;
+  uint8_t bmaControls[];
+};
+
+typedef __code const struct usb_desc_vs_if_in_header
+  usb_desc_vs_if_in_header_c;
+
+
+/* enum [>usb_descriptor<] { */
+/*   [> USB_DESC_IF_ASSOC = 0x0b, <] */
+/* }; */
+
+
+enum {
+  USB_DESC_IF_ASSOC = 0x0b,
+
+  USB_UVC_CC_VIDEO = 0x0e,
+  USB_UVC_SC_VIDEO_INTERFACE_COLLECTION = 0x03,
+  USB_UVC_SUBCLASS_CC_VIDEOCONTROL = 0x01,
+  USB_UVC_SUBCLASS_CC_VIDEOSTREAMING = 0x02,
+
+  USB_UVC_CS_INTERFACE = 0x24,
+  USB_UVC_VC_HEADER = 0x01,
+  USB_UVC_VC_INPUT_TERMINAL = 0x02,
+  USB_UVC_VC_OUTPUT_TERMINAL = 0x03,
+  USB_UVC_VC_PROCESSING_UNIT = 0x05,
+  USB_UVC_VC_EXTENSION_UNIT = 0x06,
+  USB_UVC_VS_INPUT_HEADER = 0x01,
+};
+
+
+usb_desc_if_assoc_c usb_uvc_if_assoc = {
+  .bLength              = sizeof(struct usb_desc_if_assoc),
+  .bDescriptorType      = USB_DESC_IF_ASSOC,
+  .bFirstInterface      = 0,
+  .bInterfaceCount      = 2,
+  .bFunctionClass       = USB_UVC_CC_VIDEO,
+  .bFunctionSubClass    = USB_UVC_SC_VIDEO_INTERFACE_COLLECTION,
+  .bFunctionProtocol    = 0,
+  .iFunction            = 1,
+};
+
+/* Standard video control interface descriptor */
+usb_desc_interface_c usb_uvc_std_ctrl_iface = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 2,
+  .bAlternateSetting    = 0,
+  .bNumEndpoints        = 0,
+  .bInterfaceClass      = USB_UVC_CC_VIDEO,
+  .bInterfaceSubClass   = USB_UVC_SUBCLASS_CC_VIDEOCONTROL,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
+};
+
+/* Input (camera) terminal descriptor */
+usb_desc_uvc_camera_terminal_c usb_uvc_camera = {
+  .bLength                  = sizeof(struct usb_desc_uvc_camera_terminal),
+  .bDescriptorType          = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType       = USB_UVC_VC_INPUT_TERMINAL,
+  .bTerminalID              = 1,
+  .wTerminalType            = 0x0201,
+  .bAssocTerminal           = 0,
+  .iTerminal                = 0,
+  .wObjectiveFocalLengthMin = 0x0000, // no optical zoom supported
+  .wObjectiveFocalLengthMax = 0x0000, // no optical zoom supported
+  .wOcularFocalLength       = 0x0000, // no optical zoom supported
+  .bControlSize             = 3,
+  .bmControls               = {0x00, 0x00, 0x00}, // no controls supported
+};
+
+/* Processing unit descriptor */
+usb_desc_uvc_processing_unit_c usb_uvc_processing_unit = {
+  .bLength            = sizeof(struct usb_desc_uvc_processing_unit),
+  .bDescriptorType    = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType = USB_UVC_VC_PROCESSING_UNIT,
+  .bUnitID            = 2,
+  .bSourceID          = 1,
+  .wMaxMultiplier     = 0,
+  .bControlSize       = 3,
+  ._tail              = {
+    0x00, 0x00, 0x00, // bmControls[]
+    0x00, // iProcessing
+    0x00, // bmVideoStandards
+  }, 
+};
+
+/* Extension unit descriptor */
+usb_desc_uvc_extension_unit_c usb_uvc_extension_unit = {
+  .bLength               = sizeof(struct usb_desc_uvc_extension_unit),
+  .bDescriptorType       = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType    = USB_UVC_VC_EXTENSION_UNIT,
+  .bUnitID               = 3,
+  .guidExtensionCode     = { 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  },
+  .bNumControls          = 0,
+  .bNrInPins             = 1,
+  ._tail                 = {
+    2, // baSourceID[]
+    3, // bControlSize
+    0x00, 0x00, 0x00, // bmControls[]
+    0, // iExtension
+  },
+};
+
+/* Output terminal descriptor */
+usb_desc_uvc_output_terminal_c usb_uvc_output_terminal = {
+  .bLength            = sizeof(struct usb_desc_uvc_output_terminal),
+  .bDescriptorType    = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType = USB_UVC_VC_OUTPUT_TERMINAL,
+  .bTerminalID        = 4,
+  .wTerminalType      = 0x0101,
+  .bAssocTerminal     = 0,
+  .bSourceID          = 3,
+  .iTerminal          = 0,
+  // ._tail              = {},
+};
+
+usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
+  .bLength              = sizeof(struct usb_desc_vc_if_header),
+  .bDescriptorType      = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType   = USB_UVC_VC_HEADER,
+  .bcdUVC               = 0x0100,
+  .wTotalLength         = // total size of all unit and terminal descriptors, flexible array members counted manually
+      sizeof(usb_uvc_vc_if_header) + 1 +
+      sizeof(usb_uvc_camera) + 1 +
+      sizeof(usb_uvc_processing_unit) + 5 +
+      sizeof(usb_uvc_extension_unit) + 6 +
+      sizeof(usb_uvc_output_terminal) + 0, // TODO: check size, should be 0x50+1 (as in previous code + 1 byte added to processing unit)
+  .dwClockFrequency     = 48000000,
+  .bInCollection        = 1,
+  .baInterfaceNr        = {1},
+};
+
+
+/* Standard video streaming interface descriptor (alternate setting 0) */
+usb_desc_interface_c usb_uvc_std_streaming_iface = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 1,
+  .bAlternateSetting    = 0,
+  .bNumEndpoints        = 0,
+  .bInterfaceClass      = USB_UVC_CC_VIDEO,
+  .bInterfaceSubClass   = USB_UVC_SUBCLASS_CC_VIDEOSTREAMING,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
+};
+
+/* Class-specific video streaming input header descriptor */
+usb_desc_vs_if_in_header_c usb_uvc_vs_if_in_header = {
+  .bLength             = sizeof(struct usb_desc_vs_if_in_header),
+  .bDescriptorType     = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubType  = USB_UVC_VS_INPUT_HEADER,
+  .bNumFormats         = 2,
+  .wTotalLength        = 
+      sizeof(usb_uvc_vs_if_in_header) + 0, // TODO
+  .bEndpointAddress    = 6|USB_DIR_IN, // TODO: change CDC endpoint 6
+  .bmInfo              = 0,
+  .bTerminalLink       = 4,
+  .bStillCaptureMethod = 1,
+  .bTriggerSupport     = 1,
+  .bTriggerUsage       = 0,
+  .bControlSize        = 1,
+  .bmaControls         = {0x00, 0x00},
+};
+
+
 
 usb_configuration_c usb_config = {
   {
