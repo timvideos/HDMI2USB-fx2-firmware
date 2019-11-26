@@ -87,7 +87,7 @@ struct usb_desc_uvc_processing_unit {
   uint8_t bSourceID;
   uint16_t wMaxMultiplier;
   uint8_t bControlSize;
-  uint8_t _tail[];
+  uint8_t _tail[]; // FIXME: better inteface?
   // put those in '_tail'
   /* uint8_t bmControls[]; */
   /* uint8_t iProcessing; */
@@ -183,15 +183,20 @@ struct usb_desc_uvc_vs_frame {
   uint32_t dwMaxVideoFrameBufferSize;
   uint32_t dwDefaultFrameInterval;
   uint8_t bFrameIntervalType;
+  /* 
+   * frameIntervals must be either:
+   *   dwMinFrameInterval, dwMaxFrameInterval, dwFrameIntervalStep,
+   * or:
+   *   N times dwFrameInterval                                      
+   */
   union {
-    struct {
-      uint32_t dwMinFrameInterval;
-      uint32_t dwMaxFrameInterval;
-      uint32_t dwFrameIntervalStep;
-    } continuousFrameIntervals;
-    // or discreteFrameIntervals:
-    uint32_t dwFrameInterval[];
-  } frameIntervals;
+    // for continuous frame intervals
+    uint32_t dwMinFrameInterval;
+    uint32_t dwMaxFrameInterval;
+    uint32_t dwFrameIntervalStep;
+    // for discrete frame intervals
+    uint32_t dwFrameInterval;
+  } frameIntervals[];
 };
 
 typedef __code const struct usb_desc_uvc_vs_frame
