@@ -84,45 +84,45 @@ void cdc_print(const char *string) {
   }
 
   for (i = 0; i < len; ++i) {
-    EP6FIFOBUF[i] = ((uint8_t *) string)[i];
+    EP_CDC_DEV2HOST_(FIFOBUF)[i] = ((uint8_t *) string)[i];
   }
-  EP6BCH = len >> 8;
+  EP_CDC_DEV2HOST_(BCH) = len >> 8;
   SYNCDELAY;
-  EP6BCL = len;
+  EP_CDC_DEV2HOST_(BCL) = len;
 }
 
 
 void cdc_poll_loopback() {
 
-  // receive CDC-ACM data on EP2
-  if(!(EP2CS & _EMPTY)) {
-    uint16_t length = (EP2BCH << 8) | EP2BCL;
-  
+  // receive CDC-ACM data
+  if(!(EP_CDC_HOST2DEV_(CS) & _EMPTY)) {
+    uint16_t length = (EP_CDC_HOST2DEV_(BCH) << 8) | EP_CDC_HOST2DEV_(BCL);
+
     // if scratch buffer is full, ignore subsequent data
     if (scratch_buf_len < ARRAYSIZE(scratch)) {
       // store in data up to available scratch length, ignore rest
       if (length + scratch_buf_len > ARRAYSIZE(scratch)) {
         length = ARRAYSIZE(scratch) - scratch_buf_len;
       }
-  
-      // length bytes from EP2 buf to scratch+scratch_buf_len
-      xmemcpy(scratch + scratch_buf_len, EP2FIFOBUF, length);
+
+      // length bytes from EP buf to scratch+scratch_buf_len
+      xmemcpy(scratch + scratch_buf_len, EP_CDC_HOST2DEV_(FIFOBUF), length);
       scratch_buf_len += length;
     }
-  
+
     // signalize we are ready for new data
-    EP2BCL = 0;
+    EP_CDC_HOST2DEV_(BCL) = 0;
   }
-  
-  // send data to EP6 if it is not full
-  if (scratch_buf_len != 0 && !(EP6CS & _FULL)) {
+
+  // send data to EP if it is not full
+  if (scratch_buf_len != 0 && !(EP_CDC_DEV2HOST_(CS) & _FULL)) {
     permute_data(scratch, scratch_buf_len);
-  
-    xmemcpy(EP6FIFOBUF, scratch, scratch_buf_len);
-    EP6BCH = scratch_buf_len >> 8;
+
+    xmemcpy(EP_CDC_DEV2HOST_(FIFOBUF), scratch, scratch_buf_len);
+    EP_CDC_DEV2HOST_(BCH) = scratch_buf_len >> 8;
     SYNCDELAY;
-    EP6BCL = scratch_buf_len;
-  
+    EP_CDC_DEV2HOST_(BCL) = scratch_buf_len;
+
     // simultaneously send the data over uart
     {
       uint16_t i;
@@ -132,7 +132,7 @@ void cdc_poll_loopback() {
         }
       }
     }
-  
+
     scratch_buf_len = 0;
   }
 
@@ -183,7 +183,7 @@ void permute_data(uint8_t *data, uint16_t length) {
 void init_uart_ext_int() {
   // configure PA0 as alternate function INT0
   PORTACFG |= 1;
-  
+
   // configure external interrupt on INT0 for uart rx, negative edge (start bit)
   IT0 = 1;
   IP |= 1; // high priority
