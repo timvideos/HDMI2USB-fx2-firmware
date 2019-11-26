@@ -98,10 +98,10 @@ usb_desc_endpoint_c usb_endpoint_ep2_out = {
   .bInterval            = 0,
 };
 
-usb_desc_endpoint_c usb_endpoint_ep6_in = {
+usb_desc_endpoint_c usb_endpoint_ep4_in = {
   .bLength              = sizeof(struct usb_desc_endpoint),
   .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = 6|USB_DIR_IN,
+  .bEndpointAddress     = 4|USB_DIR_IN,
   .bmAttributes         = USB_XFER_BULK,
   .wMaxPacketSize       = 512,
   .bInterval            = 0,
@@ -214,9 +214,8 @@ usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
   .baInterfaceNr        = {1},
 };
 
-
 /* Standard video streaming interface descriptor (alternate setting 0) */
-usb_desc_interface_c usb_uvc_std_streaming_iface = {
+usb_desc_interface_c usb_uvc_std_streaming_iface_0 = {
   .bLength              = sizeof(struct usb_desc_interface),
   .bDescriptorType      = USB_DESC_INTERFACE,
   .bInterfaceNumber     = 1,
@@ -244,6 +243,19 @@ usb_desc_vs_if_in_header_c usb_uvc_vs_if_in_header = {
   .bTriggerUsage       = 0,
   .bControlSize        = 1,
   .bmaControls         = {0x00, 0x00},
+};
+
+/* Standard video streaming interface descriptor (alternate setting 1) */
+usb_desc_interface_c usb_uvc_std_streaming_iface_1 = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 1,
+  .bAlternateSetting    = 1,
+  .bNumEndpoints        = 1,
+  .bInterfaceClass      = USB_UVC_CC_VIDEO,
+  .bInterfaceSubClass   = USB_UVC_SUBCLASS_CC_VIDEOSTREAMING,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
 };
 
 /*** UVC: MJPEG ***************************************************************/
@@ -388,27 +400,58 @@ usb_desc_uvc_color_matching_c usb_uvc_yuy2_color_matching = {
   .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
 };
 
+/*** UVC: endpoints ***********************************************************/
+
+usb_desc_endpoint_c usb_uvc_endpoint_in = {
+  .bLength              = sizeof(struct usb_desc_endpoint),
+  .bDescriptorType      = USB_DESC_ENDPOINT,
+  .bEndpointAddress     = 6|USB_DIR_IN,
+  .bmAttributes         = USB_XFER_ISOCHRONOUS,
+  .wMaxPacketSize       = 1024,
+  .bInterval            = 1,
+};
+
 /*** Configuration ************************************************************/
 
 usb_configuration_c usb_config = {
   {
     .bLength              = sizeof(struct usb_desc_configuration),
     .bDescriptorType      = USB_DESC_CONFIGURATION,
-    .bNumInterfaces       = 2,
+    .bNumInterfaces       = 4,  // 2 for uvc (as we have 2 alt settings)
     .bConfigurationValue  = 1,
     .iConfiguration       = 0,
     .bmAttributes         = USB_ATTR_RESERVED_1,
-    .bMaxPower            = 250,
+    .bMaxPower            = 250, // 500mA
   },
   {
-    { .interface = &usb_iface_cic },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_header },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_acm },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_union },
-    { .endpoint  = &usb_endpoint_ep1_in },
-    { .interface = &usb_iface_dic },
-    { .endpoint  = &usb_endpoint_ep2_out },
-    { .endpoint  = &usb_endpoint_ep6_in },
+    // UVC
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_if_assoc              },
+    { .interface =                             &usb_uvc_std_ctrl_iface        },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_camera                },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_processing_unit       },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_extension_unit        },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_output_terminal       },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_vc_if_header          },
+    { .interface =                             &usb_uvc_std_streaming_iface_0 },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_format       },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_frame_1      },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_frame_2      },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_color_matching  },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_vs_format        },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_vs_frame_1       },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_vs_frame_2       },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_color_matching   },
+    { .interface =                             &usb_uvc_std_streaming_iface_1 },
+    { .endpoint  =                             &usb_uvc_endpoint_in           },
+    // CDC
+    { .interface =                             &usb_iface_cic                 },
+    { .generic   = (struct usb_desc_generic *) &usb_func_cic_header           },
+    { .generic   = (struct usb_desc_generic *) &usb_func_cic_acm              },
+    { .generic   = (struct usb_desc_generic *) &usb_func_cic_union            },
+    { .endpoint  =                             &usb_endpoint_ep1_in           },
+    { .interface =                             &usb_iface_dic                 },
+    { .endpoint  =                             &usb_endpoint_ep2_out          },
+    { .endpoint  =                             &usb_endpoint_ep4_in           },
     { 0 }
   }
 };
