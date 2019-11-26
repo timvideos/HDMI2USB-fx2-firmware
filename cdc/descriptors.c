@@ -133,9 +133,12 @@ usb_desc_interface_c usb_uvc_std_ctrl_iface = {
   .iInterface           = 0,
 };
 
+/*** UVC: Streaming interface 0 ***********************************************/
+
 /* Input (camera) terminal descriptor */
+#define LENGTH_usb_uvc_camera (sizeof(struct usb_desc_uvc_camera_terminal) + 3)
 usb_desc_uvc_camera_terminal_c usb_uvc_camera = {
-  .bLength                  = sizeof(struct usb_desc_uvc_camera_terminal) + 3,
+  .bLength                  = LENGTH_usb_uvc_camera,
   .bDescriptorType          = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType       = USB_UVC_VC_INPUT_TERMINAL,
   .bTerminalID              = 1,
@@ -150,8 +153,9 @@ usb_desc_uvc_camera_terminal_c usb_uvc_camera = {
 };
 
 /* Processing unit descriptor */
+#define LENGTH_usb_uvc_processing_unit (sizeof(struct usb_desc_uvc_processing_unit) + 3 + 1 + 1)
 usb_desc_uvc_processing_unit_c usb_uvc_processing_unit = {
-  .bLength            = sizeof(struct usb_desc_uvc_processing_unit) + 3 + 1 + 1,
+  .bLength            = LENGTH_usb_uvc_processing_unit,
   .bDescriptorType    = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType = USB_UVC_VC_PROCESSING_UNIT,
   .bUnitID            = 2,
@@ -166,8 +170,9 @@ usb_desc_uvc_processing_unit_c usb_uvc_processing_unit = {
 };
 
 /* Extension unit descriptor */
+#define LENGTH_usb_uvc_extension_unit (sizeof(struct usb_desc_uvc_extension_unit) + 1 + 1 + 3 + 1)
 usb_desc_uvc_extension_unit_c usb_uvc_extension_unit = {
-  .bLength               = sizeof(struct usb_desc_uvc_extension_unit) + 1 + 1 + 3 + 1,
+  .bLength               = LENGTH_usb_uvc_extension_unit,
   .bDescriptorType       = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType    = USB_UVC_VC_EXTENSION_UNIT,
   .bUnitID               = 3,
@@ -186,8 +191,9 @@ usb_desc_uvc_extension_unit_c usb_uvc_extension_unit = {
 };
 
 /* Output terminal descriptor */
+#define LENGTH_usb_uvc_output_terminal (sizeof(struct usb_desc_uvc_extension_unit) + 0)
 usb_desc_uvc_output_terminal_c usb_uvc_output_terminal = {
-  .bLength            = sizeof(struct usb_desc_uvc_output_terminal) + 0,
+  .bLength            = LENGTH_usb_uvc_output_terminal,
   .bDescriptorType    = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType = USB_UVC_VC_OUTPUT_TERMINAL,
   .bTerminalID        = 4,
@@ -198,17 +204,19 @@ usb_desc_uvc_output_terminal_c usb_uvc_output_terminal = {
   // ._tail              = {},
 };
 
+#define LENGTH_usb_uvc_vc_if_header (sizeof(struct usb_desc_vc_if_header) + 1)
 usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
-  .bLength              = sizeof(struct usb_desc_vc_if_header) + 1,
+  .bLength              = LENGTH_usb_uvc_vc_if_header,
   .bDescriptorType      = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType   = USB_UVC_VC_HEADER,
   .bcdUVC               = 0x0100,
-  .wTotalLength         = // total size of all unit and terminal descriptors, flexible array members counted manually
-      sizeof(usb_uvc_vc_if_header) + 1 +
-      sizeof(usb_uvc_camera) + 1 +
-      sizeof(usb_uvc_processing_unit) + 5 +
-      sizeof(usb_uvc_extension_unit) + 6 +
-      sizeof(usb_uvc_output_terminal) + 0, // TODO: check size, should be 0x50+1 (as in previous code + 1 byte added to processing unit)
+  .wTotalLength         = 
+      // total size of all unit and terminal descriptors, flexible array members counted manually
+      // macros as intializers must be constant
+      LENGTH_usb_uvc_vc_if_header +
+      LENGTH_usb_uvc_camera +
+      LENGTH_usb_uvc_processing_unit +
+      LENGTH_usb_uvc_output_terminal,
   .dwClockFrequency     = 48000000,
   .bInCollection        = 1,
   .baInterfaceNr        = {1},
@@ -227,15 +235,161 @@ usb_desc_interface_c usb_uvc_std_streaming_iface_0 = {
   .iInterface           = 0,
 };
 
+/*** UVC: Streaming interface 1 ***********************************************/
+
+/*** UVC: MJPEG ***/
+
+/* Class specific VS format descriptor */
+#define LENGTH_usb_uvc_mjpeg_vs_format (sizeof(struct usb_desc_uvc_vs_format_mjpeg))
+usb_desc_uvc_vs_format_mjpeg_c usb_uvc_mjpeg_vs_format = {
+  .bLength              = LENGTH_usb_uvc_mjpeg_vs_format,
+  .bDescriptorType      = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype   = USB_UVC_VS_FORMAT_MJPEG,
+  .bFormatIndex         = 1,
+  .bNumFrameDescriptors = 2,
+  .bmFlags              = 1, // fixed sample size
+  .bDefaultFrameIndex   = 1,
+  .bAspectRatioX        = 0,
+  .bAspectRatioY        = 0,
+  .bmInterlaceFlags     = 0,
+  .bCopyProtect         = 0, // duplication unrestricted
+};
+
+/* Class specific VS frame descriptor */
+#define LENGTH_usb_uvc_mjpeg_vs_frame_1 (sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1)
+usb_desc_uvc_vs_frame_c usb_uvc_mjpeg_vs_frame_1 = {
+  .bLength                   = LENGTH_usb_uvc_mjpeg_vs_frame_1,
+  .bDescriptorType           = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype        = USB_UVC_VS_FRAME_MJPEG,
+  .bFrameIndex               = 1,
+  .bmCapabilities            = 0x02,
+  .wWidth                    = 1024,
+  .wHeight                   = 768,
+  .dwMinBitRate              = 0x0e000000,
+  .dwMaxBitRate              = 0x0e000000,
+  .dwMaxVideoFrameBufferSize = 2ul * 1024 * 768,
+  .dwDefaultFrameInterval    = 666666,
+  .bFrameIntervalType        = 1,
+  .frameIntervals            = { { .dwFrameInterval = 666666, }, }
+};
+
+/* Class specific VS frame descriptor */
+#define LENGTH_usb_uvc_mjpeg_vs_frame_2 (sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1)
+usb_desc_uvc_vs_frame_c usb_uvc_mjpeg_vs_frame_2 = {
+  .bLength                   = LENGTH_usb_uvc_mjpeg_vs_frame_2,
+  .bDescriptorType           = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype        = USB_UVC_VS_FRAME_MJPEG,
+  .bFrameIndex               = 2,
+  .bmCapabilities            = 0x02,
+  .wWidth                    = 1280,
+  .wHeight                   = 720,
+  .dwMinBitRate              = 0x0e000000,
+  .dwMaxBitRate              = 0x0e000000,
+  .dwMaxVideoFrameBufferSize = 2ul * 1280 * 720,
+  .dwDefaultFrameInterval    = 666666,
+  .bFrameIntervalType        = 1,
+  .frameIntervals            = { { .dwFrameInterval = 666666, }, }
+};
+
+/* VS Color Matching Descriptor Descriptor */
+#define LENGTH_usb_uvc_mjpeg_color_matching (sizeof(struct usb_desc_uvc_color_matching))
+usb_desc_uvc_color_matching_c usb_uvc_mjpeg_color_matching = {
+  .bLength                  = LENGTH_usb_uvc_mjpeg_color_matching,
+  .bDescriptorType          = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype       = USB_UVC_VS_COLORFORMAT,
+  .bColorPrimaries          = 1, // BT.709, sRGB
+  .bTransferCharacteristics = 1, // BT.709
+  .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
+};
+
+/*** UVC: YUY2 ***/
+
+/* Class specific VS format descriptor */
+#define LENGTH_usb_uvc_yuy2_vs_format (sizeof(struct usb_desc_uvc_vs_format_uncompressed))
+usb_desc_uvc_vs_format_uncompressed_c usb_uvc_yuy2_vs_format = {
+  .bLength              = LENGTH_usb_uvc_yuy2_vs_format,
+  .bDescriptorType      = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype   = USB_UVC_VS_FORMAT_UNCOMPRESSED,
+  .bFormatIndex         = 2,
+  .bNumFrameDescriptors = 2,
+  .guidFormat           = {
+        0x59, 0x55, 0x59, 0x32, 0x00, 0x00, 0x10, 0x00,
+        0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71,
+  },
+  .bBitsPerPixel        = 0x10,
+  .bDefaultFrameIndex   = 1,
+  .bAspectRatioX        = 0, // non-interlaced in progressive scan
+  .bAspectRatioY        = 0, // non-interlaced in progressive scan
+  .bmInterlaceFlags     = 0, // non-interlaced
+  .bCopyProtect         = 0, // no restrictions
+};
+
+/* Frame descriptors 1 */
+#define LENGTH_usb_uvc_yuy2_vs_frame_1 (sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1)
+usb_desc_uvc_vs_frame_c usb_uvc_yuy2_vs_frame_1 = {
+  .bLength                   = LENGTH_usb_uvc_yuy2_vs_frame_1,
+  .bDescriptorType           = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype        = USB_UVC_VS_FRAME_UNCOMPRESSED,
+  .bFrameIndex               = 1,
+  .bmCapabilities            = 0x02,
+  .wWidth                    = 1024,
+  .wHeight                   = 768,
+  .dwMinBitRate              = 0x0e000000,
+  .dwMaxBitRate              = 0x0e000000,
+  .dwMaxVideoFrameBufferSize = 2ul * 1024 * 768,
+  .dwDefaultFrameInterval    = 1333332,
+  .bFrameIntervalType        = 1,
+  .frameIntervals            = { { .dwFrameInterval = 1333332, }, }
+};
+
+/* Frame descriptors 2 */
+#define LENGTH_usb_uvc_yuy2_vs_frame_2 (sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1)
+usb_desc_uvc_vs_frame_c usb_uvc_yuy2_vs_frame_2 = {
+  .bLength                   = LENGTH_usb_uvc_yuy2_vs_frame_2,
+  .bDescriptorType           = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype        = USB_UVC_VS_FRAME_UNCOMPRESSED,
+  .bFrameIndex               = 2,
+  .bmCapabilities            = 0x02,
+  .wWidth                    = 1280,
+  .wHeight                   = 720,
+  .dwMinBitRate              = 0x0e000000,
+  .dwMaxBitRate              = 0x0e000000,
+  .dwMaxVideoFrameBufferSize = 2ul * 1280 * 720,
+  .dwDefaultFrameInterval    = 1333332,
+  .bFrameIntervalType        = 1,
+  .frameIntervals            = { { .dwFrameInterval = 1333332, }, }
+};
+
+/* VS Color Matching Descriptor Descriptor */
+#define LENGTH_usb_uvc_yuy2_color_matching (sizeof(struct usb_desc_uvc_color_matching))
+usb_desc_uvc_color_matching_c usb_uvc_yuy2_color_matching = {
+  .bLength                  = LENGTH_usb_uvc_yuy2_color_matching,
+  .bDescriptorType          = USB_UVC_CS_INTERFACE,
+  .bDescriptorSubtype       = USB_UVC_VS_COLORFORMAT,
+  .bColorPrimaries          = 1, // BT.709, sRGB
+  .bTransferCharacteristics = 1, // BT.709
+  .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
+};
+
+
 /* Class-specific video streaming input header descriptor */
+#define LENGTH_usb_uvc_vs_if_in_header (sizeof(struct usb_desc_vs_if_in_header) + 2)
 usb_desc_vs_if_in_header_c usb_uvc_vs_if_in_header = {
-  .bLength             = sizeof(struct usb_desc_vs_if_in_header) + 2,
+  .bLength             = LENGTH_usb_uvc_vs_if_in_header,
   .bDescriptorType     = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType  = USB_UVC_VS_INPUT_HEADER,
   .bNumFormats         = 2,
   .wTotalLength        =
-      sizeof(usb_uvc_vs_if_in_header) + 0, // TODO
-  .bEndpointAddress    = 6|USB_DIR_IN, // TODO: change CDC endpoint 6
+      LENGTH_usb_uvc_vs_if_in_header +
+      LENGTH_usb_uvc_mjpeg_vs_format +
+      LENGTH_usb_uvc_mjpeg_vs_frame_1 +
+      LENGTH_usb_uvc_mjpeg_vs_frame_2 +
+      LENGTH_usb_uvc_mjpeg_color_matching +
+      LENGTH_usb_uvc_yuy2_vs_format +
+      LENGTH_usb_uvc_yuy2_vs_frame_1 +
+      LENGTH_usb_uvc_yuy2_vs_frame_2 +
+      LENGTH_usb_uvc_yuy2_color_matching,
+  .bEndpointAddress    = 6|USB_DIR_IN,
   .bmInfo              = 0,
   .bTerminalLink       = 4,
   .bStillCaptureMethod = 1,
@@ -257,133 +411,6 @@ usb_desc_interface_c usb_uvc_std_streaming_iface_1 = {
   .bInterfaceProtocol   = 0,
   .iInterface           = 0,
 };
-
-/*** UVC: MJPEG ***************************************************************/
-
-/* Class specific VS format descriptor */
-usb_desc_uvc_vs_format_mjpeg_c usb_uvc_mjpeg_vs_format = {
-  .bLength              = sizeof(struct usb_desc_uvc_vs_format_mjpeg),
-  .bDescriptorType      = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype   = USB_UVC_VS_FORMAT_MJPEG,
-  .bFormatIndex         = 1,
-  .bNumFrameDescriptors = 2,
-  .bmFlags              = 1, // fixed sample size
-  .bDefaultFrameIndex   = 1,
-  .bAspectRatioX        = 0,
-  .bAspectRatioY        = 0,
-  .bmInterlaceFlags     = 0,
-  .bCopyProtect         = 0, // duplication unrestricted
-};
-
-/* Class specific VS frame descriptor */
-usb_desc_uvc_vs_frame_c usb_uvc_mjpeg_vs_frame_1 = {
-  .bLength                   = sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1,
-  .bDescriptorType           = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype        = USB_UVC_VS_FRAME_MJPEG,
-  .bFrameIndex               = 1,
-  .bmCapabilities            = 0x02,
-  .wWidth                    = 1024,
-  .wHeight                   = 768,
-  .dwMinBitRate              = 0x0e000000,
-  .dwMaxBitRate              = 0x0e000000,
-  .dwMaxVideoFrameBufferSize = 2ul * 1024 * 768,
-  .dwDefaultFrameInterval    = 666666,
-  .bFrameIntervalType        = 1,
-  .frameIntervals            = { { .dwFrameInterval = 666666, }, }
-};
-
-/* Class specific VS frame descriptor */
-usb_desc_uvc_vs_frame_c usb_uvc_mjpeg_vs_frame_2 = {
-  .bLength                   = sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1,
-  .bDescriptorType           = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype        = USB_UVC_VS_FRAME_MJPEG,
-  .bFrameIndex               = 2,
-  .bmCapabilities            = 0x02,
-  .wWidth                    = 1280,
-  .wHeight                   = 720,
-  .dwMinBitRate              = 0x0e000000,
-  .dwMaxBitRate              = 0x0e000000,
-  .dwMaxVideoFrameBufferSize = 2ul * 1280 * 720,
-  .dwDefaultFrameInterval    = 666666,
-  .bFrameIntervalType        = 1,
-  .frameIntervals            = { { .dwFrameInterval = 666666, }, }
-};
-
-/* VS Color Matching Descriptor Descriptor */
-usb_desc_uvc_color_matching_c usb_uvc_mjpeg_color_matching = {
-  .bLength                  = sizeof(struct usb_desc_uvc_color_matching),
-  .bDescriptorType          = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype       = USB_UVC_VS_COLORFORMAT,
-  .bColorPrimaries          = 1, // BT.709, sRGB
-  .bTransferCharacteristics = 1, // BT.709
-  .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
-};
-
-/*** UVC: YUY2 ****************************************************************/
-
-/* Class specific VS format descriptor */
-usb_desc_uvc_vs_format_uncompressed_c usb_uvc_yuy2_vs_format = {
-  .bLength              = sizeof(struct usb_desc_uvc_vs_format_uncompressed),
-  .bDescriptorType      = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype   = USB_UVC_VS_FORMAT_UNCOMPRESSED,
-  .bFormatIndex         = 2,
-  .bNumFrameDescriptors = 2,
-  .guidFormat           = {
-        0x59, 0x55, 0x59, 0x32, 0x00, 0x00, 0x10, 0x00,
-        0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71,
-  },
-  .bBitsPerPixel        = 0x10,
-  .bDefaultFrameIndex   = 1,
-  .bAspectRatioX        = 0, // non-interlaced in progressive scan
-  .bAspectRatioY        = 0, // non-interlaced in progressive scan
-  .bmInterlaceFlags     = 0, // non-interlaced
-  .bCopyProtect         = 0, // no restrictions
-};
-
-/* Frame descriptors 1 */
-usb_desc_uvc_vs_frame_c usb_uvc_yuy2_vs_frame_1 = {
-  .bLength                   = sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1,
-  .bDescriptorType           = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype        = USB_UVC_VS_FRAME_UNCOMPRESSED,
-  .bFrameIndex               = 1,
-  .bmCapabilities            = 0x02,
-  .wWidth                    = 1024,
-  .wHeight                   = 768,
-  .dwMinBitRate              = 0x0e000000,
-  .dwMaxBitRate              = 0x0e000000,
-  .dwMaxVideoFrameBufferSize = 2ul * 1024 * 768,
-  .dwDefaultFrameInterval    = 1333332,
-  .bFrameIntervalType        = 1,
-  .frameIntervals            = { { .dwFrameInterval = 1333332, }, }
-};
-
-/* Frame descriptors 2 */
-usb_desc_uvc_vs_frame_c usb_uvc_yuy2_vs_frame_2 = {
-  .bLength                   = sizeof(struct usb_desc_uvc_vs_frame) + sizeof(uint32_t) * 1,
-  .bDescriptorType           = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype        = USB_UVC_VS_FRAME_UNCOMPRESSED,
-  .bFrameIndex               = 2,
-  .bmCapabilities            = 0x02,
-  .wWidth                    = 1280,
-  .wHeight                   = 720,
-  .dwMinBitRate              = 0x0e000000,
-  .dwMaxBitRate              = 0x0e000000,
-  .dwMaxVideoFrameBufferSize = 2ul * 1280 * 720,
-  .dwDefaultFrameInterval    = 1333332,
-  .bFrameIntervalType        = 1,
-  .frameIntervals            = { { .dwFrameInterval = 1333332, }, }
-};
-
-/* VS Color Matching Descriptor Descriptor */
-usb_desc_uvc_color_matching_c usb_uvc_yuy2_color_matching = {
-  .bLength                  = sizeof(struct usb_desc_uvc_color_matching),
-  .bDescriptorType          = USB_UVC_CS_INTERFACE,
-  .bDescriptorSubtype       = USB_UVC_VS_COLORFORMAT,
-  .bColorPrimaries          = 1, // BT.709, sRGB
-  .bTransferCharacteristics = 1, // BT.709
-  .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
-};
-
 /*** UVC: endpoints ***********************************************************/
 
 usb_desc_endpoint_c usb_uvc_endpoint_in = {
