@@ -35,8 +35,8 @@ void configure_endpoints() {
   EP_CDC_DEV2HOST_(CFG) = _VALID|_DIR|_TYPE1|_BUF1;
   EP_CDC_DEV2HOST_(CS) = 0;
 
-  // UVC 512-byte double buffered ISOCHRONOUS IN
-  EP_UVC_(CFG) = _VALID|_DIR|_TYPE0|_BUF1;
+  // UVC 1024-byte (EP2 or EP6) double buffered ISOCHRONOUS IN
+  EP_UVC_(CFG) = _VALID|_DIR|_TYPE0|_SIZE|_BUF1;
 
   // reset (and skip) endpoints
   SYNCDELAY; FIFORESET = EP_CDC_HOST2DEV|_NAKALL;
