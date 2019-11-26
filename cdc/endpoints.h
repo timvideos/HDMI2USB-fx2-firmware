@@ -1,8 +1,11 @@
 #ifndef ENDPOINTS_H
 #define ENDPOINTS_H
 
-// Configuration of large endpoints (2,4,6,8)
-// EP1 and EP0 are different than those so there is no sense to define them this way
+// Configuration of large endpoints (2, 4, 6, 8).
+// EP1 and EP0 are different than those so there is no sense to define them this way.
+// This approach still has some drawbacks, as these endpoints still have some differences,
+// e.g. only EP2 and EP6 can have size of 1024 bytes. Even so it may be easier to define
+// endpoints configuration in one place.
 
 // endpoint numbers
 #define EP_CDC_HOST2DEV        2
