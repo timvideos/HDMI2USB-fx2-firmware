@@ -2,6 +2,7 @@
 #include <fx2usb.h>
 #include <usbcdc.h>
 #include "usbuvc.h"
+#include "endpoints.h"
 
 usb_ascii_string_c usb_strings[] = {
   [0] = "TimVideos.us",  // manufacturer
@@ -89,19 +90,19 @@ usb_desc_interface_c usb_iface_dic = {
   .iInterface           = 0,
 };
 
-usb_desc_endpoint_c usb_endpoint_ep2_out = {
+usb_desc_endpoint_c usb_endpoint_cdc_acm_out = {
   .bLength              = sizeof(struct usb_desc_endpoint),
   .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = 2,
+  .bEndpointAddress     = EP_CDC_HOST2DEV,
   .bmAttributes         = USB_XFER_BULK,
   .wMaxPacketSize       = 512,
   .bInterval            = 0,
 };
 
-usb_desc_endpoint_c usb_endpoint_ep4_in = {
+usb_desc_endpoint_c usb_endpoint_cdc_acm_in = {
   .bLength              = sizeof(struct usb_desc_endpoint),
   .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = 4|USB_DIR_IN,
+  .bEndpointAddress     = EP_CDC_DEV2HOST|USB_DIR_IN,
   .bmAttributes         = USB_XFER_BULK,
   .wMaxPacketSize       = 512,
   .bInterval            = 0,
@@ -413,10 +414,10 @@ usb_desc_interface_c usb_uvc_std_streaming_iface_1 = {
 };
 /*** UVC: endpoints ***********************************************************/
 
-usb_desc_endpoint_c usb_uvc_endpoint_in = {
+usb_desc_endpoint_c usb_endpoint_uvc_in = {
   .bLength              = sizeof(struct usb_desc_endpoint),
   .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = 6|USB_DIR_IN,
+  .bEndpointAddress     = EP_UVC|USB_DIR_IN,
   .bmAttributes         = USB_XFER_ISOCHRONOUS,
   .wMaxPacketSize       = 1024,
   .bInterval            = 1,
@@ -453,7 +454,7 @@ usb_configuration_c usb_config = {
     { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_vs_frame_2       },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_yuy2_color_matching   },
     { .interface =                             &usb_uvc_std_streaming_iface_1 },
-    { .endpoint  =                             &usb_uvc_endpoint_in           },
+    { .endpoint  =                             &usb_endpoint_uvc_in           },
     // CDC
     { .interface =                             &usb_iface_cic                 },
     { .generic   = (struct usb_desc_generic *) &usb_func_cic_header           },
@@ -461,8 +462,8 @@ usb_configuration_c usb_config = {
     { .generic   = (struct usb_desc_generic *) &usb_func_cic_union            },
     { .endpoint  =                             &usb_endpoint_ep1_in           },
     { .interface =                             &usb_iface_dic                 },
-    { .endpoint  =                             &usb_endpoint_ep2_out          },
-    { .endpoint  =                             &usb_endpoint_ep4_in           },
+    { .endpoint  =                             &usb_endpoint_cdc_acm_out      },
+    { .endpoint  =                             &usb_endpoint_cdc_acm_in       },
     { 0 }
   }
 };
