@@ -35,7 +35,7 @@
 /**
  * Returns the configuration. We only have one configuration.
  */
-BYTE handle_get_configuration() {
+uint8_t handle_get_configuration() {
   return 1;
 }
 
@@ -43,22 +43,22 @@ BYTE handle_get_configuration() {
  * Sets the configuration. Successful if setting it to cfg 1, otherwise fail
  * as the descriptors only provide one configuration.
  */
-BOOL handle_set_configuration(BYTE cfg) {
-  return cfg == 1 ? TRUE : FALSE;
+uint8_t handle_set_configuration(uint8_t cfg) {
+  return cfg == 1 ? 1: 0;
 }
 
 /* The current alternative setting */
-BYTE alt_setting = 0;
+uint8_t alt_setting = 0;
 /**
  * Returns the interface currently in use.
  */
-BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
+uint8_t handle_get_interface(uint8_t ifc, uint8_t* alt_ifc) {
   printf("Get Interface\n");
   if (ifc == 0 || ifc == 1) {
     *alt_ifc = alt_setting;
-    return TRUE;
+    return 1;
   }
-  return FALSE;
+  return 0;
 }
 
 /**
@@ -70,7 +70,7 @@ BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc) {
  * See TRM section 2.3.7
  * http://www.cypress.com/file/126446/download#G5.1043536
  */
-BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
+uint8_t handle_set_interface(uint8_t ifc, uint8_t alt_ifc) {
   printf("Set interface %d to alt: %d\n", ifc, alt_ifc);
 
   if (ifc == 0 && alt_ifc == 0) {
@@ -84,7 +84,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     SYNCDELAY; EP6CFG = 0x7F;
     SYNCDELAY; EP8CFG = 0x7F;
     SYNCDELAY; RESETFIFO(0x02);
-    return TRUE;
+    return 1;
   } else if (ifc == 1 && alt_ifc == 0) {
     alt_setting = 0;
     EP2CFG = 0x7F;
@@ -94,7 +94,7 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     SYNCDELAY; RESETFIFO(0x02);
     /* reset toggles */
     SYNCDELAY; RESETTOGGLE(0x82);
-    return TRUE;
+    return 1;
   } else if (ifc == 1 && alt_ifc == 1) {
     alt_setting = 1;
     /* Reset audio streaming endpoint */
@@ -104,22 +104,22 @@ BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc) {
     SYNCDELAY; EP6CFG = 0x7F;
     SYNCDELAY; RESETFIFO(0x02);
     SYNCDELAY; RESETTOGGLE(0x82);
-    return TRUE;
+    return 1;
   }
-  return FALSE;
+  return 0;
 }
 
 /**
  * Descriptor requests are handled by fx2lib.
  */
-BOOL handle_get_descriptor() {
+uint8_t handle_get_descriptor() {
   printf("Get Descriptor\n");
-  return FALSE;
+  return 0;
 }
 
 /**
  * There are no vendor commands to handle
  */
-BOOL handle_vendorcommand(BYTE cmd) {
-  return FALSE;
+uint8_t handle_vendorcommand(uint8_t cmd) {
+  return 0;
 }

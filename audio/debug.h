@@ -21,13 +21,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <fx2types.h>
-
 void usart_init(void);
-void usart_send_byte(BYTE c);
-void usart_send_byte_hex(BYTE byte);
-void usart_send_word_hex(WORD word);
-void usart_send_long_hex(DWORD word);
+void usart_send_byte(uint8_t c);
+void usart_send_byte_hex(uint8_t byte);
+void usart_send_word_hex(uint16_t word);
+void usart_send_long_hex(uint32_t word);
 void usart_send_string(const char *s);
 void usart_send_newline(void);
 void putchar(char c);

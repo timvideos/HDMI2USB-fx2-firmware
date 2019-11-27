@@ -38,7 +38,7 @@ void usart_init(void) {
 /**
  * Bit banging serial output
  */
-void usart_send_byte(BYTE c) {
+void usart_send_byte(uint8_t c) {
   (void)c; /* argument passed in DPL */
   __asm
     mov a, dpl
@@ -62,8 +62,8 @@ void usart_send_byte(BYTE c) {
 /**
  * Send a byte encoded as hexadecimal
  */
-void usart_send_byte_hex(BYTE byte) {
-  __xdata BYTE ch;
+void usart_send_byte_hex(uint8_t byte) {
+  __xdata uint8_t ch;
   ch = (byte >> 4) & 0x0F;
   ch += (ch < 10) ? '0' : 'A' - 10;
   usart_send_byte(ch);
@@ -75,8 +75,8 @@ void usart_send_byte_hex(BYTE byte) {
 /**
  * Send a word width of data as hexadecimal
  */
-void usart_send_word_hex(WORD word) {
-  __xdata BYTE ch;
+void usart_send_word_hex(uint16_t word) {
+  __xdata uint8_t ch;
   ch = (word >> 12) & 0x0F;
   ch += (ch < 10) ? '0' : 'A' - 10;
   usart_send_byte(ch);
@@ -94,8 +94,8 @@ void usart_send_word_hex(WORD word) {
 /**
  * Send a long word as hexadecimal
  */
-void usart_send_long_hex(DWORD word) {
-  __xdata BYTE ch;
+void usart_send_long_hex(uint32_t word) {
+  __xdata uint8_t ch;
   ch = (word >> 28) & 0x0F;
   ch += (ch < 10) ? '0' : 'A' - 10;
   usart_send_byte(ch);

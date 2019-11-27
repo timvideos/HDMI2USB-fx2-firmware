@@ -31,14 +31,13 @@
 #include <eputils.h>
 #include <fx2macros.h>
 #include <fx2regs.h>
-#include <fx2types.h>
 #include <setupdat.h>
 
 #include "audiodata.h"
 #include "fx2lights.h"
 
 volatile __bit got_sud;
-extern BYTE alt_setting;
+extern uint8_t alt_setting;
 
 void main() {
   d1on();
@@ -46,7 +45,7 @@ void main() {
   /* Not using advanced endpoint controls */
   REVCTL = 0;
 
-  got_sud = FALSE;
+  got_sud = 0;
 
   /* renumerate */
   RENUMERATE_UNCOND();
@@ -83,11 +82,11 @@ void main() {
 
   printf("Initialisation complete\n");
 
-  while (TRUE) {
+  while (1) {
     if (got_sud) {
       printf("Handle setup data\n");
       handle_setupdata();
-      got_sud = FALSE;
+      got_sud = 0;
     }
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
     if ((EP8CFG & bmTYPE) == bmTYPE0) {
@@ -107,7 +106,7 @@ void main() {
  * Copied usb jt routines from usbjt.h
  */
 void sudav_isr() __interrupt SUDAV_ISR {
-  got_sud = TRUE;
+  got_sud = 1;
   CLEAR_SUDAV();
 }
 
@@ -116,7 +115,7 @@ void sudav_isr() __interrupt SUDAV_ISR {
  */
 void usbreset_isr() __interrupt USBRESET_ISR {
   /* By default the USB is in full speed mode when reset */
-  handle_hispeed(FALSE);
+  handle_hispeed(0);
   CLEAR_USBRESET();
 }
 
@@ -124,6 +123,6 @@ void usbreset_isr() __interrupt USBRESET_ISR {
  * Interrupt called when hispeed mode is requested.
  */
 void hispeed_isr() __interrupt HISPEED_ISR {
-  handle_hispeed(TRUE);
+  handle_hispeed(1);
   CLEAR_HISPEED();
 }

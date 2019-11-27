@@ -22,12 +22,11 @@
 #define AUDIO_DATA_H
 
 #include <audio.h>
-#include <fx2types.h>
 
-BYTE handle_get_configuration();
-BOOL handle_set_configuration(BYTE cfg);
-BOOL handle_get_interface(BYTE ifc, BYTE* alt_ifc);
-BOOL handle_set_interface(BYTE ifc, BYTE alt_ifc);
-BOOL handle_get_descriptor();
+uint8_t handle_get_configuration();
+uint8_t handle_set_configuration(uint8_t cfg);
+uint8_t handle_get_interface(uint8_t ifc, uint8_t* alt_ifc);
+uint8_t handle_set_interface(uint8_t ifc, uint8_t alt_ifc);
+uint8_t handle_get_descriptor();
 
 #endif  // AUDIO_DATA_H
