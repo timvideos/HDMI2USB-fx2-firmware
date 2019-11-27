@@ -1,8 +1,15 @@
 #ifndef USBUVC_H
 #define USBUVC_H
 
+/* USB Video Class */
+
 #include <fx2lib.h>
 #include <fx2usb.h>
+
+// Macro to easily define typedefs for descriptor structures
+#define USB_DESC_CONST_CODE_TYPEDEF(desc) \
+    typedef __code const struct desc \
+    desc ## _c;
 
 struct usb_desc_if_assoc {
   uint8_t bLength;
@@ -15,8 +22,7 @@ struct usb_desc_if_assoc {
   uint8_t iFunction;
 };
 
-typedef __code const struct usb_desc_if_assoc
-  usb_desc_if_assoc_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_if_assoc)
 
 struct usb_desc_vc_if_header {
   uint8_t bLength;
@@ -29,8 +35,7 @@ struct usb_desc_vc_if_header {
   uint8_t baInterfaceNr[];
 };
 
-typedef __code const struct usb_desc_vc_if_header
-  usb_desc_vc_if_header_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_vc_if_header)
 
 struct usb_desc_uvc_input_terminal {
   uint8_t bLength;
@@ -43,8 +48,7 @@ struct usb_desc_uvc_input_terminal {
   uint8_t _tail[]; // additional fields depends on Terminal type
 };
 
-typedef __code const struct usb_desc_uvc_input_terminal
-  usb_desc_uvc_input_terminal_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_input_terminal)
 
 struct usb_desc_uvc_output_terminal {
   uint8_t bLength;
@@ -58,8 +62,7 @@ struct usb_desc_uvc_output_terminal {
   uint8_t _tail[]; // additional fields depends on Terminal type
 };
 
-typedef __code const struct usb_desc_uvc_output_terminal
-  usb_desc_uvc_output_terminal_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_output_terminal)
 
 struct usb_desc_uvc_camera_terminal {
   uint8_t bLength;
@@ -76,8 +79,7 @@ struct usb_desc_uvc_camera_terminal {
   uint8_t bmControls[];
 };
 
-typedef __code const struct usb_desc_uvc_camera_terminal
-  usb_desc_uvc_camera_terminal_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_camera_terminal)
 
 struct usb_desc_uvc_processing_unit {
   uint8_t bLength;
@@ -94,8 +96,7 @@ struct usb_desc_uvc_processing_unit {
   /* uint8_t bmVideoStandards; */
 };
 
-typedef __code const struct usb_desc_uvc_processing_unit
-  usb_desc_uvc_processing_unit_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_processing_unit)
 
 struct usb_desc_uvc_extension_unit {
   uint8_t bLength;
@@ -113,8 +114,7 @@ struct usb_desc_uvc_extension_unit {
   /* uint8_t iExtension; */
 };
 
-typedef __code const struct usb_desc_uvc_extension_unit
-  usb_desc_uvc_extension_unit_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_extension_unit)
 
 struct usb_desc_vs_if_in_header {
   uint8_t bLength;
@@ -132,8 +132,7 @@ struct usb_desc_vs_if_in_header {
   uint8_t bmaControls[];
 };
 
-typedef __code const struct usb_desc_vs_if_in_header
-  usb_desc_vs_if_in_header_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_vs_if_in_header)
 
 struct usb_desc_uvc_vs_format_mjpeg {
   uint8_t bLength;
@@ -149,8 +148,7 @@ struct usb_desc_uvc_vs_format_mjpeg {
   uint8_t bCopyProtect;
 };
 
-typedef __code const struct usb_desc_uvc_vs_format_mjpeg
-  usb_desc_uvc_vs_format_mjpeg_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_vs_format_mjpeg)
 
 struct usb_desc_uvc_vs_format_uncompressed {
   uint8_t bLength;
@@ -167,8 +165,7 @@ struct usb_desc_uvc_vs_format_uncompressed {
   uint8_t bCopyProtect;
 };
 
-typedef __code const struct usb_desc_uvc_vs_format_uncompressed
-  usb_desc_uvc_vs_format_uncompressed_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_vs_format_uncompressed)
 
 struct usb_desc_uvc_vs_frame {
   uint8_t bLength;
@@ -199,8 +196,7 @@ struct usb_desc_uvc_vs_frame {
   } frameIntervals[];
 };
 
-typedef __code const struct usb_desc_uvc_vs_frame
-  usb_desc_uvc_vs_frame_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_vs_frame)
 
 struct usb_desc_uvc_color_matching {
   uint8_t bLength;
@@ -211,8 +207,7 @@ struct usb_desc_uvc_color_matching {
   uint8_t bMatrixCoefficients;
 };
 
-typedef __code const struct usb_desc_uvc_color_matching
-  usb_desc_uvc_color_matching_c;
+USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_color_matching)
 
 enum { // TODO: reorganise logically
   // required for interface association descriptor
@@ -241,5 +236,6 @@ enum { // TODO: reorganise logically
   USB_UVC_VS_FRAME_UNCOMPRESSED = 0x05,
 };
 
+#undef USB_DESC_CONST_CODE_TYPEDEF
 
 #endif /* USBUVC_H */
