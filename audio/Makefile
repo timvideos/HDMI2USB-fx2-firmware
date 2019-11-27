@@ -38,6 +38,7 @@ LINUXHEADERSDIR := ../third_party/fx2lib-linux-headers
 LIBFX2DIR := ../third_party/libfx2/firmware/library
 LIBFX2_MODEL := small
 COMMON_DIR := ../common
+SYNCDELAYLEN = 4
 INCS := -I$(LINUXHEADERSDIR)
 
 # Audio descriptors require more space, so using 3d00 rather than the normal
