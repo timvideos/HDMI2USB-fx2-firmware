@@ -11,6 +11,7 @@
 #define EP_CDC_HOST2DEV        2
 #define EP_CDC_DEV2HOST        4
 #define EP_UVC                 6
+#define EP_UAC                 8
 
 // helpers for constructing register names
 // https://stackoverflow.com/a/1489985
@@ -23,5 +24,6 @@
 #define EP_CDC_HOST2DEV_(tail) MACRO_EVALUATOR(MACRO_EVALUATOR(EP, EP_CDC_HOST2DEV), tail)
 #define EP_CDC_DEV2HOST_(tail) MACRO_EVALUATOR(MACRO_EVALUATOR(EP, EP_CDC_DEV2HOST), tail)
 #define EP_UVC_(tail)          MACRO_EVALUATOR(MACRO_EVALUATOR(EP, EP_UVC), tail)
+#define EP_UAC_(tail)          MACRO_EVALUATOR(MACRO_EVALUATOR(EP, EP_UAC), tail)
 
 #endif /* ENDPOINTS_H */
