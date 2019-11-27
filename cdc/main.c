@@ -4,10 +4,13 @@
 #include <usbcdc.h>
 
 #include "cdc.h"
+#include "uvc.h"
 #include "endpoints.h"
 
 void handle_usb_setup(__xdata struct usb_req_setup *req) {
   if (cdc_handle_usb_setup(req))
+    return;
+  if (uvc_handle_usb_setup(req))
     return;
   STALL_EP0();
 }
