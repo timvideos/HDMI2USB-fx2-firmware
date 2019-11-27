@@ -1,13 +1,16 @@
 #include <fx2lib.h>
 #include <fx2usb.h>
 #include <usbcdc.h>
-#include "usbuvc.h"
+#include "usbvc.h"
+#include "usbac.h"
 #include "endpoints.h"
 
 usb_ascii_string_c usb_strings[] = {
   [0] = "TimVideos.us",  // manufacturer
   [1] = "HDMI2USB.tv - Numato Opsis Board",  // product
   [2] = "0123456789abcdef",  // serial number
+  [3] = "Left",  // channel names
+  [4] = "Right",
 };
 
 usb_desc_device_c usb_device = {
@@ -432,13 +435,134 @@ usb_desc_endpoint_c usb_endpoint_uvc_in = {
   .bInterval            = 1,
 };
 
+/*** UAC **********************************************************************/
+
+usb_desc_interface_c usb_uac_std_ac_interface = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 4,
+  .bAlternateSetting    = 0,
+  .bNumEndpoints        = 0,
+  .bInterfaceClass      = USB_CLASS_AUDIO,
+  .bInterfaceSubClass   = USB_SUBCLASS_AUDIOCONTROL,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
+};
+
+#define LENGTH_uac_input_terminal (sizeof(struct usb_desc_uac_input_terminal))
+usb_desc_uac_input_terminal_c uac_input_terminal = {
+  .bLength            = LENGTH_uac_input_terminal,
+  .bDescriptorType    = USB_DT_CS_INTERFACE,
+  .bDescriptorSubtype = UAC_INPUT_TERMINAL,
+  .bTerminalID        = 1,
+  .wTerminalType      = UAC_INPUT_TERMINAL_MICROPHONE,
+  .bAssocTerminal     = 0,
+  .bNrChannels        = 2, // stereo
+  .wChannelConfig     = (UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
+  .iChannelNames      = 4, // left, right
+  .iTerminal          = 0,
+};
+
+#define LENGTH_uac_output_terminal (sizeof(struct usb_desc_uac1_output_terminal))
+usb_desc_uac1_output_terminal_c uac_output_terminal = {
+  .bLength            = LENGTH_uac_output_terminal,
+  .bDescriptorType    = USB_DT_CS_INTERFACE,
+  .bDescriptorSubtype = UAC_OUTPUT_TERMINAL,
+  .bTerminalID        = 2,
+  .wTerminalType      = UAC_OUTPUT_TERMINAL_STREAMING,
+  .bAssocTerminal     = 0,
+  .bSourceID          = 1, // connected to input terminal
+  .iTerminal          = 0,
+};
+
+#define LENGTH_uac_ac_header (sizeof(struct usb_desc_uac1_ac_header) + 1)
+usb_desc_uac1_ac_header_c uac_ac_header = {
+  .bLength            = LENGTH_uac_ac_header,
+  .bDescriptorType    = USB_DT_CS_INTERFACE,
+  .bDescriptorSubtype = UAC_MS_HEADER,
+  .bcdADC             = UAC_BCD_V10,
+  .wTotalLength       = // this descriptor + all unit and terminal descriptors
+      LENGTH_uac_ac_header +
+      LENGTH_uac_input_terminal +
+      LENGTH_uac_output_terminal,
+  .bInCollection      = 1, // one interface in collection 
+  .baInterfaceNr      = {5}, // streaing interface 0
+};
+
+usb_desc_interface_c uac_std_streaming_interface_0 = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 5,
+  .bAlternateSetting    = 0,
+  .bNumEndpoints        = 0,
+  .bInterfaceClass      = USB_CLASS_AUDIO,
+  .bInterfaceSubClass   = USB_SUBCLASS_AUDIOSTREAMING,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
+};
+
+usb_desc_interface_c uac_std_streaming_interface_1 = {
+  .bLength              = sizeof(struct usb_desc_interface),
+  .bDescriptorType      = USB_DESC_INTERFACE,
+  .bInterfaceNumber     = 6,
+  .bAlternateSetting    = 0,
+  .bNumEndpoints        = 1,
+  .bInterfaceClass      = USB_CLASS_AUDIO,
+  .bInterfaceSubClass   = USB_SUBCLASS_AUDIOSTREAMING,
+  .bInterfaceProtocol   = 0,
+  .iInterface           = 0,
+};
+
+usb_desc_uac1_as_header_c uac_as_header = {
+  .bLength            = sizeof(struct usb_desc_uac1_as_header),
+  .bDescriptorType    = USB_DT_CS_INTERFACE,
+  .bDescriptorSubtype = UAC_AS_GENERAL,
+  .bTerminalLink      = 2, // connected to output terminal
+  .bDelay             = 1,
+  .wFormatTag         = UAC_FORMAT_TYPE_I_PCM,
+};
+
+usb_desc_uac_format_type_i_discrete_c uac_format = {
+  .bLength            = sizeof(struct usb_desc_uac_format_type_i_discrete) + 3,
+  .bDescriptorType    = USB_DT_CS_INTERFACE,
+  .bDescriptorSubtype = UAC_FORMAT_TYPE,
+  .bFormatType        = UAC_FORMAT_TYPE_I,
+  .bNrChannels        = 2,
+  .bSubframeSize      = 2,
+  .bBitResolution     = 16,
+  .bSamFreqType       = 1,
+  .tSamFreq           = {{0x40, 0x1F, 0x00}}, // 8000Hz, little endian
+};
+
+/*** UAC: endpoints ***********************************************************/
+
+usb_desc_audio_endpoint_c uac_audio_endpoint = {
+  .bLength          = sizeof(struct usb_desc_audio_endpoint),
+  .bDescriptorType  = USB_DESC_ENDPOINT,
+  .bEndpointAddress = 8|USB_DIR_IN,
+  .bmAttributes     = USB_XFER_ISOCHRONOUS,
+  .wMaxPacketSize   = 512,
+  .bInterval        = 4,
+  .bRefresh         = 0,
+  .bSynchAddress    = 0,
+};
+
+usb_desc_uac_iso_endpoint_c uac_iso_endpoint = {
+  .bLength            = sizeof(struct usb_desc_uac_iso_endpoint),
+  .bDescriptorType    = USB_DT_CS_ENDPOINT,
+  .bDescriptorSubtype = UAC_AS_GENERAL,
+  .bmAttributes       = 0,
+  .bLockDelayUnits    = 0,
+  .wLockDelay         = 0,
+};
+
 /*** Configuration ************************************************************/
 
 usb_configuration_c usb_config = {
   {
     .bLength              = sizeof(struct usb_desc_configuration),
     .bDescriptorType      = USB_DESC_CONFIGURATION,
-    .bNumInterfaces       = 4,  // 2 for uvc (as we have 2 alt settings)
+    .bNumInterfaces       = 7,  // 2 for uvc (as we have 2 alt settings)
     .bConfigurationValue  = 1,
     .iConfiguration       = 0,
     .bmAttributes         = USB_ATTR_RESERVED_1,
@@ -475,6 +599,19 @@ usb_configuration_c usb_config = {
     { .interface =                             &usb_iface_dic                 },
     { .endpoint  =                             &usb_endpoint_cdc_acm_out      },
     { .endpoint  =                             &usb_endpoint_cdc_acm_in       },
+    // UAC
+    // { .generic   = (struct usb_desc_generic *) &usb_uvc_if_assoc              },
+    { .interface =                             &usb_uac_std_ac_interface      },
+    { .generic   = (struct usb_desc_generic *) &uac_ac_header                 },
+    { .generic   = (struct usb_desc_generic *) &uac_input_terminal            },
+    { .generic   = (struct usb_desc_generic *) &uac_output_terminal           },
+    { .interface =                             &uac_std_streaming_interface_0 },
+    { .interface =                             &uac_std_streaming_interface_1 },
+    { .generic   = (struct usb_desc_generic *) &uac_as_header                 },
+    { .generic   = (struct usb_desc_generic *) &uac_format                    },
+    // { .endpoint  =                             &uac_audio_endpoint            },
+    { .generic   = (struct usb_desc_generic *) &uac_audio_endpoint            },
+    { .generic   = (struct usb_desc_generic *) &uac_iso_endpoint              },
     { 0 }
   }
 };
