@@ -1,5 +1,5 @@
-#ifndef USBUVC_H
-#define USBUVC_H
+#ifndef UVC_DEFS_H
+#define UVC_DEFS_H
 
 /* USB Video Class */
 
@@ -238,4 +238,4 @@ enum { // TODO: reorganise logically
 
 #undef USB_DESC_CONST_CODE_TYPEDEF
 
-#endif /* USBUVC_H */
+#endif /* UVC_DEFS_H */

@@ -1,8 +1,8 @@
 #include <fx2lib.h>
 #include <fx2usb.h>
 #include <usbcdc.h>
-#include "usbvc.h"
-#include "usbac.h"
+#include "uvc_defs.h"
+#include "uac_defs.h"
 #include "endpoints.h"
 
 usb_ascii_string_c usb_strings[] = {
@@ -459,7 +459,7 @@ usb_desc_uac_input_terminal_c uac_input_terminal = {
   .bAssocTerminal     = 0,
   .bNrChannels        = 2, // stereo
   .wChannelConfig     = (UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
-  .iChannelNames      = 4, // left, right
+  .iChannelNames      = 4, // first channel name, other channels must have consequetive indices
   .iTerminal          = 0,
 };
 

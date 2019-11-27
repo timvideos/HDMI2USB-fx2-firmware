@@ -1,5 +1,5 @@
-#ifndef USBUAC_H
-#define USBUAC_H
+#ifndef UAC_DEFS_H
+#define UAC_DEFS_H
 
 /* USB Audio Class */
 
@@ -316,4 +316,4 @@ USB_DESC_CONST_CODE_TYPEDEF(usb_desc_dev_qualifier)
 
 #undef USB_DESC_CONST_CODE_TYPEDEF
 
-#endif /* USBUAC_H */
+#endif /* UAC_DEFS_H */
