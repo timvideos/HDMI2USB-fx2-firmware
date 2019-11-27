@@ -214,7 +214,12 @@ struct usb_desc_uvc_color_matching {
 typedef __code const struct usb_desc_uvc_color_matching
   usb_desc_uvc_color_matching_c;
 
-enum {
+enum { // TODO: reorganise logically
+  // required for interface association descriptor
+  // see: https://www.usb.org/sites/default/files/iadclasscode_r10.pdf
+  USB_DEV_CLASS_MISCELLANEOUS = 0xef,
+  USB_DEV_SUBCLASS_COMMON = 0x02,
+  USB_DEV_PROTOCOL_INTERFACE_ASSOCIATION_DESCRIPTOR = 0x01,
   USB_DESC_IF_ASSOC = 0x0b,
 
   USB_UVC_CC_VIDEO = 0x0e,
@@ -235,5 +240,6 @@ enum {
   USB_UVC_VS_FORMAT_UNCOMPRESSED = 0x04,
   USB_UVC_VS_FRAME_UNCOMPRESSED = 0x05,
 };
+
 
 #endif /* USBUVC_H */

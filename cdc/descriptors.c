@@ -14,14 +14,9 @@ usb_desc_device_c usb_device = {
   .bLength              = sizeof(struct usb_desc_device),
   .bDescriptorType      = USB_DESC_DEVICE,
   .bcdUSB               = 0x0200,
-  // It would make more sense for this to be USB_DEV_CLASS_PER_INTERFACE, such that the device
-  // could be a composite device and include non-CDC interfaces. However, this does not work under
-  // Windows; it enumerates a broken unknown device and a broken serial port instead. It is likely
-  // that the following Microsoft document describes a way to make it work, but I have not verified
-  // it: https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/usb-common-class-generic-parent-driver
-  .bDeviceClass         = USB_DEV_CLASS_PER_INTERFACE,
-  .bDeviceSubClass      = USB_DEV_SUBCLASS_PER_INTERFACE,
-  .bDeviceProtocol      = USB_DEV_PROTOCOL_PER_INTERFACE,
+  .bDeviceClass         = USB_DEV_CLASS_MISCELLANEOUS,
+  .bDeviceSubClass      = USB_DEV_SUBCLASS_COMMON,
+  .bDeviceProtocol      = USB_DEV_PROTOCOL_INTERFACE_ASSOCIATION_DESCRIPTOR,
   .bMaxPacketSize0      = 64,
   .idVendor             = VID,  // VID, PID, DID must be defined as compiler flags
   .idProduct            = PID,
@@ -34,6 +29,17 @@ usb_desc_device_c usb_device = {
 
 /*** CDC **********************************************************************/
 
+usb_desc_if_assoc_c usb_cdc_if_assoc = {
+  .bLength              = sizeof(struct usb_desc_if_assoc),
+  .bDescriptorType      = USB_DESC_IF_ASSOC,
+  .bFirstInterface      = 0,
+  .bInterfaceCount      = 2,
+  .bFunctionClass       = USB_IFACE_CLASS_CIC,
+  .bFunctionSubClass    = USB_IFACE_SUBCLASS_CDC_CIC_ACM,
+  .bFunctionProtocol    = USB_IFACE_PROTOCOL_CDC_CIC_NONE,
+  .iFunction            = 1,
+};
+
 usb_desc_interface_c usb_iface_cic = {
   .bLength              = sizeof(struct usb_desc_interface),
   .bDescriptorType      = USB_DESC_INTERFACE,
@@ -43,7 +49,7 @@ usb_desc_interface_c usb_iface_cic = {
   .bInterfaceClass      = USB_IFACE_CLASS_CIC,
   .bInterfaceSubClass   = USB_IFACE_SUBCLASS_CDC_CIC_ACM,
   .bInterfaceProtocol   = USB_IFACE_PROTOCOL_CDC_CIC_NONE,
-  .iInterface           = 0,
+  .iInterface           = 1,
 };
 
 usb_desc_endpoint_c usb_endpoint_ep1_in = {
@@ -87,7 +93,7 @@ usb_desc_interface_c usb_iface_dic = {
   .bInterfaceClass      = USB_IFACE_CLASS_DIC,
   .bInterfaceSubClass   = USB_IFACE_SUBCLASS_CDC_DIC,
   .bInterfaceProtocol   = USB_IFACE_PROTOCOL_CDC_DIC_NONE,
-  .iInterface           = 0,
+  .iInterface           = 1,
 };
 
 usb_desc_endpoint_c usb_endpoint_cdc_acm_out = {
@@ -110,10 +116,11 @@ usb_desc_endpoint_c usb_endpoint_cdc_acm_in = {
 
 /*** UVC **********************************************************************/
 
+/* Interface association descriptor */
 usb_desc_if_assoc_c usb_uvc_if_assoc = {
   .bLength              = sizeof(struct usb_desc_if_assoc),
   .bDescriptorType      = USB_DESC_IF_ASSOC,
-  .bFirstInterface      = 0,
+  .bFirstInterface      = 2,
   .bInterfaceCount      = 2,
   .bFunctionClass       = USB_UVC_CC_VIDEO,
   .bFunctionSubClass    = USB_UVC_SC_VIDEO_INTERFACE_COLLECTION,
@@ -192,7 +199,7 @@ usb_desc_uvc_extension_unit_c usb_uvc_extension_unit = {
 };
 
 /* Output terminal descriptor */
-#define LENGTH_usb_uvc_output_terminal (sizeof(struct usb_desc_uvc_extension_unit) + 0)
+#define LENGTH_usb_uvc_output_terminal (sizeof(struct usb_desc_uvc_output_terminal) + 0)
 usb_desc_uvc_output_terminal_c usb_uvc_output_terminal = {
   .bLength            = LENGTH_usb_uvc_output_terminal,
   .bDescriptorType    = USB_UVC_CS_INTERFACE,
@@ -205,6 +212,7 @@ usb_desc_uvc_output_terminal_c usb_uvc_output_terminal = {
   // ._tail              = {},
 };
 
+/* Class specific VC interface header descriptor */
 #define LENGTH_usb_uvc_vc_if_header (sizeof(struct usb_desc_vc_if_header) + 1)
 usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
   .bLength              = LENGTH_usb_uvc_vc_if_header,
@@ -217,6 +225,7 @@ usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
       LENGTH_usb_uvc_vc_if_header +
       LENGTH_usb_uvc_camera +
       LENGTH_usb_uvc_processing_unit +
+      LENGTH_usb_uvc_extension_unit +
       LENGTH_usb_uvc_output_terminal,
   .dwClockFrequency     = 48000000,
   .bInCollection        = 1,
@@ -372,7 +381,6 @@ usb_desc_uvc_color_matching_c usb_uvc_yuy2_color_matching = {
   .bMatrixCoefficients      = 4, // SMPTE 170M, BT.601
 };
 
-
 /* Class-specific video streaming input header descriptor */
 #define LENGTH_usb_uvc_vs_if_in_header (sizeof(struct usb_desc_vs_if_in_header) + 2)
 usb_desc_vs_if_in_header_c usb_uvc_vs_if_in_header = {
@@ -412,6 +420,7 @@ usb_desc_interface_c usb_uvc_std_streaming_iface_1 = {
   .bInterfaceProtocol   = 0,
   .iInterface           = 0,
 };
+
 /*** UVC: endpoints ***********************************************************/
 
 usb_desc_endpoint_c usb_endpoint_uvc_in = {
@@ -439,12 +448,13 @@ usb_configuration_c usb_config = {
     // UVC
     { .generic   = (struct usb_desc_generic *) &usb_uvc_if_assoc              },
     { .interface =                             &usb_uvc_std_ctrl_iface        },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_vc_if_header          },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_camera                },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_processing_unit       },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_extension_unit        },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_output_terminal       },
-    { .generic   = (struct usb_desc_generic *) &usb_uvc_vc_if_header          },
     { .interface =                             &usb_uvc_std_streaming_iface_0 },
+    { .generic   = (struct usb_desc_generic *) &usb_uvc_vs_if_in_header       },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_format       },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_frame_1      },
     { .generic   = (struct usb_desc_generic *) &usb_uvc_mjpeg_vs_frame_2      },
@@ -456,6 +466,7 @@ usb_configuration_c usb_config = {
     { .interface =                             &usb_uvc_std_streaming_iface_1 },
     { .endpoint  =                             &usb_endpoint_uvc_in           },
     // CDC
+    { .generic   = (struct usb_desc_generic *) &usb_cdc_if_assoc              },
     { .interface =                             &usb_iface_cic                 },
     { .generic   = (struct usb_desc_generic *) &usb_func_cic_header           },
     { .generic   = (struct usb_desc_generic *) &usb_func_cic_acm              },
