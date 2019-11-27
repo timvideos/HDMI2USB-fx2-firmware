@@ -79,31 +79,32 @@ uint8_t handle_set_interface(uint8_t ifc, uint8_t alt_ifc) {
          * Restore endpoints to default condition with valid bit cleared
          * (invalid, bulk, out, double)
          */
-    EP2CFG = 0x7F;
-    SYNCDELAY; EP4CFG = 0x7F;
-    SYNCDELAY; EP6CFG = 0x7F;
-    SYNCDELAY; EP8CFG = 0x7F;
-    SYNCDELAY; RESETFIFO(0x02);
+    EP8CFG = ~_VALID;
+    SYNCDELAY;
+    //fx2lib
+    RESETFIFO(0x02);
     return 1;
   } else if (ifc == 1 && alt_ifc == 0) {
     alt_setting = 0;
-    EP2CFG = 0x7F;
-    SYNCDELAY; EP4CFG = 0x7F;
-    SYNCDELAY; EP6CFG = 0x7F;
-    SYNCDELAY; EP8CFG = 0x7F;
-    SYNCDELAY; RESETFIFO(0x02);
+    EP8CFG = ~_VALID;
+    SYNCDELAY;
+    //fx2lib
+    RESETFIFO(0x02);
     /* reset toggles */
-    SYNCDELAY; RESETTOGGLE(0x82);
+    SYNCDELAY;
+    //fx2lib
+    RESETTOGGLE(0x82);
     return 1;
   } else if (ifc == 1 && alt_ifc == 1) {
     alt_setting = 1;
     /* Reset audio streaming endpoint */
     EP8CFG = (bmVALID | bmDIR | bmTYPE0);
-    SYNCDELAY; EP2CFG = 0x7F;
-    SYNCDELAY; EP4CFG = 0x7F;
-    SYNCDELAY; EP6CFG = 0x7F;
-    SYNCDELAY; RESETFIFO(0x02);
-    SYNCDELAY; RESETTOGGLE(0x82);
+    SYNCDELAY;
+    //fx2lib
+    RESETFIFO(0x02);
+    SYNCDELAY;
+    //fx2lib
+    RESETTOGGLE(0x82);
     return 1;
   }
   return 0;

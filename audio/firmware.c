@@ -48,15 +48,22 @@ void main() {
   got_sud = 0;
 
   /* renumerate */
+  //fx2lib
   RENUMERATE_UNCOND();
 
+  //fx2lib
   SETCPUFREQ(CLK_48M);
+  //fx2lib
   SETIF48MHZ();
   usart_init();
 
+  //fx2lib
   USE_USB_INTS();
+  //fx2lib
   ENABLE_SUDAV();
+  //fx2lib
   ENABLE_USBRESET();
+  //fx2lib
   ENABLE_HISPEED();
   d1off();
 
@@ -69,10 +76,13 @@ void main() {
      * Direction: out
      * Buffer: Double
      */
-  EP2CFG = 0x7F;
-  SYNCDELAY; EP4CFG = 0x7F;
-  SYNCDELAY; EP6CFG = 0x7F;
-  SYNCDELAY; EP8CFG = 0x7F;
+  EP2CFG = ~_VALID;
+  SYNCDELAY;
+  EP4CFG = ~_VALID;
+  SYNCDELAY;
+  EP6CFG = ~_VALID;
+  SYNCDELAY;
+  EP8CFG = ~_VALID;
 
   /* Enable global interrupts */
   EA = 1;
@@ -89,8 +99,8 @@ void main() {
       got_sud = 0;
     }
     /* ISO endpoint config type is 01 in the enpoint configuration buffer */
-    if ((EP8CFG & bmTYPE) == bmTYPE0) {
-      while (!(EP2468STAT & bmEP8FULL)) {
+    if ((EP8CFG & (_TYPE0 | _TYPE1)) == _TYPE0) {
+      while (!(EP2468STAT & _EP8F)) {
         d1on();
         /* Send max data. Larger than 0x30 causes an EOVERFLOW */
         EP8BCH = 0x00;
@@ -107,6 +117,7 @@ void main() {
  */
 void sudav_isr() __interrupt SUDAV_ISR {
   got_sud = 1;
+  //fx2lib
   CLEAR_SUDAV();
 }
 
@@ -116,6 +127,7 @@ void sudav_isr() __interrupt SUDAV_ISR {
 void usbreset_isr() __interrupt USBRESET_ISR {
   /* By default the USB is in full speed mode when reset */
   handle_hispeed(0);
+  //fx2lib
   CLEAR_USBRESET();
 }
 
@@ -124,5 +136,6 @@ void usbreset_isr() __interrupt USBRESET_ISR {
  */
 void hispeed_isr() __interrupt HISPEED_ISR {
   handle_hispeed(1);
+  //fx2lib
   CLEAR_HISPEED();
 }

@@ -67,9 +67,9 @@ struct usb_descriptors {
 
 __xdata __at(DSCR_AREA) struct usb_descriptors descriptors;
 
-__code __at(DSCR_AREA + offsetof(struct usb_descriptors, device)) WORD dev_dscr;
-__code __at(DSCR_AREA + offsetof(struct usb_descriptors, qualifier)) WORD dev_qual_dscr;
-__code __at(DSCR_AREA + offsetof(struct usb_descriptors, highspeed)) WORD highspd_dscr;
-__code __at(DSCR_AREA + offsetof(struct usb_descriptors, fullspeed)) WORD fullspd_dscr;
-__code __at(DSCR_AREA + offsetof(struct usb_descriptors, strings)) WORD dev_strings;
+__code __at(DSCR_AREA + offsetof(struct usb_descriptors, device)) uint16_t dev_dscr;
+__code __at(DSCR_AREA + offsetof(struct usb_descriptors, qualifier)) uint16_t dev_qual_dscr;
+__code __at(DSCR_AREA + offsetof(struct usb_descriptors, highspeed)) uint16_t highspd_dscr;
+__code __at(DSCR_AREA + offsetof(struct usb_descriptors, fullspeed)) uint16_t fullspd_dscr;
+__code __at(DSCR_AREA + offsetof(struct usb_descriptors, strings)) uint16_t dev_strings;
 #endif  // DESCRIPTORS_H_
