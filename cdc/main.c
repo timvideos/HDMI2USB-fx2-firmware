@@ -7,6 +7,28 @@
 #include "uvc.h"
 #include "endpoints.h"
 
+static void endpoints_config();
+
+int main() {
+  // Run core at 48 MHz fCLK.
+  CPUCS = _CLKSPD1;
+
+  // Use newest chip features.
+  REVCTL = _ENH_PKT|_DYN_OUT;
+
+  // configure usb endpoints and fifos
+  endpoints_config();
+
+  // Re-enumerate, to make sure our descriptors are picked up correctly.
+  usb_init(/*disconnect=*/true);
+
+  cdc_init();
+
+  while (1) {
+    cdc_poll();
+  }
+}
+
 void handle_usb_setup(__xdata struct usb_req_setup *req) {
   if (cdc_handle_usb_setup(req))
     return;
@@ -15,7 +37,10 @@ void handle_usb_setup(__xdata struct usb_req_setup *req) {
   STALL_EP0();
 }
 
-void configure_endpoints() {
+#define MSB(word) (((word) & 0xff00) >> 8)
+#define LSB(word) ((word) & 0xff)
+
+void endpoints_config() {
   // NAK all transfers.
   SYNCDELAY;
   FIFORESET = _NAKALL;
@@ -25,6 +50,15 @@ void configure_endpoints() {
   EP4CFG &= ~_VALID;
   EP6CFG &= ~_VALID;
   EP8CFG &= ~_VALID;
+
+  // Return FIFO setings back to default just in case previous firmware messed with them
+  SYNCDELAY; PINFLAGSAB = 0x00;
+  SYNCDELAY; PINFLAGSCD = 0x00;
+  SYNCDELAY; FIFOPINPOLAR = 0x00;
+
+  // configure FIFO interface
+  // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
+  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG1;
 
   // CDC interrupt endpoint
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
@@ -40,6 +74,10 @@ void configure_endpoints() {
 
   // UVC 1024-byte (EP2 or EP6) double buffered ISOCHRONOUS IN
   EP_UVC_(CFG) = _VALID|_DIR|_TYPE0|_SIZE|_BUF1;
+  // FIFO: auto commit IN packets, set length of 1024
+  SYNCDELAY; EP_UVC_(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+  SYNCDELAY; EP_UVC_(AUTOINLENH) = MSB(1024);
+  SYNCDELAY; EP_UVC_(AUTOINLENL) = MSB(1024);
 
   // reset (and skip) endpoints
   SYNCDELAY; FIFORESET = EP_CDC_HOST2DEV|_NAKALL;
@@ -54,21 +92,3 @@ void configure_endpoints() {
   SYNCDELAY; FIFORESET = 0;
 }
 
-int main() {
-  // Run core at 48 MHz fCLK.
-  CPUCS = _CLKSPD1;
-
-  // Use newest chip features.
-  REVCTL = _ENH_PKT|_DYN_OUT;
-
-  configure_endpoints();
-
-  // Re-enumerate, to make sure our descriptors are picked up correctly.
-  usb_init(/*disconnect=*/true);
-
-  cdc_init();
-
-  while (1) {
-    cdc_poll();
-  }
-}
