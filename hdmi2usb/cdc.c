@@ -1,78 +1,191 @@
 #include "cdc.h"
 
-#include "macros.h"
+#include <fx2lib.h>
+#include <fx2delay.h>
 
-volatile uint16_t cdc_queued_bytes = 0;
+#include <stdio.h>
+#include <string.h>
+#include <fx2debug.h>
 
-struct usb_cdc_req_line_coding cdc_current_line_coding = {
-    .dwDTERate = MAKEDWORD(0, MAKEDWORD(2400, 2400)),
-    .bCharFormat = USB_CDC_REQ_LINE_CODING_STOP_BITS_1,
-    .bParityType = USB_CDC_REQ_LINE_CODING_PARITY_NONE,
-    .bDataBits = 8
-};
+volatile bool pending_ie0 = false;
+static uint32_t scratch_buf_len = 0;
 
-void cdc_receive_poll() {
-  if (!(EP2468STAT & bmCDC_H2D_EP(E))) {
-    uint16_t bytes = MAKEWORD(CDC_H2D_EP(BCH), CDC_H2D_EP(BCL));
-    cdcuser_receive_data(CDC_H2D_EP(FIFOBUF), bytes);
-    CDC_H2D_EP(BCL) = 0x80;  // Mark us ready to receive again.
-  }
-  // FIXME: Send the interrupt thingy
+static void permute_data(uint8_t *data, uint16_t length);
+static void init_uart_ext_int();
+
+
+// blocking software uart
+#define BAUDRATE 115200
+DEFINE_DEBUG_FN(bitbang_uart_send_byte, PB0, BAUDRATE)
+
+#include <stdio.h>
+DEFINE_DEBUG_PUTCHAR_FN(PB1, BAUDRATE)
+
+
+// external interrupt on pin INT0
+void isr_IE0() __interrupt(_INT_IE0) {
+  // IE0 is automatically cleared by hardware
+  pending_ie0 = true;
 }
 
-bool cdc_handle_command(uint8_t cmd) {
-  int i;
-  uint8_t* line_coding = (uint8_t*)&cdc_current_line_coding;
-  uint32_t baud_rate = 0;
+void cdc_init() {
+  init_uart_ext_int();
+}
 
-  switch (cmd) {
-    case USB_CDC_PSTN_REQ_SET_LINE_CODING:
-      EUSB = 0;
-      SUDPTRCTL = 0x01;
-      EP0BCL = 0x00;
-      SUDPTRCTL = 0x00;
-      EUSB = 1;
-
-      while (EP0BCL != 7)
-        ;
-      SYNCDELAY;
-
-      for (i = 0; i < 7; i++)
-        line_coding[i] = EP0BUF[i];
-
-      // FIXME: Make this following line work rather then the if statement chain!
-      //                baud_rate = MAKEDWORD(
-      //			MAKEWORD(cdc_current_line_coding.bDTERate3, cdc_current_line_coding.bDTERate2),
-      //			MAKEWORD(cdc_current_line_coding.bDTERate1, cdc_current_line_coding.bDTERate0));
-      baud_rate = MAKEDWORD(
-          MAKEWORD(line_coding[3], line_coding[2]),
-          MAKEWORD(line_coding[1], line_coding[0]));
-
-      if (!cdcuser_set_line_rate(baud_rate))
-        ;  //EP0STALL();
-
-      return true;
-
-    case USB_CDC_PSTN_REQ_GET_LINE_CODING:
-      SUDPTRCTL = 0x01;
-
-      for (i = 0; i < 7; i++)
-        EP0BUF[i] = line_coding[i];
-
-      EP0BCH = 0x00;
-      SYNCDELAY;
-      EP0BCL = 7;
-      SYNCDELAY;
-      while (EP0CS & 0x02)
-        ;
-      SUDPTRCTL = 0x00;
-
-      return true;
-
-    case USB_CDC_PSTN_REQ_SET_CONTROL_LINE_STATE:
-      return true;
-
-    default:
-      return false;
+bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
+  // We *very specifically* declare that we do not support, among others, SET_CONTROL_LINE_STATE
+  // request, but Linux sends it anyway and this results in timeouts propagating to userspace.
+  // Linux will send us other requests we explicitly declare to not support, but those just fail.
+  if (req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_OUT) &&
+      req->bRequest == USB_CDC_PSTN_REQ_SET_CONTROL_LINE_STATE &&
+      req->wIndex == 0 && req->wLength == 0)
+  {
+    ACK_EP0();
+    return true;
   }
+
+  // We *very specifically* declare that we do not support, among others, GET_LINE_CODING request,
+  // but Windows sends it anyway and this results in errors propagating to userspace.
+  if(req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_IN) &&
+     req->bRequest == USB_CDC_PSTN_REQ_GET_LINE_CODING &&
+     req->wIndex == 0 && req->wLength == 7)
+  {
+    __xdata struct usb_cdc_req_line_coding *line_coding =
+        (__xdata struct usb_cdc_req_line_coding *)EP0BUF;
+    line_coding->dwDTERate = 115200;
+    line_coding->bCharFormat = USB_CDC_REQ_LINE_CODING_STOP_BITS_1;
+    line_coding->bParityType = USB_CDC_REQ_LINE_CODING_PARITY_NONE;
+    line_coding->bDataBits = 8;
+    SETUP_EP0_BUF(sizeof(struct usb_cdc_req_line_coding));
+    return true;
+  }
+
+  // We *very specifically* declare that we do not support, among others, SET_LINE_CODING request,
+  // but Windows sends it anyway and this results in errors propagating to userspace.
+  if(req->bmRequestType == (USB_RECIP_IFACE|USB_TYPE_CLASS|USB_DIR_OUT) &&
+     req->bRequest == USB_CDC_PSTN_REQ_SET_LINE_CODING &&
+     req->wIndex == 0 && req->wLength == 7)
+  {
+    SETUP_EP0_BUF(0);
+    return true;
+  }
+
+  return false;
+}
+
+void cdc_print(const char *string) {
+  uint16_t i;
+  uint16_t len = strlen(string);
+  if (len > 512)
+    len = 512;
+
+  __critical {
+    printf("string = %s\n", string);
+  }
+
+  for (i = 0; i < len; ++i) {
+    EP_CDC_DEV2HOST_(FIFOBUF)[i] = ((uint8_t *) string)[i];
+  }
+  EP_CDC_DEV2HOST_(BCH) = len >> 8;
+  SYNCDELAY;
+  EP_CDC_DEV2HOST_(BCL) = len;
+}
+
+
+void cdc_poll_loopback() {
+
+  // receive CDC-ACM data
+  if(!(EP_CDC_HOST2DEV_(CS) & _EMPTY)) {
+    uint16_t length = (EP_CDC_HOST2DEV_(BCH) << 8) | EP_CDC_HOST2DEV_(BCL);
+
+    // if scratch buffer is full, ignore subsequent data
+    if (scratch_buf_len < ARRAYSIZE(scratch)) {
+      // store in data up to available scratch length, ignore rest
+      if (length + scratch_buf_len > ARRAYSIZE(scratch)) {
+        length = ARRAYSIZE(scratch) - scratch_buf_len;
+      }
+
+      // length bytes from EP buf to scratch+scratch_buf_len
+      xmemcpy(scratch + scratch_buf_len, EP_CDC_HOST2DEV_(FIFOBUF), length);
+      scratch_buf_len += length;
+    }
+
+    // signalize we are ready for new data
+    EP_CDC_HOST2DEV_(BCL) = 0;
+  }
+
+  // send data to EP if it is not full
+  if (scratch_buf_len != 0 && !(EP_CDC_DEV2HOST_(CS) & _FULL)) {
+    permute_data(scratch, scratch_buf_len);
+
+    xmemcpy(EP_CDC_DEV2HOST_(FIFOBUF), scratch, scratch_buf_len);
+    EP_CDC_DEV2HOST_(BCH) = scratch_buf_len >> 8;
+    SYNCDELAY;
+    EP_CDC_DEV2HOST_(BCL) = scratch_buf_len;
+
+    // simultaneously send the data over uart
+    {
+      uint16_t i;
+      for (i = 0; i < scratch_buf_len; ++i) {
+        __critical {
+          bitbang_uart_send_byte(scratch[i]);
+        }
+      }
+    }
+
+    scratch_buf_len = 0;
+  }
+
+}
+
+void cdc_poll() {
+
+  // cdc_poll_loopback();
+
+
+  static uint32_t counter = 0;
+
+  if (counter++ > 10000UL * 8) {
+    counter = 0;
+
+    __critical {
+      printf("sending byte...\r\n");
+    }
+
+    // send a byte over uart which will loop back to us
+    // IE0 = 0;
+    __critical {
+      bitbang_uart_send_byte('q');
+    }
+    // IE0 = 1;
+  }
+
+  // indicate when we receive something on RX pin (INT0)
+  if (pending_ie0) {
+    pending_ie0 = false;
+    __critical {
+      printf("got pending_ie0, counter = %ld\r\n", counter);
+    }
+  }
+
+}
+
+void permute_data(uint8_t *data, uint16_t length) {
+  uint16_t i;
+  for (i = 0; i < length; ++i) {
+    // translate a-zA-Z by N characters
+    if ((data[i] >= 'a' && data[i] <= 'z') || (data[i] >= 'A' && data[i] <= 'Z')) {
+      data[i] += 1;
+    }
+  }
+}
+
+void init_uart_ext_int() {
+  // configure PA0 as alternate function INT0
+  PORTACFG |= 1;
+
+  // configure external interrupt on INT0 for uart rx, negative edge (start bit)
+  IT0 = 1;
+  IP |= 1; // high priority
+  IE |= 1; // enable interrupt
 }
