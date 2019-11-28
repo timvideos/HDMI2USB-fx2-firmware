@@ -23,10 +23,8 @@ int main() {
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
-  cdc_init();
-
   while (1) {
-    cdc_poll();
+    // slave fifos configured in auto mode
   }
 }
 
@@ -87,23 +85,29 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+  SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
+  SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
   // CDC 512-byte double buffed BULK IN.
   EP_CDC_DEV2HOST(CFG) = _VALID|_DIR|_TYPE1|_BUF1;
   EP_CDC_DEV2HOST(CS) = 0;
+  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
+  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
 
   // UVC 512-byte double buffered ISOCHRONOUS IN
   EP_UVC(CFG) = _VALID|_DIR|_TYPE0|_SIZE|_BUF1;
   // FIFO: auto commit IN packets, set length of 512
   SYNCDELAY; EP_UVC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
   SYNCDELAY; EP_UVC(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_UVC(AUTOINLENL) = MSB(512);
+  SYNCDELAY; EP_UVC(AUTOINLENL) = LSB(512);
 
   // UAC 512-byte double buffered ISOCHRONOUS IN
   EP_UAC(CFG) = _VALID|_DIR|_TYPE0|_SIZE|_BUF1;
   SYNCDELAY; EP_UAC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
   SYNCDELAY; EP_UAC(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_UAC(AUTOINLENL) = MSB(512);
+  SYNCDELAY; EP_UAC(AUTOINLENL) = LSB(512);
 
   // reset (and skip) endpoints
   SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_HOST2DEV|_NAKALL;
