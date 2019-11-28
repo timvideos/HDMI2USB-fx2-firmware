@@ -9,17 +9,17 @@ SOURCES = main descriptors cdc uvc uac
 SYNCDELAYLEN = 4
 
 ifeq (${BOARD},atlys)
-VID := 1D50
-PID := 60B7
-DID := 0002
+	VID := 1D50
+	PID := 60B7
+	DID := 0002
 else
-ifeq (${BOARD},opsis)
-VID := 2A19
-PID := 5442
-DID := 0002
-else
-$(error "Unknown board type '$(BOARD)'")
-endif
+	ifeq (${BOARD},opsis)
+		VID := 2A19
+		PID := 5442
+		DID := 0002
+	else
+		$(error "Unknown board type '$(BOARD)'")
+	endif
 endif
 
 CFLAGS = --std-sdcc99 -Wa"-p" --xram-size 0x0200 
