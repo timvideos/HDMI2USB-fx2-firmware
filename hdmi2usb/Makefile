@@ -4,7 +4,7 @@ MODEL     = small
 BOARD    ?= opsis
 
 LIBFX2  = ../third_party/libfx2/firmware/library
-SOURCES = main descriptors cdc uvc
+SOURCES = main descriptors cdc uvc uac 
 
 SYNCDELAYLEN = 4
 

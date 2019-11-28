@@ -5,9 +5,10 @@
 
 #include "usb_config.h"
 #include "cdc.h"
+#include "uac.h"
 #include "uvc.h"
 
-static void endpoints_config();
+static void fx2_usb_config();
 
 int main() {
   // Run core at 48 MHz fCLK.
@@ -17,7 +18,7 @@ int main() {
   REVCTL = _ENH_PKT|_DYN_OUT;
 
   // configure usb endpoints and fifos
-  endpoints_config();
+  fx2_usb_config();
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
@@ -29,18 +30,37 @@ int main() {
   }
 }
 
+/*** Reimplemented libfx2 USB handlers ****************************************/
+
+// USB setup commands
 void handle_usb_setup(__xdata struct usb_req_setup *req) {
   if (cdc_handle_usb_setup(req))
     return;
   if (uvc_handle_usb_setup(req))
     return;
-  STALL_EP0();
+  STALL_EP0(); // not handled
 }
+
+// Set active interface _alternate setting_
+bool handle_usb_set_interface(uint8_t interface, uint8_t alt_setting) {
+  if (uac_handle_usb_set_interface(interface, alt_setting))
+    return true;
+  return false; // not handled
+}
+
+// Set current interface _alternate setting_
+void handle_usb_get_interface(uint8_t interface) {
+  if (uac_handle_usb_get_interface(interface))
+    return;
+  STALL_EP0(); // not handled
+}
+
+/*** USB registers configuration **********************************************/
 
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
 
-void endpoints_config() {
+void fx2_usb_config() {
   // NAK all transfers.
   SYNCDELAY;
   FIFORESET = _NAKALL;
