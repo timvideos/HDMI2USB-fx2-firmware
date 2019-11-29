@@ -6,10 +6,10 @@ __xdata volatile struct BitbangUART uart;
 
 void uart_init(uint32_t baudrate) {
   // configure PB0 as TX, PA0 as RX // FIXME: in interrupt we use #define
-  OEB = (1 << 0); // PB0 as output
+  OEB |= (1 << 0); // PB0 as output
   PB0 = 1; // uart is initially high
 
-  PORTACFG &= ~1; // ensure no alternate function on pin PA0
+  PORTACFG &= ~(1 << 0); // ensure no alternate function on pin PA0
   OEA = 0; // PA0 as input (and all others)
 
 
