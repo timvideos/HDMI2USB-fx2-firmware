@@ -9,6 +9,8 @@
 #include "uvc.h"
 #include "uart.h"
 
+#define DNA_START_CODE 0xfe
+
 static char byte2hex(uint8_t byte);
 static void fx2_usb_config();
 
@@ -36,8 +38,8 @@ int main() {
     
     if (!(EP_CDC_DEV2HOST(CS) & _EMPTY)) {
       // inspect data in buffer to check if DNA is being passed
-      if (EP_CDC_DEV2HOST(FIFOBUF)[0] == 0x00) { // DNA start code
-        const uint16_t dna_header_length = 1;
+      if (EP_CDC_DEV2HOST(FIFOBUF)[0] == DNA_START_CODE) {
+        const uint16_t dna_start_code_length = 1;
         uint16_t buf_length;
         uint8_t i;
     
@@ -45,11 +47,11 @@ int main() {
         // we can block as the rest of endpoints is handled by hardware
         do {
           buf_length = (EP_CDC_DEV2HOST(BCH) << 8) | EP_CDC_DEV2HOST(BCL);
-        } while (buf_length < dna_header_length + ARRAYSIZE(dna));
+        } while (buf_length < dna_start_code_length + ARRAYSIZE(dna));
     
         // save dna to USB serial number
         for (i = 0; i < ARRAYSIZE(dna); ++i) { // two chars for one byte
-          uint8_t byte = EP_CDC_DEV2HOST(FIFOBUF)[dna_header_length + i];
+          uint8_t byte = EP_CDC_DEV2HOST(FIFOBUF)[dna_start_code_length + i];
           char c_low = byte2hex(byte & 0x0f);
           char c_high = byte2hex((byte & 0xf0) >> 4);
           // save in reverse order - LSB goes as last element of the string
