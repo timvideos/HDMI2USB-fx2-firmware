@@ -18,24 +18,26 @@ int main() {
   // Use newest chip features.
   REVCTL = _ENH_PKT|_DYN_OUT;
 
-  __critical { // disable interrupts during configuration phase
-    // configure usb endpoints and fifos
-    fx2_usb_config();
-
-    uart_init(9600);
-  }
-
-  EA = 1; // enable interrupts
+  // configure usb endpoints and fifos
+  fx2_usb_config();
+  
+  // configure and start bitbang uart
+  uart_init(9600);
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
+  EA = 1; // enable interrupts
+
+  delay_ms(100);
+  uart_start();
 
   // UART test
   uint32_t test_counter = 0;  // to slowly perform consequent steps
   int test_step = 0;
   const char *string = "N";
 
+  cdc_printf("# Starting UART test...\r\n");
   while (1) {
     // slave fifos configured in auto mode
 
@@ -43,7 +45,7 @@ int main() {
     cdc_poll();
 
     // performed in "human" time
-    if (test_counter++ > 10000UL * 5) {
+    if (test_counter++ > 10000UL * 6) {
       test_counter = 0;
 
       switch (test_step++) {
@@ -55,13 +57,13 @@ int main() {
           }
           break;
         case 1:
-          cdc_printf("sending 0x%02x '%c' ...\r\n", string[0], string[0]);
+          cdc_printf("\r\nsending...  0x%02x '%c'\r\n", string[0], string[0]);
           uart_queue_send(string[0]);
           break;
         default:
-          cdc_printf(" [ tick ]\r\n");
           test_step = 0;
       }
+      test_step %= 2;
     }
   }
 }

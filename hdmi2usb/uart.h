@@ -35,6 +35,7 @@ struct BitbangUART {
 extern __xdata volatile struct BitbangUART uart;
 
 void uart_init(uint32_t baudrate);
+void uart_start();
 void uart_queue_send(uint8_t byte);
 
 

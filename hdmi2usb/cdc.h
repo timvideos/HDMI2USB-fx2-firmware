@@ -18,6 +18,6 @@
 // void cdc_init();
 bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req);
 // void cdc_handle_IBN();
-void cdcpoll();
+void cdc_poll();
 
 #endif /* CDC_H */

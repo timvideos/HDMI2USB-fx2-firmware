@@ -5,22 +5,26 @@ static void set_tim2_frequency(uint32_t baud_rate);
 __xdata volatile struct BitbangUART uart;
 
 void uart_init(uint32_t baudrate) {
-  // configure interrupt timer
-  TR2 = 0; // start timer 2
-  set_tim2_frequency(baudrate * 2); // we need 2 times faster clock than the actual baudrate
-  T2CON = 0x00; // configure timer 2 in default auto-reload mode
-  ET2 = 1; // enable timer 2 interrupt
-  PT2 = 1; // set high priority
-  TR2 = 1; // start timer
-
-  // configure PB0 as TX, PA0 as RX // TODO: in interrupt we use #define
+  // configure PB0 as TX, PA0 as RX // FIXME: in interrupt we use #define
   OEB = (1 << 0); // PB0 as output
   PB0 = 1; // uart is initially high
 
   PORTACFG &= ~1; // ensure no alternate function on pin PA0
   OEA = 0; // PA0 as input (and all others)
 
-  EA = 1; // enable all interrupts
+
+  // configure interrupt timer
+  TR2 = 0; // top timer 2
+  set_tim2_frequency(baudrate * 2); // we need 2 times faster clock than the actual baudrate
+  T2CON = 0x00; // configure timer 2 in default auto-reload mode
+  ET2 = 1; // enable timer 2 interrupt
+  
+  PT2 = 1; // set high priority
+  // PT2 = 0; // set low priority
+}
+
+void uart_start() {
+  TR2 = 1; // start timer
 }
 
 void uart_queue_send(uint8_t byte) {
