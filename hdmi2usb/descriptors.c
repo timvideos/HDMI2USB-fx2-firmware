@@ -13,6 +13,9 @@ usb_ascii_string_c usb_strings[] = {
   [4] = "Right",
 };
 
+// modifiable strings
+char *usb_user_strings[ARRAYSIZE(usb_strings)] = {0};
+
 usb_desc_device_c usb_device = {
   .bLength              = sizeof(struct usb_desc_device),
   .bDescriptorType      = USB_DESC_DEVICE,

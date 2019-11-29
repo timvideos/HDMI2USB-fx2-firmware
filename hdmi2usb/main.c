@@ -9,6 +9,7 @@
 #include "uvc.h"
 #include "uart.h"
 
+static char byte2hex(uint8_t byte);
 static void fx2_usb_config();
 
 int main() {
@@ -26,8 +27,48 @@ int main() {
 
   EA = 1; // enable interrupts
 
+  // store DNA received from FPGA and use a custom usb serial number to publish DNA
+  uint8_t dna[8];
+  char usb_serial_number[16];
+
   while (1) {
     // slave fifos configured in auto mode
+    
+    if (!(EP_CDC_DEV2HOST(CS) & _EMPTY)) {
+      // inspect data in buffer to check if DNA is being passed
+      if (EP_CDC_DEV2HOST(FIFOBUF)[0] == 0x00) { // DNA start code
+        const uint16_t dna_header_length = 1;
+        uint16_t buf_length;
+        uint8_t i;
+    
+        // wait until we have whole DNA
+        // we can block as the rest of endpoints is handled by hardware
+        do {
+          buf_length = (EP_CDC_DEV2HOST(BCH) << 8) | EP_CDC_DEV2HOST(BCL);
+        } while (buf_length < dna_header_length + ARRAYSIZE(dna));
+    
+        // save dna to USB serial number
+        for (i = 0; i < ARRAYSIZE(dna); ++i) { // two chars for one byte
+          uint8_t byte = EP_CDC_DEV2HOST(FIFOBUF)[dna_header_length + i];
+          char c_low = byte2hex(byte & 0x0f);
+          char c_high = byte2hex((byte & 0xf0) >> 4);
+          // save in reverse order - LSB goes as last element of the string
+          usb_serial_number[ARRAYSIZE(usb_serial_number) - 2 * i] = c_low;
+          usb_serial_number[ARRAYSIZE(usb_serial_number) - 2 * i + 1] = c_high;
+        }
+
+        // make usb use modified DNA FIXME: use a define which string number is for serial number
+        usb_user_strings[2] = usb_serial_number;
+    
+        // re-enumerate to pick up new serial number
+        usb_init(/*disconnect=*/true);
+    
+        // ignore endpoint data
+        INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
+      } else { // commit regular data arming an IN tranfser
+        INPKTEND = USB_CFG_EP_CDC_DEV2HOST;
+      }
+    }
   }
 }
 
@@ -92,16 +133,14 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT|_ZEROLENIN;
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
   // CDC 512-byte double buffed BULK IN.
   EP_CDC_DEV2HOST(CFG) = _VALID|_DIR|_TYPE1|_BUF1;
   EP_CDC_DEV2HOST(CS) = 0;
-  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = _AUTOIN|_ZEROLENIN;
-  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
+  // no automatic committing as we need to first check for DNA
 
   // UVC 512-byte double buffered ISOCHRONOUS IN
   EP_UVC(CFG) = _VALID|_DIR|_TYPE0|_SIZE|_BUF1;
@@ -126,5 +165,16 @@ void fx2_usb_config() {
 
   // restore normal operation
   SYNCDELAY; FIFORESET = 0;
+}
+
+// byte must be 4-bit value!
+char byte2hex(uint8_t byte) {
+  char c;
+  if (byte <= 9) {
+    c = byte + '0';
+  } else {
+    c = byte + 'a';
+  }
+  return c;
 }
 
