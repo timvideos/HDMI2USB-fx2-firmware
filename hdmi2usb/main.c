@@ -7,6 +7,7 @@
 #include "cdc.h"
 #include "uac.h"
 #include "uvc.h"
+#include "uart.h"
 
 static void fx2_usb_config();
 
@@ -17,15 +18,51 @@ int main() {
   // Use newest chip features.
   REVCTL = _ENH_PKT|_DYN_OUT;
 
-  // configure usb endpoints and fifos
-  fx2_usb_config();
+  __critical { // disable interrupts during configuration phase
+    // configure usb endpoints and fifos
+    fx2_usb_config();
+
+    uart_init(9600);
+  }
+
+  EA = 1; // enable interrupts
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
+
+  // UART test
+  uint32_t test_counter = 0;  // to slowly perform consequent steps
+  int test_step = 0;
+  const char *string = "N";
+
   while (1) {
     // slave fifos configured in auto mode
 
+    // clears endpoint with received data
+    cdc_poll();
+
+    // performed in "human" time
+    if (test_counter++ > 10000UL * 5) {
+      test_counter = 0;
+
+      switch (test_step++) {
+        case 0:
+          cdc_printf("rec=%d, byte=0x%02x '%c', ovf=%d\r\n", 
+                    uart.received_flag, uart.rx_buf, uart.rx_buf, uart.overflow_flag);
+          if (uart.received_flag) {
+            uart.received_flag = false;
+          }
+          break;
+        case 1:
+          cdc_printf("sending 0x%02x '%c' ...\r\n", string[0], string[0]);
+          uart_queue_send(string[0]);
+          break;
+        default:
+          cdc_printf(" [ tick ]\r\n");
+          test_step = 0;
+      }
+    }
   }
 }
 
@@ -77,7 +114,8 @@ void fx2_usb_config() {
 
   // configure FIFO interface
   // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
-  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG0;
+  // SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG1;
+  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|0|0; // FIXME: change uart pins, now they collide with FIFO interface
 
   // CDC interrupt endpoint
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
