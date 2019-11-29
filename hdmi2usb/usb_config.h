@@ -1,6 +1,18 @@
 #ifndef USB_CONFIG_H
 #define USB_CONFIG_H
 
+/*** USB string IDs ***********************************************************/
+
+// 1-based string IDs
+// NOTE: usb_strings array is zero-indexed!
+enum USBStringID {
+  USB_STR_MANUFACTURER = 1,
+  USB_STR_PRODUCT,
+  USB_STR_SERIAL_NUMBER,
+  USB_STR_CHANNEL_NAME_1,
+  USB_STR_CHANNEL_NAME_2,  // second channel name must follow the first one
+};
+
 /*** USB interface numbers configuration **************************************/
 
 enum USBConfigInterface {

@@ -6,11 +6,11 @@
 #include "uac_defs.h"
 
 usb_ascii_string_c usb_strings[] = {
-  [0] = "TimVideos.us",  // manufacturer
-  [1] = "HDMI2USB.tv - Numato Opsis Board",  // product
-  [2] = "0123456789abcdef",  // serial number
-  [3] = "Left",  // channel names
-  [4] = "Right",
+  [USB_STR_MANUFACTURER   - 1] = "TimVideos.us",
+  [USB_STR_PRODUCT        - 1] = "HDMI2USB.tv - Numato Opsis Board",
+  [USB_STR_SERIAL_NUMBER  - 1] = "0123456789abcdef",
+  [USB_STR_CHANNEL_NAME_1 - 1] = "Left",
+  [USB_STR_CHANNEL_NAME_2 - 1] = "Right",
 };
 
 // modifiable strings
@@ -27,9 +27,9 @@ usb_desc_device_c usb_device = {
   .idVendor             = VID,  // VID, PID, DID must be defined as compiler flags
   .idProduct            = PID,
   .bcdDevice            = DID,
-  .iManufacturer        = 1,
-  .iProduct             = 2,
-  .iSerialNumber        = 3,
+  .iManufacturer        = USB_STR_MANUFACTURER,
+  .iProduct             = USB_STR_PRODUCT,
+  .iSerialNumber        = USB_STR_SERIAL_NUMBER,
   .bNumConfigurations   = 1,
 };
 
@@ -462,7 +462,7 @@ usb_desc_uac_input_terminal_c uac_input_terminal = {
   .bAssocTerminal     = 0,
   .bNrChannels        = 2, // stereo
   .wChannelConfig     = (UAC_CHANNEL_LEFT | UAC_CHANNEL_RIGHT),
-  .iChannelNames      = 4, // first channel name, other channels must have consequetive indices
+  .iChannelNames      = USB_STR_CHANNEL_NAME_1, // first channel name, other channels must have consequetive indices
   .iTerminal          = 0,
 };
 

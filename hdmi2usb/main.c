@@ -59,8 +59,8 @@ int main() {
           usb_serial_number[ARRAYSIZE(usb_serial_number) - 2 * i + 1] = c_high;
         }
 
-        // make usb use modified DNA FIXME: use a define which string number is for serial number
-        usb_user_strings[2] = usb_serial_number;
+        // make usb use modified DNA
+        usb_user_strings[USB_STR_SERIAL_NUMBER - 1] = usb_serial_number;
     
         // re-enumerate to pick up new serial number
         usb_init(/*disconnect=*/true);
