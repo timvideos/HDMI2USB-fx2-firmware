@@ -6,8 +6,7 @@ This repository contains the firmware used in the
 such as the [Numato Opsis](https://opsis.hdmi2usb.tv) and the Digilent Atlys
 boards.
 
-Firmware is generally compiled with [SDDC 3.6]() and the sdas8051 assembler.
-Older versions *might* work but have been known to generate incorrect firmware.
+Firmware uses [libfx2](https://github.com/whitequark/libfx2), which fx2tool to load and flash firmware. It is compiled with SDCC version 3.9, but other versions may work.
 
 ## [microload](./microload)
 
@@ -29,14 +28,14 @@ The JTAG firmware is used to allow loading gateware onto an FPGA.
 
  * [ixo-usb-jtag](https://github.com/mithro/ixo-usb-jtag)
 
-## [HDMI2USB UVC+CDC](./hdmi2usb)
+## [HDMI2USB UVC+UAC+CDC](./hdmi2usb)
 
 This is the primary firmware for HDMI2USB functionality.
 
 The firmware is responsible for transporting the video data off of the FPGA. It
 does this by enumerating as a USB Video Class device; a standard way of
 interfacing devices such as webcams to a host. Linux, Windows and OS X all
-include support out of the box for reading taking to such devices.
+include support out of the box for reading taking to such devices. It also enumerates as USB audio class for streaming audio data.
 
 The firmware is also used for control and debugging of the system, through a
 USB Communications Class Device. This is a common way of attaching serial ports
@@ -81,22 +80,16 @@ FIXME: Put some documentation about the FX2 here.
 
 # Building
 
-    make load-fx2
+The HDMI2USB firmware is built using *hdmi2usb/Makefile*. To build the firmware [SDCC](http://sdcc.sourceforge.net/) is required.
 
-will build and flash the FX2 firmware. This requires the `hdmi2usb-mode-switch`
-command, which on Debian Stretch and later can be installed using the
-`hdmi2usb-mode-switch` package, otherwise see
-[HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch). It
-also requires [SDCC](http://sdcc.sourceforge.net/).
+To load the firmware, hdmi2usb-mode-switch tool is required:
+
+    hdmi2usb-mode-switch --load-fx2-firmware hdmi2usb/hdmi2usb.ihex
+
+The `hdmi2usb-mode-switch` command can be installed on Debian Stretch and later from the `hdmi2usb-mode-switch` package. Otherwise see [HDMI2USB-mode-switch](https://github.com/timvideos/HDMI2USB-mode-switch).
 
 By default the firmware will be built for the Opsis board. This can be changed
-by passing `BOARD=atlys` to make to build for the Atlys boards. The audio
-firmware also supports `BOARD=fx2miniboard` for building for the Cypress EZ-USB
-FX2LP.
-
-To build the docs, doxygen is required. Then run
-
-    make docs
+by passing `BOARD=atlys` to make to build for the Atlys boards. 
 
 There are three ways to run `hdmi2usb-mode-switch`:
 
