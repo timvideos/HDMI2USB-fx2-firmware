@@ -25,9 +25,9 @@ enum USBConfigInterface {
 // endpoint numbers
 #define USB_CFG_EP_CDC_COMMUNICATION   1 // communication interface, using small endpoint
 #define USB_CFG_EP_CDC_HOST2DEV        2 // data interface OUT
-#define USB_CFG_EP_CDC_DEV2HOST        4 // data interface IN
+#define USB_CFG_EP_UAC                 4
 #define USB_CFG_EP_UVC                 6
-#define USB_CFG_EP_UAC                 8
+#define USB_CFG_EP_CDC_DEV2HOST        8 // data interface IN
 
 // helpers for constructing register names
 // https://stackoverflow.com/a/1489985
