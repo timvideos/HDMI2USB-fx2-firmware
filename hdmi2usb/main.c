@@ -71,8 +71,12 @@ void fx2_usb_config() {
   EP8CFG &= ~_VALID;
 
   // Return FIFO setings back to default just in case previous firmware messed with them
-  SYNCDELAY; PINFLAGSAB = 0x00;
-  SYNCDELAY; PINFLAGSCD = 0x00;
+  // Configure flags:
+  // FLAGA = EP2 ~EF, FLAGB = EP4 ~EF, FLAGC = EP6 ~FF, FLAGD = EP8 ~FF
+  // Configure PA7 as FLAGD
+  SYNCDELAY; PINFLAGSAB = 0b10011000;
+  SYNCDELAY; PINFLAGSCD = 0b11111110;
+  SYNCDELAY; PORTACFG |= _FLAGD;
   SYNCDELAY; FIFOPINPOLAR = 0x00;
 
   // configure FIFO interface
