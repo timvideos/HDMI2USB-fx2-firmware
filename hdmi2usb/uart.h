@@ -5,6 +5,7 @@
 #include <fx2lib.h>
 #include <fx2ints.h>
 #include <fx2regs.h>
+#include <fx2queue.h>
 
 #define UART_TX_PIN PB0
 #define UART_RX_PIN PA0
@@ -30,6 +31,9 @@ struct BitbangUART {
   bool received_flag;
   bool overflow_flag;
 };
+
+DECLARE_QUEUE(uart_tx_queue, uint8_t, 50)
+DECLARE_QUEUE(uart_rx_queue, uint8_t, 50)
 
 // structure used by the interrupt for bitbang uart logic
 extern __xdata volatile struct BitbangUART uart;

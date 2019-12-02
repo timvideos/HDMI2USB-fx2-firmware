@@ -8,6 +8,7 @@
 #include "dna.h"
 #include "uac.h"
 #include "uvc.h"
+#include "uart.h"
 
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
@@ -17,6 +18,9 @@ static void fx2_usb_config();
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
+
+  // configure UART for CDC data transmissions
+  uart_init(9600);
 
   // Configure usb endpoints and fifos
   fx2_usb_config();
@@ -38,8 +42,47 @@ int main() {
 
   EA = 1; // enable interrupts
 
+  // start the state machine
+  uart_start();
+
   while (1) {
     // slave fifos configured in auto mode
+
+    // CDC endpoints are in manual mode
+
+    // TODO: now we assume UART queues are never full!
+
+    // get data from CDC OUT endpoint and send it through UART
+    if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
+      uint16_t i;
+      uint16_t length = (EP_CDC_HOST2DEV(BCH) << 8) | EP_CDC_HOST2DEV(BCL);
+
+      for (i = 0; i < length; ++i) {
+        uint8_t byte = EP_CDC_HOST2DEV(FIFOBUF)[i];
+        QUEUE_PUT(uart_tx_queue, byte);
+      }
+
+      // clear the endpoint
+      EP_CDC_HOST2DEV(BCL) = 0;
+    }
+
+    // get data from UART RX queue and commit it to CDC IN endpoint
+    {
+      uint16_t cdc_in_length = 0;
+
+      while (!QUEUE_EMPTY(uart_rx_queue) && !(EP_CDC_DEV2HOST(CS) & _FULL)) {
+        uint8_t byte;
+        QUEUE_GET(uart_rx_queue, byte);
+        EP_CDC_DEV2HOST(FIFOBUF)[cdc_in_length++] = byte;
+      }
+
+      // if we have written anything, then commit the packet
+      if (cdc_in_length > 0) {
+        EP_CDC_DEV2HOST(BCH) = MSB(cdc_in_length);
+        EP_CDC_DEV2HOST(BCL) = LSB(cdc_in_length);
+      }
+    }
+
   }
 }
 
@@ -104,7 +147,7 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = /* _AUTOOUT */ 0;
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
