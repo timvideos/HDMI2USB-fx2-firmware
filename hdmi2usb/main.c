@@ -8,7 +8,6 @@
 #include "dna.h"
 #include "uac.h"
 #include "uvc.h"
-#include "uart.h"
 
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
