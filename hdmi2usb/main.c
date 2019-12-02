@@ -5,72 +5,42 @@
 
 #include "usb_config.h"
 #include "cdc.h"
+#include "dna.h"
 #include "uac.h"
 #include "uvc.h"
 #include "uart.h"
 
-#define DNA_START_CODE 0xfe
+#define MSB(word) (((word) & 0xff00) >> 8)
+#define LSB(word) ((word) & 0xff)
 
-static char byte2hex(uint8_t byte);
 static void fx2_usb_config();
 
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
 
-  // Use newest chip features.
-  REVCTL = _ENH_PKT|_DYN_OUT;
-
-  // configure usb endpoints and fifos
+  // Configure usb endpoints and fifos
   fx2_usb_config();
+
+  // Wait until FPGA sends DNA over CDC IN endpoint or timeout (EP can't be in auto IN FIFO mode!)
+  try_read_fpga_dna(200);
+
+  // Reconfigure CDC IN endpoint in auto IN mode
+  SYNCDELAY; INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
+  SYNCDELAY; FIFORESET = _NAKALL;
+  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_DEV2HOST|_NAKALL;
+  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = _AUTOOUT|_ZEROLENIN;
+  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
+  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
+  SYNCDELAY; FIFORESET = 0;
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
   EA = 1; // enable interrupts
 
-  // store DNA received from FPGA and use a custom usb serial number to publish DNA
-  uint8_t dna[8];
-  char usb_serial_number[16];
-
   while (1) {
     // slave fifos configured in auto mode
-    
-    if (!(EP_CDC_DEV2HOST(CS) & _EMPTY)) {
-      // inspect data in buffer to check if DNA is being passed
-      if (EP_CDC_DEV2HOST(FIFOBUF)[0] == DNA_START_CODE) {
-        const uint16_t dna_start_code_length = 1;
-        uint16_t buf_length;
-        uint8_t i;
-    
-        // wait until we have whole DNA
-        // we can block as the rest of endpoints is handled by hardware
-        do {
-          buf_length = (EP_CDC_DEV2HOST(BCH) << 8) | EP_CDC_DEV2HOST(BCL);
-        } while (buf_length < dna_start_code_length + ARRAYSIZE(dna));
-    
-        // save dna to USB serial number
-        for (i = 0; i < ARRAYSIZE(dna); ++i) { // two chars for one byte
-          uint8_t byte = EP_CDC_DEV2HOST(FIFOBUF)[dna_start_code_length + i];
-          char c_low = byte2hex(byte & 0x0f);
-          char c_high = byte2hex((byte & 0xf0) >> 4);
-          // save in reverse order - LSB goes as last element of the string
-          usb_serial_number[ARRAYSIZE(usb_serial_number) - 2 * i] = c_low;
-          usb_serial_number[ARRAYSIZE(usb_serial_number) - 2 * i + 1] = c_high;
-        }
-
-        // make usb use modified DNA
-        usb_user_strings[USB_STR_SERIAL_NUMBER - 1] = usb_serial_number;
-    
-        // re-enumerate to pick up new serial number
-        usb_init(/*disconnect=*/true);
-    
-        // ignore endpoint data
-        INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
-      } else { // commit regular data arming an IN tranfser
-        INPKTEND = USB_CFG_EP_CDC_DEV2HOST;
-      }
-    }
   }
 }
 
@@ -101,13 +71,13 @@ void handle_usb_get_interface(uint8_t interface) {
 
 /*** USB registers configuration **********************************************/
 
-#define MSB(word) (((word) & 0xff00) >> 8)
-#define LSB(word) ((word) & 0xff)
-
 void fx2_usb_config() {
   // NAK all transfers.
   SYNCDELAY;
   FIFORESET = _NAKALL;
+
+  // Use newest chip features required for auto slave FIFO operation (TRM 9.3.1)
+  REVCTL = _ENH_PKT|_DYN_OUT;
 
   // first all as invalid
   EP2CFG &= ~_VALID;
@@ -135,7 +105,7 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT|_ZEROLENIN;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT;
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
@@ -168,15 +138,3 @@ void fx2_usb_config() {
   // restore normal operation
   SYNCDELAY; FIFORESET = 0;
 }
-
-// byte must be 4-bit value!
-char byte2hex(uint8_t byte) {
-  char c;
-  if (byte <= 9) {
-    c = byte + '0';
-  } else {
-    c = byte + 'a';
-  }
-  return c;
-}
-

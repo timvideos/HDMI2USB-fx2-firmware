@@ -8,13 +8,10 @@
 usb_ascii_string_c usb_strings[] = {
   [USB_STR_MANUFACTURER   - 1] = "TimVideos.us",
   [USB_STR_PRODUCT        - 1] = "HDMI2USB.tv - Numato Opsis Board",
-  [USB_STR_SERIAL_NUMBER  - 1] = "0123456789abcdef",
+  [USB_STR_SERIAL_NUMBER  - 1] = "0123456789abcdef", // must have length 16 to set it to FPGA DNA
   [USB_STR_CHANNEL_NAME_1 - 1] = "Left",
   [USB_STR_CHANNEL_NAME_2 - 1] = "Right",
 };
-
-// modifiable strings
-char *usb_user_strings[ARRAYSIZE(usb_strings)] = {0};
 
 usb_desc_device_c usb_device = {
   .bLength              = sizeof(struct usb_desc_device),
