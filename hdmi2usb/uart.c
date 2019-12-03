@@ -6,12 +6,15 @@ __xdata volatile struct BitbangUART uart;
 
 void uart_init(uint32_t baudrate) {
   // configure PB0 as TX, PA0 as RX // FIXME: in interrupt we use #define
-  OEB |= (1 << 0); // PB0 as output
   PB0 = 1; // uart is initially high
+  OEB |= (1 << 0); // PB0 as output
 
-  PORTACFG &= ~(1 << 0); // ensure no alternate function on pin PA0
-  OEA = 0; // PA0 as input (and all others)
+  // configure PA0 as alternate function INT0
+  PORTACFG |= 1;
 
+  // configure external interrupt on INT0 for uart rx, negative edge (start bit)
+  IT0 = 1;
+  IP |= 1; // high priority
 
   // configure interrupt timer
   TR2 = 0; // top timer 2
@@ -23,6 +26,28 @@ void uart_init(uint32_t baudrate) {
   // PT2 = 0; // set low priority
 }
 
+// disables the timer and moves uart state machine into standby
+// until ext_interrupt_sync gets called (either by starting TX or on RX external interrupt)
+void ext_interrupt_await() {
+  TR2 = 0; // disable timer
+  IE |= 1; // enable interrupt
+}
+
+// synchronizes uart timer at given moment at the TX phase
+void ext_interrupt_sync() {
+  // first, disable external interrupt
+  IE &= ~1;
+  // set correct phase
+  uart.clk_phase = CLK_TX;
+  // set timer counter to max value, so that it fires in next tick
+  // FIXME: we could set it to reload value and force interrupt
+  TH2 = 0xff;
+  TL2 = 0xff;
+  // start the timer
+  TR2 = 1;
+}
+
+
 void uart_start() {
   TR2 = 1; // start timer
 }
@@ -32,6 +57,11 @@ void uart_send(uint8_t byte) {
   uart.tx.data = byte;
   uart.tx.bit_n = 0;
   uart.tx.state = START_BIT;
+
+  // if timer is not running, than we are in awaiting state so we have to start timer now
+  // if (!TR2) {
+    ext_interrupt_sync();
+  // }
 }
 
 // timer 2 interrupt for software uart
@@ -39,8 +69,8 @@ void isr_TF2() __interrupt(_INT_TF2) {
   TF2 = 0; // clear timer overflow flag
 
   // transmit in first clock tick, receive in the second one
-  if (uart.clk_phase == 0) {
-    uart.clk_phase = 1;
+  if (uart.clk_phase == CLK_TX) {
+    uart.clk_phase = CLK_RX;
 
     // transmit state machine
     switch (uart.tx.state) {
@@ -64,7 +94,7 @@ void isr_TF2() __interrupt(_INT_TF2) {
         break;
     }
   } else { // receive phase
-    uart.clk_phase = 0; // next is tx
+    uart.clk_phase = CLK_TX;
 
     // receive state machine
     switch (uart.rx.state) {
@@ -101,6 +131,30 @@ void isr_TF2() __interrupt(_INT_TF2) {
         break;
     }
   }
+
+  // check if we are in idle state
+  // we want to enable external interrupt synchronization only if we are not sending nor receiving
+  // this external interrupt will be disabled in the handler when it occurs (and will reenable this interrupt)
+  if (uart.tx.state == IDLE && uart.rx.state == IDLE) {
+    uart.idle_counter++;
+    if (uart.idle_counter > UART_IDLE_TICKS) {
+      uart.idle_counter = 0;
+      ext_interrupt_await();
+    }
+  } else {
+    uart.idle_counter = 0;
+  }
+
+}
+
+// external interrupt on pin INT0
+void isr_IE0() __interrupt(_INT_IE0) {
+  // IE0 is automatically cleared by hardware
+
+  // this gets fired when we there is a falling edge (we assume it is the START BIT)
+  // we want to synchronize Timer 2 to that moment by starting it with clk_phase = TX,
+  // as the falling edge is the phase when TX happens, so RX will happen 180 deg later
+  ext_interrupt_sync();
 }
 
 
