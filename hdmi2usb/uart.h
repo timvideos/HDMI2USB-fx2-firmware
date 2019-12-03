@@ -15,40 +15,24 @@
 // disabled and is restarted on RX external interrupt (or on TX)
 #define UART_IDLE_TICKS 6
 
-enum UARTState {
-  IDLE = 0,
-  START_BIT,
-  DATA,
-  END_BIT
-};
+#define UART_TX_QUEUE_SIZE 50
+#define UART_RX_QUEUE_SIZE 50
 
-enum UARTClkPhase {
-  CLK_TX,
-  CLK_RX
-};
 
-struct UARTStateMachine {
-  enum UARTState state;
-  uint8_t data;
-  uint8_t bit_n;
-};
-
-struct BitbangUART {
-  struct UARTStateMachine tx;
-  struct UARTStateMachine rx;
-  enum UARTClkPhase clk_phase;
-  uint8_t rx_buf;
-  bool received_flag;
-  bool overflow_flag;
-  uint8_t idle_counter;
-};
-
-// structure used by the interrupt for bitbang uart logic
-extern __xdata volatile struct BitbangUART uart;
-
+/**
+ * Configures UART for given baudrate and starts listening for incoming data
+ */
 void uart_init(uint32_t baudrate);
-void uart_start();
-void uart_send(uint8_t byte);
+
+/**
+ * Send byte using bitbang UART. Returns false if TX queue is full.
+ */
+bool uart_push(uint8_t byte);
+
+/**
+ * Get byte from UART RX queue. Returns false if RX queue is empty.
+ */
+bool uart_pop(uint8_t *byte);
 
 
 #endif /* UART_H */

@@ -15,11 +15,6 @@
 
 static void fx2_usb_config();
 
-DECLARE_QUEUE(uart_tx_queue, __xdata uint8_t, 50)
-DEFINE_QUEUE(uart_tx_queue, __xdata uint8_t, 50)
-DECLARE_QUEUE(uart_rx_queue, __xdata uint8_t, 50)
-DEFINE_QUEUE(uart_rx_queue, __xdata uint8_t, 50)
-
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
@@ -49,14 +44,10 @@ int main() {
 
   EA = 1; // enable interrupts
 
-  // start the state machine
-  uart_start();
-
   while (1) {
     // slave fifos configured in auto mode
 
-    // CDC endpoints are in manual mode
-    // TODO: now we assume UART queues are never full!
+    // CDC endpoints are in manual mode, we send/read CDC data through UART
 
     // get data from CDC OUT endpoint and send it to UART TX queue
     if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
@@ -64,37 +55,21 @@ int main() {
       uint16_t length = (EP_CDC_HOST2DEV(BCH) << 8) | EP_CDC_HOST2DEV(BCL);
 
       for (i = 0; i < length; ++i) {
-        if (QUEUE_FULL(uart_tx_queue))
+        if (!uart_push(EP_CDC_HOST2DEV(FIFOBUF)[i]))
           break; // TODO: we're dropping data if queue is full
-        uint8_t byte = EP_CDC_HOST2DEV(FIFOBUF)[i];
-        QUEUE_PUT(uart_tx_queue, byte);
       }
 
       // clear the endpoint
       EP_CDC_HOST2DEV(BCL) = 0;
     }
 
-    // pop byte from TX queue and send it
-    if (!QUEUE_EMPTY(uart_tx_queue) && uart.tx.state == IDLE) {
-      uint8_t byte;
-      QUEUE_GET(uart_tx_queue, byte);
-      uart_send(byte); // now in interrupt subsequent bits will be sent
-    }
-
-    // pop last received byte and queue it in RX queue
-    if (uart.received_flag && !QUEUE_FULL(uart_rx_queue)) {
-        uint8_t byte = uart.rx_buf;
-        QUEUE_PUT(uart_rx_queue, byte);
-        uart.received_flag = false;
-    }
-
     // get data from UART RX queue and commit it to CDC IN endpoint
     {
       uint16_t cdc_in_length = 0;
+      uint8_t byte = 0;
 
-      while (!QUEUE_EMPTY(uart_rx_queue) && !(EP_CDC_DEV2HOST(CS) & _FULL)) {
-        uint8_t byte;
-        QUEUE_GET(uart_rx_queue, byte);
+      // order matters! first check if EP is full, then pop from queue
+      while (!(EP_CDC_DEV2HOST(CS) & _FULL) && uart_pop(&byte)) {
         EP_CDC_DEV2HOST(FIFOBUF)[cdc_in_length++] = byte;
       }
 
