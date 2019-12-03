@@ -18,7 +18,7 @@ void uart_init(uint32_t baudrate) {
   set_tim2_frequency(baudrate * 2); // we need 2 times faster clock than the actual baudrate
   T2CON = 0x00; // configure timer 2 in default auto-reload mode
   ET2 = 1; // enable timer 2 interrupt
-  
+
   PT2 = 1; // set high priority
   // PT2 = 0; // set low priority
 }
@@ -27,7 +27,7 @@ void uart_start() {
   TR2 = 1; // start timer
 }
 
-void uart_queue_send(uint8_t byte) {
+void uart_send(uint8_t byte) {
   // TODO: add actual queueing logic
   uart.tx.data = byte;
   uart.tx.bit_n = 0;

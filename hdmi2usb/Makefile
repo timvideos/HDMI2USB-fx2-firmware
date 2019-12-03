@@ -5,7 +5,7 @@ BOARD        ?= opsis
 SYNCDELAYLEN ?= 4
 
 LIBFX2DIR = ../third_party/libfx2
-SOURCES = main descriptors cdc uvc uac dna
+SOURCES = main descriptors cdc uvc uac uart dna
 
 ifeq (${BOARD},atlys)
 	VID := 1D50

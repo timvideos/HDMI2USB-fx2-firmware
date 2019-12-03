@@ -32,15 +32,12 @@ struct BitbangUART {
   bool overflow_flag;
 };
 
-DECLARE_QUEUE(uart_tx_queue, uint8_t, 50)
-DECLARE_QUEUE(uart_rx_queue, uint8_t, 50)
-
 // structure used by the interrupt for bitbang uart logic
 extern __xdata volatile struct BitbangUART uart;
 
 void uart_init(uint32_t baudrate);
 void uart_start();
-void uart_queue_send(uint8_t byte);
+void uart_send(uint8_t byte);
 
 
 #endif /* UART_H */

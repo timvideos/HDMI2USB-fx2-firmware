@@ -15,6 +15,11 @@
 
 static void fx2_usb_config();
 
+DECLARE_QUEUE(uart_tx_queue, __xdata uint8_t, 50)
+DEFINE_QUEUE(uart_tx_queue, __xdata uint8_t, 50)
+DECLARE_QUEUE(uart_rx_queue, __xdata uint8_t, 50)
+DEFINE_QUEUE(uart_rx_queue, __xdata uint8_t, 50)
+
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
@@ -28,6 +33,7 @@ int main() {
   // Wait until FPGA sends DNA over CDC IN endpoint or timeout (EP can't be in auto IN FIFO mode!)
   try_read_fpga_dna(200);
 
+#if 0 // TODO: manual mode is required for CDC to UART
   // Reconfigure CDC IN endpoint in auto IN mode
   SYNCDELAY; INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
   SYNCDELAY; FIFORESET = _NAKALL;
@@ -36,6 +42,7 @@ int main() {
   SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
   SYNCDELAY; FIFORESET = 0;
+#endif
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
@@ -49,21 +56,36 @@ int main() {
     // slave fifos configured in auto mode
 
     // CDC endpoints are in manual mode
-
     // TODO: now we assume UART queues are never full!
 
-    // get data from CDC OUT endpoint and send it through UART
+    // get data from CDC OUT endpoint and send it to UART TX queue
     if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
       uint16_t i;
       uint16_t length = (EP_CDC_HOST2DEV(BCH) << 8) | EP_CDC_HOST2DEV(BCL);
 
       for (i = 0; i < length; ++i) {
+        if (QUEUE_FULL(uart_tx_queue))
+          break; // TODO: we're dropping data if queue is full
         uint8_t byte = EP_CDC_HOST2DEV(FIFOBUF)[i];
         QUEUE_PUT(uart_tx_queue, byte);
       }
 
       // clear the endpoint
       EP_CDC_HOST2DEV(BCL) = 0;
+    }
+
+    // pop byte from TX queue and send it
+    if (!QUEUE_EMPTY(uart_tx_queue) && uart.tx.state == IDLE) {
+      uint8_t byte;
+      QUEUE_GET(uart_tx_queue, byte);
+      uart_send(byte); // now in interrupt subsequent bits will be sent
+    }
+
+    // pop last received byte and queue it in RX queue
+    if (uart.received_flag && !QUEUE_FULL(uart_rx_queue)) {
+        uint8_t byte = uart.rx_buf;
+        QUEUE_PUT(uart_rx_queue, byte);
+        uart.received_flag = false;
     }
 
     // get data from UART RX queue and commit it to CDC IN endpoint
@@ -138,7 +160,7 @@ void fx2_usb_config() {
 
   // configure FIFO interface
   // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
-  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG1;
+  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0/* |_IFCFG1|_IFCFG1 FIXME: conflicting UART pins */;
 
   // CDC interrupt endpoint
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
