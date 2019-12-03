@@ -169,7 +169,8 @@ void set_tim2_frequency(uint32_t baud_rate) {
   // so we use Timer 2
   uint16_t rcap2hl;    // value of RCAP2HL before splitting into H and L
   uint8_t clk_multip;  // multiplier depeding on processor clock speed
-  uint32_t tmp;        // for better accuracy in calculations
+  uint32_t n_clocks;
+  uint32_t clk_out;
 
   // CPU clock speed multiplier:
   // 00 - 12MHz: x1
@@ -178,17 +179,60 @@ void set_tim2_frequency(uint32_t baud_rate) {
   // so 2^CLKSPD
   clk_multip = 1 << CPUCLKSPD;
 
-  // calculate baud rate
-  // RCAP2HL = 65536 * CLKOUT / (32 * BaudRate)
-  tmp = clk_multip * 375000L * 2;
-  tmp /= baud_rate;
-  tmp += 1;
-  tmp /= 2;
+  // use CLKOUT/4
+  CKCON |= _T2M;
+
+  clk_out = 12000000ul / 4 * clk_multip;
+
+  // to get desired baud rate f_baud
+  // f_baud = clk_out / n_clocks
+  // n_clocks = clk_out / f_baud
+  // because the timer counts from RCAP2HL up to 0xffff it can be calculated as:
+  // RCAP2HL = 0xffff - (n_clocks - 1)
+  n_clocks = clk_out / baud_rate;
+  rcap2hl = 0xffff - (uint16_t) (n_clocks - 1);
 
   // save the baudrate
-  rcap2hl = 0xFFFF - (uint16_t) tmp;
-  RCAP2H= MSB(rcap2hl);
-  // seems that the 24/48mhz calculations are always one less than suggested values (TRM table 14-16)
-  RCAP2L= LSB(rcap2hl) + (clk_multip > 0 ? 1 : 0);
+  RCAP2H = MSB(rcap2hl);
+  RCAP2L = LSB(rcap2hl);
 }
 
+// Code to test baudrate generation error
+// NOTE: timer must actually be configured for 2x the desired baudrate
+// NOTE: these are only about timer frequency correctness, processor may not be able to handle high baudrates
+#if 0
+#!/usr/bin/env python
+
+tested = [2400, 4800, 9600, 19200, 28800, 38400, 57600, 115200, 230400, 1000000, 2000000]
+
+#  def u16(h, l):
+#      return ((h & 0xff) << 8) | (l & 0xff)
+
+# simulate calculating rcap
+def calc_rcap(baud, clk_multip):
+    clk_out = int(12e6) // 4 * clk_multip
+    n_clocks = clk_out // int(baud)
+    rcap = 0xffff - (n_clocks - 1)
+    return rcap
+
+# get actual baud rate for given rcap
+def calc_baud(rcap, clk_multip):
+    clk_out = 12e6 * int(clk_multip) / 4
+    n_clocks = (0xffff - int(rcap)) + 1
+    baud = clk_out / n_clocks
+    return baud
+
+def test_baud_error(baud_desired, clk_multip):
+    rcap = calc_rcap(baud_desired, clk_multip)
+    baud_real = calc_baud(rcap, clk_multip)
+    rel_error = (baud_real - baud_desired) / baud_desired
+    return baud_real, rel_error
+
+print('Clk freq, Baud desired,     Baud real, Rel error')
+for clk_multip in [1, 2, 4]:
+    for baud in tested:
+        baud_real, rel_error = test_baud_error(baud, clk_multip)
+        print('  {clk} MHz,   {desired:6} bps, {actual:9.2f} bps, {err:7.3f} %'.format(
+            clk=12 * clk_multip, desired=baud, actual=baud_real, err=rel_error * 100
+        ))
+#endif
