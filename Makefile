@@ -10,7 +10,7 @@
 ### files.
 ###
 ### Being a programmable device, the FX2 can emulate many other USB devices. We
-### use it to emulate a USB UVC Webcam, USB Audio device and a USB CDC-ACM serial 
+### use it to emulate a USB UVC Webcam, USB Audio device and a USB CDC-ACM serial
 ### port.
 
 MODESWITCH_CMD = hdmi2usb-mode-switch
@@ -19,7 +19,7 @@ LIBFX2DIR = ./third_party/libfx2
 all: conda firmware-fx2
 
 ###
-### conda - self contained environment 
+### conda - self contained environment
 ### ----------------------------------------------------------------------------
 
 export PATH := $(shell pwd)/conda/bin:$(PATH)
@@ -31,7 +31,7 @@ Miniconda3-latest-Linux-x86_64.sh:
 	wget -c https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 	@chmod a+x Miniconda3-latest-Linux-x86_64.sh
 
-conda: Miniconda3-latest-Linux-x86_64.sh ### 
+conda: Miniconda3-latest-Linux-x86_64.sh ###
 	@echo
 	@echo " Setting up conda"
 	@echo "-----------------------------"
@@ -53,7 +53,7 @@ clean-conda: ###
 	rm Miniconda3-*.sh || true
 
 ###
-### FX2 HDMI2USB firmware 
+### FX2 HDMI2USB firmware
 ### ----------------------------------------------------------------------------
 
 firmware-fx2: libfx2 hdmi2usb/hdmi2usb.ihex ###
@@ -91,7 +91,7 @@ $(LIBFX2DIR)/.git: .gitmodules
 ### Microload bootloader
 ### ----------------------------------------------------------------------------
 
-microload: fifo-microload i2c-microload ###
+microload: microload-fifo microload-i2c ###
 
 microload-fifo: ###
 	$(MAKE) -C microload fifo
@@ -116,7 +116,7 @@ clean-unconfigured:
 	$(MAKE) -C eeprom-unconfigured clean
 
 ###
-### Documentation 
+### Documentation
 ### ----------------------------------------------------------------------------
 
 docs: export PROJECT_NUMBER:=$(shell git describe --always --dirty --long)
