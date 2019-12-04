@@ -151,8 +151,8 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK IN.
   EP_CDC_DEV2HOST(CFG) = _VALID|_DIR|_TYPE1|_BUF1;
   EP_CDC_DEV2HOST(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = 0;
-  // no automatic committing as we need to first check for DNA
+  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = 0;
+  // manual mode, data passed to FPGA through UART
 
   // UVC 512-byte double buffered ISOCHRONOUS IN
   EP_UVC(CFG) = _VALID|_DIR|_TYPE0|_BUF1;
