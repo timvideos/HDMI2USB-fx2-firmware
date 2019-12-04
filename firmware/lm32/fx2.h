@@ -5,9 +5,9 @@
 #include <stdbool.h>
 
 enum fx2_fw_version {
-	FX2FW_USBJTAG,
+  FX2FW_USBJTAG,
 #ifdef ENCODER_BASE
-	FX2FW_HDMI2USB,
+  FX2FW_HDMI2USB,
 #endif
 };
 
