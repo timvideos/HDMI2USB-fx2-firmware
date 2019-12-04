@@ -24,7 +24,7 @@ bool try_read_fpga_dna(uint16_t max_wait_ms) {
         dna_start_index++;
       } else { // consider remaining data as DNA starting from next byte
         copy_dna_to_serial_number(EP_CDC_DEV2HOST(FIFOBUF) + dna_start_index + 1);
-        return true; 
+        return true;
       }
     // interate as long as there is space for a potential DNA packet (packet = start byte + DNA)
     } while (ep_data_len >= dna_start_index + 1 + DNA_LENGTH);
@@ -32,9 +32,9 @@ bool try_read_fpga_dna(uint16_t max_wait_ms) {
     // use simple inaccurate wait on delays as we don't really need too much precision
     delay_ms(DNA_WAIT_TIMEOUT_PRECISION_MS);
     // decrease remaining time, avoid overflow through zero
-    if (max_wait_ms < DNA_WAIT_TIMEOUT_PRECISION_MS) 
+    if (max_wait_ms < DNA_WAIT_TIMEOUT_PRECISION_MS)
       max_wait_ms = 0;
-    else 
+    else
       max_wait_ms -= DNA_WAIT_TIMEOUT_PRECISION_MS;
   }
 
@@ -53,8 +53,8 @@ void copy_dna_to_serial_number(uint8_t *from_buf) {
     char c_high = byte2hex((from_buf[i] & 0xf0) >> 4);
 
     // save in reverse order - LSB goes as last element of the string
-    usb_serial_number[DNA_USB_SERIAL_NUMBER_LENGTH - 2*i] = c_low;
-    usb_serial_number[DNA_USB_SERIAL_NUMBER_LENGTH - (2*i + 1)] = c_high;
+    usb_serial_number[DNA_USB_SERIAL_NUMBER_LENGTH - 1 - 2*i] = c_low;
+    usb_serial_number[DNA_USB_SERIAL_NUMBER_LENGTH - 1 - (2*i + 1)] = c_high;
   }
 }
 
