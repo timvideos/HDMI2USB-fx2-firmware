@@ -14,7 +14,6 @@
 ### port.
 
 MODESWITCH_CMD = hdmi2usb-mode-switch
-DFU_UTIL = dfu-util
 FX2TOOL = fx2tool
 LIBFX2DIR = ./third_party/libfx2
 
@@ -65,10 +64,7 @@ load-fx2: firmware-fx2 ###
 	$(MODESWITCH_CMD) --load-fx2-firmware hdmi2usb/hdmi2usb.hex
 
 flash-fx2: libfx2-boot-dfu hdmi2usb/hdmi2usb.dfu ###
-	$(MODESWITCH_CMD) --load-fx2-firmware $(LIBFX2DIR)/firmware/boot-dfu/boot-dfu.ihex
-	@sleep 1 # wait until it reenumerates
-	@./unbind-drivers.sh
-	$(DFU_UTIL) -D hdmi2usb/hdmi2usb.dfu
+	$(MODESWITCH_CMD) --flash-fx2-eeprom hdmi2usb/hdmi2usb.dfu
 
 clean-fx2: ###
 	$(MAKE) -C hdmi2usb clean
