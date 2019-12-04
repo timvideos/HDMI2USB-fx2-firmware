@@ -6,6 +6,7 @@
 
 #include "usb_config.h"
 
+// TODO: this is unsafe, it is for debugging only so use consistent DEBUG define
 #include <stdio.h>
 #define cdc_printf(...)                                         \
     do {                                                        \
@@ -15,9 +16,7 @@
       EP_CDC_DEV2HOST(BCL) = len & 0xff;                        \
     } while (0);                                                \
 
-// void cdc_init();
 bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req);
-// void cdc_handle_IBN();
 void cdc_poll();
 
 #endif /* CDC_H */

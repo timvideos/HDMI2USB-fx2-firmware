@@ -8,6 +8,7 @@
 #include "dna.h"
 #include "uac.h"
 #include "uvc.h"
+#include "uart.h"
 
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
@@ -18,12 +19,16 @@ int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
 
+  // configure UART for CDC data transmissions
+  uart_init(9600);
+
   // Configure usb endpoints and fifos
   fx2_usb_config();
 
   // Wait until FPGA sends DNA over CDC IN endpoint or timeout (EP can't be in auto IN FIFO mode!)
   try_read_fpga_dna(200);
 
+#if 0 // TODO: manual mode is required for CDC to UART
   // Reconfigure CDC IN endpoint in auto IN mode
   SYNCDELAY; INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
   SYNCDELAY; FIFORESET = _NAKALL;
@@ -32,6 +37,7 @@ int main() {
   SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
   SYNCDELAY; FIFORESET = 0;
+#endif
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
@@ -40,6 +46,40 @@ int main() {
 
   while (1) {
     // slave fifos configured in auto mode
+
+    // CDC endpoints are in manual mode, we send/read CDC data through UART
+
+    // get data from CDC OUT endpoint and send it to UART TX queue
+    if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
+      uint16_t i;
+      uint16_t length = (EP_CDC_HOST2DEV(BCH) << 8) | EP_CDC_HOST2DEV(BCL);
+
+      for (i = 0; i < length; ++i) {
+        if (!uart_push(EP_CDC_HOST2DEV(FIFOBUF)[i]))
+          break; // TODO: we're dropping data if queue is full
+      }
+
+      // clear the endpoint
+      EP_CDC_HOST2DEV(BCL) = 0;
+    }
+
+    // get data from UART RX queue and commit it to CDC IN endpoint
+    {
+      uint16_t cdc_in_length = 0;
+      uint8_t byte = 0;
+
+      // order matters! first check if EP is full, then pop from queue
+      while (!(EP_CDC_DEV2HOST(CS) & _FULL) && uart_pop(&byte)) {
+        EP_CDC_DEV2HOST(FIFOBUF)[cdc_in_length++] = byte;
+      }
+
+      // if we have written anything, then commit the packet
+      if (cdc_in_length > 0) {
+        EP_CDC_DEV2HOST(BCH) = MSB(cdc_in_length);
+        EP_CDC_DEV2HOST(BCL) = LSB(cdc_in_length);
+      }
+    }
+
   }
 }
 
@@ -95,7 +135,7 @@ void fx2_usb_config() {
 
   // configure FIFO interface
   // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
-  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG1;
+  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0/* |_IFCFG1|_IFCFG1 FIXME: conflicting UART pins */;
 
   // CDC interrupt endpoint
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
@@ -104,7 +144,7 @@ void fx2_usb_config() {
   // CDC 512-byte double buffed BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = /* _AUTOOUT */ 0;
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
