@@ -27,7 +27,7 @@ struct BitbangUART {
   struct UARTStateMachine tx;
   struct UARTStateMachine rx;
   enum UARTClkPhase clk_phase;
-  bool overflow_flag;
+  uint8_t overflow_flag;
   uint8_t idle_counter;
 };
 
@@ -172,7 +172,7 @@ void isr_TF2() __interrupt(_INT_TF2) {
           uart.rx.state = IDLE;
           if (UART_RX_PIN != 0) {
             if (QUEUE_FULL(uart_rx_queue)) {
-              uart.overflow_flag;
+              uart.overflow_flag = 1;
             } else {
               QUEUE_PUT(uart_rx_queue, uart.rx.data);
             }
