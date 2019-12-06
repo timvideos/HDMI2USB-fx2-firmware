@@ -3,10 +3,10 @@
 extern usb_descriptor_set_c usb_descriptor_set;
 
 // keeps track of current alternate setting of streaming interface
-uint8_t uac_as_alt_setting = 0;
+__xdata uint8_t uac_as_alt_setting = 0;
 // store the interface numbers for set/get interface handlers
-static uint8_t if_num_ctrl;
-static uint8_t if_num_streaming;
+__xdata static uint8_t if_num_ctrl;
+__xdata static uint8_t if_num_streaming;
 
 bool uac_handle_usb_set_interface(uint8_t interface, uint8_t alt_setting) {
   if (interface == if_num_ctrl && alt_setting == 0) {
