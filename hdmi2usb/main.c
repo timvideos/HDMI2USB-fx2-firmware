@@ -24,13 +24,21 @@ int main() {
 
   // Descriptors
   {
-    struct cdc_config config = {
+    struct cdc_configuration config = {
       .if_num_comm = USB_CFG_IF_CDC_COMMUNICATION,
       .ep_addr_comm = USB_CFG_EP_CDC_COMMUNICATION,
       .ep_addr_data_host2dev = USB_CFG_EP_CDC_HOST2DEV,
       .ep_addr_data_dev2host = USB_CFG_EP_CDC_DEV2HOST,
     };
     cdc_config(&config);
+  }
+  {
+    struct uvc_configuration config = {
+      .if_num_ctrl = USB_CFG_IF_UVC_VIDEO_CONTROL,
+      .if_num_streaming = USB_CFG_IF_UVC_VIDEO_STREAMING,
+      .ep_addr_streaming = USB_CFG_EP_UVC,
+    };
+    uvc_config(&config);
   }
 
   // Configure usb endpoints and fifos

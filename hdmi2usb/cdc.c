@@ -1,6 +1,6 @@
 #include "cdc.h"
 
-void cdc_config(struct cdc_config *config) {
+void cdc_config(struct cdc_configuration *config) {
   // configure interface numbers
   uint8_t if_num_data = config->if_num_comm + 1;
   ((__xdata struct usb_desc_interface *) &usb_cdc_if_cic)->bInterfaceNumber = config->if_num_comm;
