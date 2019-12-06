@@ -4,6 +4,7 @@
 #include <fx2delay.h>
 #include <fx2usb.h>
 #include "usb_config.h"
+#include "uart.h"
 
 static char byte2hex(uint8_t byte);
 static void copy_dna_to_serial_number(uint8_t *from_buf);
@@ -11,7 +12,45 @@ static void copy_dna_to_serial_number(uint8_t *from_buf);
 // usb strings defined with descriptors
 extern usb_ascii_string_c usb_strings[];
 
-bool try_read_fpga_dna(uint16_t max_wait_ms) {
+bool try_read_fpga_dna_uart(uint16_t max_wait_ms) {
+  uint8_t dna_buf[DNA_LENGTH];
+  uint8_t dna_buf_i = 0;
+
+  while (max_wait_ms > 0) {
+    bool dna_started = false;
+    uint8_t byte;
+
+    // pop data until we find start byte
+    if (!dna_started && uart_pop(&byte) && byte == DNA_START_CODE) {
+      dna_started = true;
+    }
+
+    // now we are copying DNA to the buffer
+    if (dna_started) {
+      // read any missing data
+      while (dna_buf_i < DNA_LENGTH && uart_pop(&byte)) {
+        dna_buf[dna_buf_i++] = byte;
+      }
+      // if we have whole DNA, then set serial number and exit
+      if (dna_buf_i == DNA_LENGTH) {
+        copy_dna_to_serial_number(dna_buf);
+        return true;
+      }
+    }
+
+    // use simple inaccurate wait on delays as we don't really need too much precision
+    delay_ms(DNA_WAIT_TIMEOUT_PRECISION_MS);
+    // decrease remaining time, avoid overflow through zero
+    if (max_wait_ms < DNA_WAIT_TIMEOUT_PRECISION_MS)
+      max_wait_ms = 0;
+    else
+      max_wait_ms -= DNA_WAIT_TIMEOUT_PRECISION_MS;
+  }
+
+  return false; // DNA not sent
+}
+
+bool try_read_fpga_dna_ep(uint16_t max_wait_ms) {
   uint16_t dna_start_index = 0;  // to be able to find DNA packets in middle of buffer
   uint16_t ep_data_len;
 

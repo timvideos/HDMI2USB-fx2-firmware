@@ -12,8 +12,10 @@
 /**
  * Tries reading CDC IN endpoint to find DNA packet sent from FPGA.
  * Timeouts after approximatelly max_wait_ms (more as simple delay is used).
- * The timeout 
+ * The timeout
  */
-bool try_read_fpga_dna(uint16_t max_wait_ms);
+// TODO: make this depend on configuration option instead of duplicating code
+bool try_read_fpga_dna_uart(uint16_t max_wait_ms);
+bool try_read_fpga_dna_ep(uint16_t max_wait_ms);
 
 #endif /* DNA_H */

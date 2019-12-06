@@ -25,8 +25,8 @@ int main() {
   // Configure usb endpoints and fifos
   fx2_usb_config();
 
-  // Wait until FPGA sends DNA over CDC IN endpoint or timeout (EP can't be in auto IN FIFO mode!)
-  try_read_fpga_dna(200);
+  // Wait until FPGA sends DNA over serial
+  try_read_fpga_dna_uart(200);
 
 #if 0 // TODO: manual mode is required for CDC to UART
   // Reconfigure CDC IN endpoint in auto IN mode
