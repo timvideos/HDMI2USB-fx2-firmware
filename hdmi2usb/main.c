@@ -13,7 +13,7 @@
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
 
-static void fx2_usb_config();
+static void fx2_config();
 
 int main() {
   // Run core at 48 MHz fCLK.
@@ -24,7 +24,7 @@ int main() {
 
   // Descriptors
   {
-    struct cdc_configuration config = {
+    __xdata struct cdc_configuration config = {
       .if_num_comm = USB_CFG_IF_CDC_COMMUNICATION,
       .ep_addr_comm = USB_CFG_EP_CDC_COMMUNICATION,
       .ep_addr_data_host2dev = USB_CFG_EP_CDC_HOST2DEV,
@@ -33,14 +33,14 @@ int main() {
     cdc_config(&config);
   }
   {
-    struct uvc_configuration config = {
+    __xdata struct uvc_configuration config = {
       .if_num_ctrl = USB_CFG_IF_UVC_VIDEO_CONTROL,
       .ep_addr_streaming = USB_CFG_EP_UVC,
     };
     uvc_config(&config);
   }
   {
-    struct uac_configuration config = {
+    __xdata struct uac_configuration config = {
       .if_num_ctrl = USB_CFG_IF_UAC_AUDIO_CONTROL,
       .ep_addr_streaming = USB_CFG_EP_UAC,
     };
@@ -48,7 +48,7 @@ int main() {
   }
 
   // Configure usb endpoints and fifos
-  fx2_usb_config();
+  fx2_config();
 
   // Wait until FPGA sends DNA over serial
   try_read_fpga_dna_uart(200);
@@ -56,11 +56,18 @@ int main() {
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
-  EA = 1; // enable interrupts
-
   while (1) {
-    // UVC, UAC and CDC OUT endpoints configured with slave fifos in auto mode - nothing to do
-    // CDC IN endpoint in manual mode, we read CDC data using UART
+    // UVC, UAC endpoints configured with slave fifos in auto mode - nothing to do
+    // CDC IN/OUT endpoint in manual mode
+    // we read CDC IN data from FPGA using UART
+    // we send CDC OUT data to FPGA through manual slave FIFO
+
+    // commit CDC OUT packets of any length to ensure low serial latency
+    if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
+      cdc_printf("\r\ngot something\r\n");
+      EP_CDC_HOST2DEV(BCL) = 0;
+      // SYNCDELAY; OUTPKTEND = USB_CFG_EP_CDC_HOST2DEV;
+    }
 
     // get data from UART RX queue and commit it to CDC IN endpoint
     {
@@ -109,19 +116,10 @@ void handle_usb_get_interface(uint8_t interface) {
 
 /*** USB registers configuration **********************************************/
 
-void fx2_usb_config() {
-  // NAK all transfers.
-  SYNCDELAY;
-  FIFORESET = _NAKALL;
-
+// configures slave FIFO interface for fx2crossbar compatibility
+void fifo_interface_config() {
   // Use newest chip features required for auto slave FIFO operation (TRM 9.3.1)
   REVCTL = _ENH_PKT|_DYN_OUT;
-
-  // first all as invalid
-  EP2CFG &= ~_VALID;
-  EP4CFG &= ~_VALID;
-  EP6CFG &= ~_VALID;
-  EP8CFG &= ~_VALID;
 
   // Return FIFO setings back to default just in case previous firmware messed with them
   // Configure flags:
@@ -135,52 +133,50 @@ void fx2_usb_config() {
   // configure FIFO interface
   // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
   SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG0;
+}
 
-  // CDC interrupt endpoint
+void endpoints_config() {
+  // "small" endpoint for CDC interrupt
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
   EP1OUTCFG &= ~_VALID; // EP1OUT not used
 
-  // The "big" endpoints for interfacing to FPGA through slave FIFO interface.
-  // FX2 Crossbar supports 2 OUT FIFOs and 2 IN FIFOs, so:
-  // * we use OUT FIFOs for audio and video,
-  // * we use one IN FIFO for CDC OUT endpoint (HOST->FX2->FPGA),
-  // * CDC IN endpoint data (FPGA->FX2->HOST) is passed using UART, so FIFO
-  //   is not configured here.
-
-  // CDC 512-byte double buffered BULK OUT
+  // "big" endpoints
+  // CDC: 512-byte, double buffed, BULK OUT.
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
-  EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT;
-  SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
-
-  // CDC 512-byte double buffed BULK IN.
+  // CDC: 512-byte, double buffed, BULK IN.
   EP_CDC_DEV2HOST(CFG) = _VALID|_DIR|_TYPE1|_BUF1;
-  EP_CDC_DEV2HOST(CS) = 0;
-  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = 0;
-  // manual mode, data passed to FPGA through UART
+  // UVC: 512-byte, double buffered, ISOCHRONOUS IN
+  EP_UVC(CFG)          = _VALID|_DIR|_TYPE0|_BUF1;
+  // UAC: 512-byte, double buffered, ISOCHRONOUS IN
+  EP_UAC(CFG)          = _VALID|_DIR|_TYPE0|_BUF1;
+}
 
-  // UVC 512-byte double buffered ISOCHRONOUS IN
-  EP_UVC(CFG) = _VALID|_DIR|_TYPE0|_BUF1;
-  // FIFO: auto commit IN packets, set length of 512
-  SYNCDELAY; EP_UVC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
-  SYNCDELAY; EP_UVC(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_UVC(AUTOINLENL) = LSB(512);
-
-  // UAC 512-byte double buffered ISOCHRONOUS IN
-  EP_UAC(CFG) = _VALID|_DIR|_TYPE0|_BUF1;
-  SYNCDELAY; EP_UAC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
-  SYNCDELAY; EP_UAC(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_UAC(AUTOINLENL) = LSB(512);
-
-  // reset (and skip) endpoints
-  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_HOST2DEV|_NAKALL;
-  SYNCDELAY; OUTPKTEND = USB_CFG_EP_CDC_HOST2DEV|_SKIP;
-  SYNCDELAY; OUTPKTEND = USB_CFG_EP_CDC_HOST2DEV|_SKIP;
-  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_DEV2HOST|_NAKALL;
-  SYNCDELAY; FIFORESET = USB_CFG_EP_UVC|_NAKALL;
-  SYNCDELAY; FIFORESET = USB_CFG_EP_UAC|_NAKALL;
-
+void fifo_config() {
+  // NAK all transfers.
+  SYNCDELAY; FIFORESET = _NAKALL;
+  // reset endpoint fifos
+  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_HOST2DEV;
+  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_DEV2HOST;
+  SYNCDELAY; FIFORESET = USB_CFG_EP_UVC;
+  SYNCDELAY; FIFORESET = USB_CFG_EP_UAC;
   // restore normal operation
   SYNCDELAY; FIFORESET = 0;
+
+  // configure auto fifo modes for endpoints
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = 0;  // manual
+  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = 0;  // manual
+  SYNCDELAY; EP_UVC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+  SYNCDELAY; EP_UAC(FIFOCFG) = _AUTOIN|_ZEROLENIN;
+
+  // configure auto packet length of IN endpoint FIFOs
+  SYNCDELAY; EP_UVC(AUTOINLENH) = MSB(512);
+  SYNCDELAY; EP_UVC(AUTOINLENL) = LSB(512);
+  SYNCDELAY; EP_UAC(AUTOINLENH) = MSB(512);
+  SYNCDELAY; EP_UAC(AUTOINLENL) = LSB(512);
+}
+
+void fx2_config() {
+  fifo_interface_config();
+  endpoints_config();
+  fifo_config();
 }
