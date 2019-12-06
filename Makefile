@@ -14,6 +14,7 @@
 ### port.
 
 MODESWITCH_CMD = hdmi2usb-mode-switch
+FX2TOOL = fx2tool
 LIBFX2DIR = ./third_party/libfx2
 
 all: conda firmware-fx2
@@ -62,11 +63,17 @@ firmware-fx2: libfx2 hdmi2usb/hdmi2usb.ihex ###
 load-fx2: firmware-fx2 ###
 	$(MODESWITCH_CMD) --load-fx2-firmware hdmi2usb/hdmi2usb.hex
 
+flash-fx2: libfx2-boot-dfu hdmi2usb/hdmi2usb.dfu ###
+	$(MODESWITCH_CMD) --flash-fx2-eeprom hdmi2usb/hdmi2usb.dfu
+
 clean-fx2: ###
 	$(MAKE) -C hdmi2usb clean
 
 hdmi2usb/hdmi2usb.ihex:
 	$(MAKE) -C hdmi2usb
+
+hdmi2usb/hdmi2usb.dfu: hdmi2usb/hdmi2usb.ihex
+	$(FX2TOOL) dfu $< $@
 
 ###
 ### libfx2 - FX2 chip support library
@@ -86,6 +93,12 @@ $(LIBFX2DIR)/.git: .gitmodules
 	git submodule sync --recursive -- $$(dirname $@)
 	git submodule update --recursive --init $$(dirname $@)
 	touch $@ -r .gitmodules
+
+libfx2-boot-dfu: libfx2 $(LIBFX2DIR)/firmware/boot-dfu/boot-dfu.ihex
+	@true
+
+$(LIBFX2DIR)/firmware/boot-dfu/boot-dfu.ihex:
+	$(MAKE) -C $(LIBFX2DIR)/firmware/boot-dfu
 
 ###
 ### Microload bootloader
