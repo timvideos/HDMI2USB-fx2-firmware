@@ -61,7 +61,7 @@ firmware-fx2: libfx2 hdmi2usb/hdmi2usb.ihex ###
 	@true
 
 load-fx2: firmware-fx2 ###
-	$(MODESWITCH_CMD) --load-fx2-firmware hdmi2usb/hdmi2usb.hex
+	$(MODESWITCH_CMD) --load-fx2-firmware hdmi2usb/hdmi2usb.ihex
 
 flash-fx2: libfx2-boot-dfu hdmi2usb/hdmi2usb.dfu ###
 	$(MODESWITCH_CMD) --flash-fx2-eeprom hdmi2usb/hdmi2usb.dfu
