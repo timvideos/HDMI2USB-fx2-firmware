@@ -1,17 +1,6 @@
 #include "cdc.h"
 
 #include <fx2lib.h>
-#include <fx2delay.h>
-
-#include <stdio.h>
-#include <string.h>
-#include <fx2debug.h>
-
-volatile bool pending_ie0 = false;
-static uint32_t scratch_buf_len = 0;
-
-static void permute_data(uint8_t *data, uint16_t length);
-static void init_uart_ext_int();
 
 bool cdc_handle_usb_setup(__xdata struct usb_req_setup *req) {
   // We *very specifically* declare that we do not support, among others, SET_CONTROL_LINE_STATE
