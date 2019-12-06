@@ -3,26 +3,37 @@
 
 /* USB Video Class */
 
-#include <fx2lib.h>
-#include <fx2usb.h>
+#include "usb_defs.h"
 
-// Macro to easily define typedefs for descriptor structures
-#define USB_DESC_CONST_CODE_TYPEDEF(desc) \
-    typedef __code const struct desc \
-    desc ## _c;
+enum { // TODO: reorganise logically
+  USB_UVC_CC_VIDEO = 0x0e,
+  USB_UVC_SC_VIDEO_INTERFACE_COLLECTION = 0x03,
+  USB_UVC_SUBCLASS_CC_VIDEOCONTROL = 0x01,
+  USB_UVC_SUBCLASS_CC_VIDEOSTREAMING = 0x02,
 
-struct usb_desc_if_assoc {
-  uint8_t bLength;
-  uint8_t bDescriptorType;
-  uint8_t bFirstInterface;
-  uint8_t bInterfaceCount;
-  uint8_t bFunctionClass;
-  uint8_t bFunctionSubClass;
-  uint8_t bFunctionProtocol;
-  uint8_t iFunction;
+  USB_UVC_CS_INTERFACE = 0x24,
+  USB_UVC_VC_HEADER = 0x01,
+  USB_UVC_VC_INPUT_TERMINAL = 0x02,
+  USB_UVC_VC_OUTPUT_TERMINAL = 0x03,
+  USB_UVC_VC_PROCESSING_UNIT = 0x05,
+  USB_UVC_VC_EXTENSION_UNIT = 0x06,
+  USB_UVC_VS_INPUT_HEADER = 0x01,
+  USB_UVC_VS_FORMAT_MJPEG = 0x06,
+  USB_UVC_VS_FRAME_MJPEG = 0x07,
+  USB_UVC_VS_COLORFORMAT = 0x0d,
+  USB_UVC_VS_FORMAT_UNCOMPRESSED = 0x04,
+  USB_UVC_VS_FRAME_UNCOMPRESSED = 0x05,
+
+  // commands
+  USB_UVC_SET_CUR = 0x01,
+  USB_UVC_GET_CUR = 0x81,
+  USB_UVC_GET_MIN = 0x82,
+  USB_UVC_GET_MAX = 0x83,
+  USB_UVC_GET_RES = 0x84,
+  USB_UVC_GET_LEN = 0x85,
+  USB_UVC_GET_INFO = 0x86,
+  USB_UVC_GET_DEF = 0x87,
 };
-
-USB_DESC_CONST_CODE_TYPEDEF(usb_desc_if_assoc)
 
 struct usb_desc_vc_if_header {
   uint8_t bLength;
@@ -180,11 +191,11 @@ struct usb_desc_uvc_vs_frame {
   uint32_t dwMaxVideoFrameBufferSize;
   uint32_t dwDefaultFrameInterval;
   uint8_t bFrameIntervalType;
-  /* 
+  /*
    * frameIntervals must be either:
    *   dwMinFrameInterval, dwMaxFrameInterval, dwFrameIntervalStep,
    * or:
-   *   N times dwFrameInterval                                      
+   *   N times dwFrameInterval
    */
   union {
     // for continuous frame intervals
@@ -208,44 +219,5 @@ struct usb_desc_uvc_color_matching {
 };
 
 USB_DESC_CONST_CODE_TYPEDEF(usb_desc_uvc_color_matching)
-
-enum { // TODO: reorganise logically
-  // required for interface association descriptor
-  // see: https://www.usb.org/sites/default/files/iadclasscode_r10.pdf
-  USB_DEV_CLASS_MISCELLANEOUS = 0xef,
-  USB_DEV_SUBCLASS_COMMON = 0x02,
-  USB_DEV_PROTOCOL_INTERFACE_ASSOCIATION_DESCRIPTOR = 0x01,
-  USB_DESC_IF_ASSOC = 0x0b,
-
-  USB_UVC_CC_VIDEO = 0x0e,
-  USB_UVC_SC_VIDEO_INTERFACE_COLLECTION = 0x03,
-  USB_UVC_SUBCLASS_CC_VIDEOCONTROL = 0x01,
-  USB_UVC_SUBCLASS_CC_VIDEOSTREAMING = 0x02,
-
-  USB_UVC_CS_INTERFACE = 0x24,
-  USB_UVC_VC_HEADER = 0x01,
-  USB_UVC_VC_INPUT_TERMINAL = 0x02,
-  USB_UVC_VC_OUTPUT_TERMINAL = 0x03,
-  USB_UVC_VC_PROCESSING_UNIT = 0x05,
-  USB_UVC_VC_EXTENSION_UNIT = 0x06,
-  USB_UVC_VS_INPUT_HEADER = 0x01,
-  USB_UVC_VS_FORMAT_MJPEG = 0x06,
-  USB_UVC_VS_FRAME_MJPEG = 0x07,
-  USB_UVC_VS_COLORFORMAT = 0x0d,
-  USB_UVC_VS_FORMAT_UNCOMPRESSED = 0x04,
-  USB_UVC_VS_FRAME_UNCOMPRESSED = 0x05,
-
-  // commands
-  USB_UVC_SET_CUR = 0x01,
-  USB_UVC_GET_CUR = 0x81,
-  USB_UVC_GET_MIN = 0x82,
-  USB_UVC_GET_MAX = 0x83,
-  USB_UVC_GET_RES = 0x84,
-  USB_UVC_GET_LEN = 0x85,
-  USB_UVC_GET_INFO = 0x86,
-  USB_UVC_GET_DEF = 0x87,
-};
-
-#undef USB_DESC_CONST_CODE_TYPEDEF
 
 #endif /* UVC_DEFS_H */

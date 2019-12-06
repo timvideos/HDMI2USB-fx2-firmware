@@ -3,12 +3,11 @@
 
 /* USB Audio Class */
 
-#include <fx2lib.h>
-#include <fx2usb.h>
+#include "usb_defs.h"
 
 // TODO: this has been extracted from linux headers, but should be organised better,
 //       we also need one naming convention corresponding to that in libfx2
-enum { 
+enum {
   /* bInterfaceProtocol values to denote the version of the standard used */
   UAC_VERSION_1 = 0x00,
   UAC_VERSION_2 = 0x20,
@@ -185,11 +184,6 @@ enum {
 };
 
 
-// Macro to easily define typedefs for descriptor structures
-#define USB_DESC_CONST_CODE_TYPEDEF(desc) \
-    typedef __code const struct desc \
-    desc ## _c;
-
 /* 4.3.2  Class-Specific AC Interface Descriptor */
 struct usb_desc_uac1_ac_header {
   uint8_t bLength;            /* 8 + n */
@@ -313,7 +307,5 @@ struct usb_desc_dev_qualifier {
 };
 
 USB_DESC_CONST_CODE_TYPEDEF(usb_desc_dev_qualifier)
-
-#undef USB_DESC_CONST_CODE_TYPEDEF
 
 #endif /* UAC_DEFS_H */
