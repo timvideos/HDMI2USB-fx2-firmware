@@ -22,6 +22,17 @@ int main() {
   // configure UART for CDC data transmissions
   uart_init(9600, UART_MODE_RX);
 
+  // Descriptors
+  {
+    struct cdc_config config = {
+      .if_num_comm = USB_CFG_IF_CDC_COMMUNICATION,
+      .ep_addr_comm = USB_CFG_EP_CDC_COMMUNICATION,
+      .ep_addr_data_host2dev = USB_CFG_EP_CDC_HOST2DEV,
+      .ep_addr_data_dev2host = USB_CFG_EP_CDC_DEV2HOST,
+    };
+    cdc_config(&config);
+  }
+
   // Configure usb endpoints and fifos
   fx2_usb_config();
 

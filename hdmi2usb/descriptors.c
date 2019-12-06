@@ -4,6 +4,7 @@
 #include "usb_config.h"
 #include "uvc_defs.h"
 #include "uac_defs.h"
+#include "cdc.h"
 
 usb_ascii_string_c usb_strings[] = {
   [USB_STR_MANUFACTURER   - 1] = "TimVideos.us",
@@ -28,93 +29,6 @@ usb_desc_device_c usb_device = {
   .iProduct             = USB_STR_PRODUCT,
   .iSerialNumber        = USB_STR_SERIAL_NUMBER,
   .bNumConfigurations   = 1,
-};
-
-/*** CDC **********************************************************************/
-
-usb_desc_if_assoc_c usb_cdc_if_assoc = {
-  .bLength              = sizeof(struct usb_desc_if_assoc),
-  .bDescriptorType      = USB_DESC_IF_ASSOC,
-  .bFirstInterface      = USB_CFG_IF_CDC_COMMUNICATION,
-  .bInterfaceCount      = 2,
-  .bFunctionClass       = USB_IFACE_CLASS_CIC,
-  .bFunctionSubClass    = USB_IFACE_SUBCLASS_CDC_CIC_ACM,
-  .bFunctionProtocol    = USB_IFACE_PROTOCOL_CDC_CIC_NONE,
-  .iFunction            = 1,
-};
-
-usb_desc_interface_c usb_iface_cic = {
-  .bLength              = sizeof(struct usb_desc_interface),
-  .bDescriptorType      = USB_DESC_INTERFACE,
-  .bInterfaceNumber     = USB_CFG_IF_CDC_COMMUNICATION,
-  .bAlternateSetting    = 0,
-  .bNumEndpoints        = 1,
-  .bInterfaceClass      = USB_IFACE_CLASS_CIC,
-  .bInterfaceSubClass   = USB_IFACE_SUBCLASS_CDC_CIC_ACM,
-  .bInterfaceProtocol   = USB_IFACE_PROTOCOL_CDC_CIC_NONE,
-  .iInterface           = 1,
-};
-
-usb_desc_endpoint_c usb_cdc_ep_comm = {
-  .bLength              = sizeof(struct usb_desc_endpoint),
-  .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = USB_CFG_EP_CDC_COMMUNICATION|USB_DIR_IN,
-  .bmAttributes         = USB_XFER_INTERRUPT,
-  .wMaxPacketSize       = 8,
-  .bInterval            = 10,
-};
-
-usb_cdc_desc_functional_header_c usb_func_cic_header = {
-  .bLength              = sizeof(struct usb_cdc_desc_functional_header),
-  .bDescriptorType      = USB_DESC_CS_INTERFACE,
-  .bDescriptorSubType   = USB_DESC_CDC_FUNCTIONAL_SUBTYPE_HEADER,
-  .bcdCDC               = 0x0120,
-};
-
-usb_cdc_desc_functional_acm_c usb_func_cic_acm = {
-  .bLength              = sizeof(struct usb_cdc_desc_functional_acm),
-  .bDescriptorType      = USB_DESC_CS_INTERFACE,
-  .bDescriptorSubType   = USB_DESC_CDC_FUNCTIONAL_SUBTYPE_ACM,
-  .bmCapabilities       = 0,
-};
-
-usb_cdc_desc_functional_union_c usb_func_cic_union = {
-  .bLength              = sizeof(struct usb_cdc_desc_functional_union) +
-                          sizeof(uint8_t) * 1,
-  .bDescriptorType      = USB_DESC_CS_INTERFACE,
-  .bDescriptorSubType   = USB_DESC_CDC_FUNCTIONAL_SUBTYPE_UNION,
-  .bControlInterface    = 0,
-  .bSubordinateInterface = { 1 },
-};
-
-usb_desc_interface_c usb_iface_dic = {
-  .bLength              = sizeof(struct usb_desc_interface),
-  .bDescriptorType      = USB_DESC_INTERFACE,
-  .bInterfaceNumber     = USB_CFG_IF_CDC_DATA,
-  .bAlternateSetting    = 0,
-  .bNumEndpoints        = 2,
-  .bInterfaceClass      = USB_IFACE_CLASS_DIC,
-  .bInterfaceSubClass   = USB_IFACE_SUBCLASS_CDC_DIC,
-  .bInterfaceProtocol   = USB_IFACE_PROTOCOL_CDC_DIC_NONE,
-  .iInterface           = 1,
-};
-
-usb_desc_endpoint_c usb_cdc_ep_data_out = {
-  .bLength              = sizeof(struct usb_desc_endpoint),
-  .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = USB_CFG_EP_CDC_HOST2DEV,
-  .bmAttributes         = USB_XFER_BULK,
-  .wMaxPacketSize       = 512,
-  .bInterval            = 0,
-};
-
-usb_desc_endpoint_c usb_cdc_ep_data_in = {
-  .bLength              = sizeof(struct usb_desc_endpoint),
-  .bDescriptorType      = USB_DESC_ENDPOINT,
-  .bEndpointAddress     = USB_CFG_EP_CDC_DEV2HOST|USB_DIR_IN,
-  .bmAttributes         = USB_XFER_BULK,
-  .wMaxPacketSize       = 512,
-  .bInterval            = 0,
 };
 
 /*** UVC **********************************************************************/
@@ -222,7 +136,7 @@ usb_desc_vc_if_header_c usb_uvc_vc_if_header = {
   .bDescriptorType      = USB_UVC_CS_INTERFACE,
   .bDescriptorSubType   = USB_UVC_VC_HEADER,
   .bcdUVC               = 0x0100,
-  .wTotalLength         = 
+  .wTotalLength         =
       // total size of all unit and terminal descriptors, flexible array members counted manually
       // macros as intializers must be constant
       LENGTH_usb_uvc_vc_if_header +
@@ -485,7 +399,7 @@ usb_desc_uac1_ac_header_c uac_ac_header = {
       LENGTH_uac_ac_header +
       LENGTH_uac_input_terminal +
       LENGTH_uac_output_terminal,
-  .bInCollection      = 1, // one interface in collection 
+  .bInCollection      = 1, // one interface in collection
   .baInterfaceNr      = {5}, // streaing interface 0
 };
 
@@ -593,15 +507,7 @@ usb_configuration_c usb_config = {
     { .interface =                             &usb_uvc_std_streaming_iface_1    },
     { .endpoint  =                             &usb_endpoint_uvc_in              },
     // CDC
-    { .generic   = (struct usb_desc_generic *) &usb_cdc_if_assoc                 },
-    { .interface =                             &usb_iface_cic                    },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_header              },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_acm                 },
-    { .generic   = (struct usb_desc_generic *) &usb_func_cic_union               },
-    { .endpoint  =                             &usb_cdc_ep_comm                  },
-    { .interface =                             &usb_iface_dic                    },
-    { .endpoint  =                             &usb_cdc_ep_data_out              },
-    { .endpoint  =                             &usb_cdc_ep_data_in               },
+    CDC_DESCRIPTORS_LIST
     // UAC
     // TODO: { .generic   = (struct usb_desc_generic *) &usb_uvc_if_assoc              },
     { .interface =                             &usb_uac_std_ac_interface         },
