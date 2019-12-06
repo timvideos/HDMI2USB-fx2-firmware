@@ -28,40 +28,14 @@ int main() {
   // Wait until FPGA sends DNA over serial
   try_read_fpga_dna_uart(200);
 
-#if 0 // TODO: manual mode is required for CDC to UART
-  // Reconfigure CDC IN endpoint in auto IN mode
-  SYNCDELAY; INPKTEND = USB_CFG_EP_CDC_DEV2HOST|_SKIP;
-  SYNCDELAY; FIFORESET = _NAKALL;
-  SYNCDELAY; FIFORESET = USB_CFG_EP_CDC_DEV2HOST|_NAKALL;
-  SYNCDELAY; EP_CDC_DEV2HOST(FIFOCFG) = _AUTOIN|_ZEROLENIN;
-  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENH) = MSB(512);
-  SYNCDELAY; EP_CDC_DEV2HOST(AUTOINLENL) = LSB(512);
-  SYNCDELAY; FIFORESET = 0;
-#endif
-
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
 
   EA = 1; // enable interrupts
 
   while (1) {
-    // slave fifos configured in auto mode
-
-    // CDC endpoints are in manual mode, we send/read CDC data through UART
-
-    // get data from CDC OUT endpoint and send it to UART TX queue
-    if (!(EP_CDC_HOST2DEV(CS) & _EMPTY)) {
-      uint16_t i;
-      uint16_t length = (EP_CDC_HOST2DEV(BCH) << 8) | EP_CDC_HOST2DEV(BCL);
-
-      for (i = 0; i < length; ++i) {
-        if (!uart_push(EP_CDC_HOST2DEV(FIFOBUF)[i]))
-          break; // TODO: we're dropping data if queue is full
-      }
-
-      // clear the endpoint
-      EP_CDC_HOST2DEV(BCL) = 0;
-    }
+    // UVC, UAC and CDC OUT endpoints configured with slave fifos in auto mode - nothing to do
+    // CDC IN endpoint in manual mode, we read CDC data using UART
 
     // get data from UART RX queue and commit it to CDC IN endpoint
     {
@@ -135,16 +109,23 @@ void fx2_usb_config() {
 
   // configure FIFO interface
   // internal clock|48MHz|output to pin|normla polarity|syncronious mode|no gstate|slave FIFO interface mode [1:0]
-  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0/* |_IFCFG1|_IFCFG1 FIXME: conflicting UART pins */;
+  SYNCDELAY; IFCONFIG = _IFCLKSRC|_3048MHZ|_IFCLKOE|0|0|0|_IFCFG1|_IFCFG0;
 
   // CDC interrupt endpoint
   EP1INCFG = _VALID|_TYPE1|_TYPE0; // INTERRUPT IN.
   EP1OUTCFG &= ~_VALID; // EP1OUT not used
 
-  // CDC 512-byte double buffed BULK OUT.
+  // The "big" endpoints for interfacing to FPGA through slave FIFO interface.
+  // FX2 Crossbar supports 2 OUT FIFOs and 2 IN FIFOs, so:
+  // * we use OUT FIFOs for audio and video,
+  // * we use one IN FIFO for CDC OUT endpoint (HOST->FX2->FPGA),
+  // * CDC IN endpoint data (FPGA->FX2->HOST) is passed using UART, so FIFO
+  //   is not configured here.
+
+  // CDC 512-byte double buffered BULK OUT
   EP_CDC_HOST2DEV(CFG) = _VALID|_TYPE1|_BUF1;
   EP_CDC_HOST2DEV(CS) = 0;
-  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = /* _AUTOOUT */ 0;
+  SYNCDELAY; EP_CDC_HOST2DEV(FIFOCFG) = _AUTOOUT;
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENH) = MSB(512);
   SYNCDELAY; EP_CDC_HOST2DEV(AUTOINLENL) = LSB(512);
 
