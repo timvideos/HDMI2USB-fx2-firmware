@@ -51,7 +51,7 @@ extern usb_desc_endpoint_c                   usb_uvc_ep_in;
 
 struct uvc_configuration {
   uint8_t if_num_ctrl;
-  uint8_t if_num_streaming; // with 2 alternate settings
+  // if_num_streaming = if_num_ctrl + 1
   uint8_t ep_addr_streaming;
 };
 

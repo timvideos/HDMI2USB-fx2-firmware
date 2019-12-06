@@ -50,7 +50,8 @@ extern usb_desc_endpoint_c              usb_cdc_ep_data_in;
  * NOTE: CDC data interface always has number of communication interface + 1!
  */
 struct cdc_configuration {
-  uint8_t if_num_comm; // data interface number = if_num_comm + 1
+  uint8_t if_num_comm;
+  // if_num_data = if_num_comm + 1
   uint8_t ep_addr_comm;
   uint8_t ep_addr_data_host2dev;
   uint8_t ep_addr_data_dev2host;

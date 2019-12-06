@@ -35,10 +35,16 @@ int main() {
   {
     struct uvc_configuration config = {
       .if_num_ctrl = USB_CFG_IF_UVC_VIDEO_CONTROL,
-      .if_num_streaming = USB_CFG_IF_UVC_VIDEO_STREAMING,
       .ep_addr_streaming = USB_CFG_EP_UVC,
     };
     uvc_config(&config);
+  }
+  {
+    struct uac_configuration config = {
+      .if_num_ctrl = USB_CFG_IF_UAC_AUDIO_CONTROL,
+      .ep_addr_streaming = USB_CFG_EP_UAC,
+    };
+    uac_config(&config);
   }
 
   // Configure usb endpoints and fifos
