@@ -23,6 +23,7 @@ struct UARTStateMachine {
 
 // State of the whole bitbang UART
 struct BitbangUART {
+  enum UARTMode mode;
   struct UARTStateMachine tx;
   struct UARTStateMachine rx;
   enum UARTClkPhase clk_phase;
@@ -31,55 +32,68 @@ struct BitbangUART {
 };
 
 static void set_tim2_frequency(uint32_t baud_rate);
-static void ext_interrupt_await();
-static void ext_interrupt_sync();
+static void uart_set_idle();
+static void uart_set_running();
 
 
+// state and queue buffers
 __xdata volatile struct BitbangUART uart;
 DEFINE_QUEUE(uart_tx_queue, __xdata volatile uint8_t, UART_TX_QUEUE_SIZE)
 DEFINE_QUEUE(uart_rx_queue, __xdata volatile uint8_t, UART_RX_QUEUE_SIZE)
 
 
-void uart_init(uint32_t baudrate) {
-  // configure PB0 as TX, PA0 as RX // FIXME: in interrupt we use #define
-  PB0 = 1; // uart is initially high
-  OEB |= (1 << 0); // PB0 as output
+void uart_init(uint32_t baudrate, enum UARTMode mode) {
+  xmemclr(&uart, sizeof(uart));
+  uart.mode = mode;
 
-  // configure PA0 as alternate function INT0
-  PORTACFG |= 1;
+  if (mode != UART_MODE_RX) { // configure TX pin as output
+    // FIXME: remove hardcoded pin numbers
+    PB0 = 1; // uart is initially high
+    OEB |= (1 << 0);
+  }
 
-  // configure external interrupt on INT0 for uart rx, negative edge (start bit)
-  IT0 = 1;
-  IP |= 1; // high priority
+  if (mode != UART_MODE_TX) {
+    // FIXME: remove hardcoded pin numbers
+    // configure PA0 as alternate function INT0
+    PORTACFG |= 1;
+    // configure external interrupt on INT0 for uart rx, negative edge (start bit)
+    IT0 = 1;
+    IP |= 1; // high priority
+  }
 
   // configure interrupt timer
-  TR2 = 0; // top timer 2
+  TR2 = 0; // stop timer 2
   set_tim2_frequency(baudrate * 2); // we need 2 times faster clock than the actual baudrate
   T2CON = 0x00; // configure timer 2 in default auto-reload mode
   ET2 = 1; // enable timer 2 interrupt
-
   PT2 = 1; // set high priority
-  // PT2 = 0; // set low priority
 
-  ext_interrupt_await();
+  // enable external interrupt if RX is enabled
+  uart_set_idle();
 }
 
 bool uart_push(uint8_t byte) {
+  if (uart.mode == UART_MODE_RX)
+    return false;
+
   if (QUEUE_FULL(uart_tx_queue))
     return false;
 
   QUEUE_PUT(uart_tx_queue, byte);
   uart.tx.state = START_BIT;
 
-  // if timer is not running, than we are in waiting state so we have to start timer now
+  // if timer is not running, than we are in idle state so we have to start timer now
   if (!TR2) {
-    ext_interrupt_sync();
+    uart_set_running();
   }
 
   return true;
 }
 
 bool uart_pop(uint8_t *byte) {
+  if (uart.mode == UART_MODE_TX)
+    return false;
+
   if (QUEUE_EMPTY(uart_rx_queue))
     return false;
 
@@ -92,76 +106,81 @@ void isr_TF2() __interrupt(_INT_TF2) {
   TF2 = 0; // clear timer overflow flag
 
   // transmit in first clock tick, receive in the second one
+  // TODO: make clock two times slower when not in full-duplex mode
   if (uart.clk_phase == CLK_TX) {
     uart.clk_phase = CLK_RX;
 
-    // transmit state machine
-    switch (uart.tx.state) {
-      case IDLE:
-        if (QUEUE_EMPTY(uart_tx_queue)) {
+    if (uart.mode != UART_MODE_RX) {
+      // transmit state machine
+      switch (uart.tx.state) {
+        case IDLE:
+          if (QUEUE_EMPTY(uart_tx_queue)) {
+            break;
+          }
+          // no break if there is something else in the queue!
+          // jump to START_BIT directly
+          // uart.tx.state = START_BIT;
+        case START_BIT:
+          UART_TX_PIN = 0;
+          uart.tx.bit_n = 0;
+          uart.tx.state = DATA;
+          // load next byte from queue
+          QUEUE_GET(uart_tx_queue, uart.tx.data);
           break;
-        }
-        // no break if there is something else in the queue!
-        // jump to START_BIT directly
-        // uart.tx.state = START_BIT;
-      case START_BIT:
-        UART_TX_PIN = 0;
-        uart.tx.bit_n = 0;
-        uart.tx.state = DATA;
-        // load next byte from queue
-        QUEUE_GET(uart_tx_queue, uart.tx.data);
-        break;
-      case DATA:
-        UART_TX_PIN = uart.tx.data & 0x01;
-        uart.tx.data >>= 1;
-        uart.tx.bit_n++;
-        if (uart.tx.bit_n > 7) {
-          uart.tx.state = END_BIT;
-        }
-        break;
-      case END_BIT:
-        UART_TX_PIN = 1;
-        uart.tx.state = IDLE;
-        break;
-      default:
-        break;
+        case DATA:
+          UART_TX_PIN = uart.tx.data & 0x01;
+          uart.tx.data >>= 1;
+          uart.tx.bit_n++;
+          if (uart.tx.bit_n > 7) {
+            uart.tx.state = END_BIT;
+          }
+          break;
+        case END_BIT:
+          UART_TX_PIN = 1;
+          uart.tx.state = IDLE;
+          break;
+        default:
+          break;
+      }
     }
   } else { // receive phase
     uart.clk_phase = CLK_TX;
 
-    // receive state machine
-    switch (uart.rx.state) {
-      case IDLE:
-        // when detected low transition, go to directly to data state, as this was start bit
-        if (UART_RX_PIN == 0) {
-          // we are in START_BIT state, NO BREAK!
-        } else {
-          break; // only if not start bit
-        }
-      case START_BIT:
-        uart.rx.data = 0;
-        uart.rx.bit_n = 0;
-        uart.rx.state = DATA;
-        break;
-      case DATA:
-        uart.rx.data |= (UART_RX_PIN & 0x1) << uart.rx.bit_n;
-        uart.rx.bit_n++;
-        if (uart.rx.bit_n > 7) {
-          uart.rx.state = END_BIT;
-        }
-        break;
-      case END_BIT:
-        uart.rx.state = IDLE;
-        if (UART_RX_PIN != 0) {
-          if (QUEUE_FULL(uart_rx_queue)) {
-            uart.overflow_flag;
+    if (uart.mode != UART_MODE_TX) {
+      // receive state machine
+      switch (uart.rx.state) {
+        case IDLE:
+          // when detected low transition, go to directly to data state, as this was start bit
+          if (UART_RX_PIN == 0) {
+            // we are in START_BIT state, NO BREAK!
           } else {
-            QUEUE_PUT(uart_rx_queue, uart.rx.data);
+            break; // only if not start bit
           }
-        }
-        break;
-      default:
-        break;
+        case START_BIT:
+          uart.rx.data = 0;
+          uart.rx.bit_n = 0;
+          uart.rx.state = DATA;
+          break;
+        case DATA:
+          uart.rx.data |= (UART_RX_PIN & 0x1) << uart.rx.bit_n;
+          uart.rx.bit_n++;
+          if (uart.rx.bit_n > 7) {
+            uart.rx.state = END_BIT;
+          }
+          break;
+        case END_BIT:
+          uart.rx.state = IDLE;
+          if (UART_RX_PIN != 0) {
+            if (QUEUE_FULL(uart_rx_queue)) {
+              uart.overflow_flag;
+            } else {
+              QUEUE_PUT(uart_rx_queue, uart.rx.data);
+            }
+          }
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -172,7 +191,7 @@ void isr_TF2() __interrupt(_INT_TF2) {
     uart.idle_counter++;
     if (uart.idle_counter > UART_IDLE_TICKS) {
       uart.idle_counter = 0;
-      ext_interrupt_await();
+      uart_set_idle();
     }
   } else {
     uart.idle_counter = 0;
@@ -187,21 +206,25 @@ void isr_IE0() __interrupt(_INT_IE0) {
   // this gets fired when we there is a falling edge (we assume it is the START BIT)
   // we want to synchronize Timer 2 to that moment by starting it with clk_phase = TX,
   // as the falling edge is the phase when TX happens, so RX will happen 180 deg later
-  ext_interrupt_sync();
+  uart_set_running();
 }
 
 
 // disables the timer and moves uart state machine into standby
-// until ext_interrupt_sync gets called (either by starting TX or on RX external interrupt)
-void ext_interrupt_await() {
+// in RX mode we enable external interrupt, TX is started with uart_set_running
+void uart_set_idle() {
   TR2 = 0; // disable timer
-  IE |= 1; // enable interrupt
+  if (uart.mode != UART_MODE_TX) {
+    IE |= 1; // enable external interrupt
+  }
 }
 
 // synchronizes uart timer at given moment at the TX phase
-void ext_interrupt_sync() {
-  // first, disable external interrupt
-  IE &= ~1;
+void uart_set_running() {
+  if (uart.mode != UART_MODE_TX) { // if RX is enabled
+    // first, disable external interrupt
+    IE &= ~1;
+  }
   // set correct phase
   uart.clk_phase = CLK_TX;
   // set timer counter to max value, so that it fires in next tick
@@ -213,7 +236,7 @@ void ext_interrupt_sync() {
 }
 
 
-// clockl speed: 0b00 = 12MHz, 0b01 = 24MHz, 0b10 = 48MHz
+// clock speed: 0b00 = 12MHz, 0b01 = 24MHz, 0b10 = 48MHz
 #define CPUCLKSPD ((CPUCS & (_CLKSPD0 | _CLKSPD1)) >> 3)
 
 #define MSB(word) (((word) & 0xff00) >> 8)

@@ -20,7 +20,7 @@ int main() {
   CPUCS = _CLKSPD1;
 
   // configure UART for CDC data transmissions
-  uart_init(9600);
+  uart_init(9600, UART_MODE_RX);
 
   // Configure usb endpoints and fifos
   fx2_usb_config();

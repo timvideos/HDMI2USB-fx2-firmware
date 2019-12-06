@@ -18,19 +18,31 @@
 #define UART_TX_QUEUE_SIZE 50
 #define UART_RX_QUEUE_SIZE 50
 
+enum UARTMode {
+  UART_MODE_TX,
+  UART_MODE_RX,
+  UART_MODE_RX_TX,
+};
 
 /**
- * Configures UART for given baudrate and starts listening for incoming data
+ * Configures UART for given baudrate and starts it.
+ * UART can either work in full duplex mode, or only one direction
+ * can be enabled, in which case the second one is not configured
+ * and the pin can be used for other purpose.
+ * In either mode, Timer 2 is used for baudrate generation.
+ * If RX is enabled, INT0 is used for clock synchronization.
  */
-void uart_init(uint32_t baudrate);
+void uart_init(uint32_t baudrate, enum UARTMode mode);
 
 /**
- * Send byte using bitbang UART. Returns false if TX queue is full.
+ * Send byte using bitbang UART. Returns false if TX queue is full,
+ * or if TX mode is not enabled.
  */
 bool uart_push(uint8_t byte);
 
 /**
- * Get byte from UART RX queue. Returns false if RX queue is empty.
+ * Get byte from UART RX queue. Returns false if RX queue is empty,
+ * or if RX mode is not enabled.
  */
 bool uart_pop(uint8_t *byte);
 
