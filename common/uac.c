@@ -43,6 +43,7 @@ void uac_config(struct uac_configuration *config) {
   ((__xdata struct usb_desc_interface *) &usb_uac_std_ac_interface)->bInterfaceNumber = if_num_ctrl;
   ((__xdata struct usb_desc_interface *) &usb_uac_std_streaming_interface_alt0)->bInterfaceNumber = if_num_streaming;
   ((__xdata struct usb_desc_interface *) &usb_uac_std_streaming_interface_alt1)->bInterfaceNumber = if_num_streaming;
+  ((__xdata struct usb_desc_uac1_ac_header *) &usb_uac_ac_header)->baInterfaceNr[0] = if_num_streaming;
   // endpoint numbers
   ((__xdata struct usb_desc_endpoint *) &usb_uac_audio_endpoint)->bEndpointAddress = config->ep_addr_streaming | USB_DIR_IN;
   // strings
@@ -100,7 +101,7 @@ usb_desc_uac1_ac_header_c usb_uac_ac_header = {
       LENGTH_uac_input_terminal +
       LENGTH_uac_output_terminal,
   .bInCollection      = 1, // one interface in collection
-  .baInterfaceNr      = {5}, // streaing interface 0
+  .baInterfaceNr      = { 0 }, // uac_config // streaing interface
 };
 
 // Setting 0 of streaming interface, no endpoints which means this is a zero-bandwidth
