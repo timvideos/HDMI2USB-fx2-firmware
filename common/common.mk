@@ -1,10 +1,11 @@
+# configuration
+BOARD ?= opsis
+MODEL ?= small
+SYNCDELAYLEN ?= 4
+
 # use conda enviorment if it exists
 MAKEFILE_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 export PATH := $(MAKEFILE_PATH)../conda/bin:$(PATH)
-
-MODEL ?= small
-BOARD ?= opsis
-SYNCDELAYLEN ?= 4
 
 CFLAGS =
 CFLAGS += --std-sdcc99
