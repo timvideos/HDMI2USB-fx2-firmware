@@ -1,6 +1,5 @@
 #include <fx2lib.h>
 #include <fx2usb.h>
-#include <usbcdc.h>
 
 #include "usb_config.h"
 #include "cdc.h"

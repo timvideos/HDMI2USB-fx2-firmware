@@ -6,6 +6,9 @@
 
 #include "uvc_defs.h"
 
+// control interface and streaming interface
+#define UVC_NUM_INTERFACES 2
+
 // UVC descritors
 extern usb_desc_if_assoc_c                   usb_uvc_if_assoc;
 extern usb_desc_interface_c                  usb_uvc_std_ctrl_iface;

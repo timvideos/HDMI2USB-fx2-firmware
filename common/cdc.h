@@ -6,6 +6,9 @@
 
 #include "usb_defs.h"
 
+// control interface and data interface
+#define CDC_NUM_INTERFACES 2
+
 // CDC-ACM descritors
 extern usb_desc_if_assoc_c              usb_cdc_if_assoc;
 extern usb_cdc_desc_functional_header_c usb_cdc_func_cic_header;

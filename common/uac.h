@@ -4,6 +4,9 @@
 #include <fx2usb.h>
 #include "uac_defs.h"
 
+// control and streaming interface
+#define UAC_NUM_INTERFACES 2
+
 // UAC descriptors
 extern usb_desc_interface_c                  usb_uac_std_ac_interface;
 extern usb_desc_uac_input_terminal_c         usb_uac_input_terminal;
