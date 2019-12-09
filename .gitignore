@@ -2,6 +2,7 @@
 *.asm
 *.cdb
 *.hex
+*.ihex
 *.lk
 *.lst
 *.map
