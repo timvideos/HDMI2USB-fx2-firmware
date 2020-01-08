@@ -5,6 +5,9 @@ FLAGS     = -I../../common -DDEBUG
 SOURCES   = main descriptors ../../common/cdc ../../common/uart
 
 BITBANG ?= 1
+BAUDRATE ?= 115200
+
+FLAGS += -DBAUDRATE=$(BAUDRATE)
 
 ifeq ($(BITBANG), 1)
 FLAGS += -DUART_SOFTWARE_BITBANG=1 \

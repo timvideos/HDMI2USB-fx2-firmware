@@ -9,6 +9,8 @@ To run the example the pins used for UART TX and RX must be externally connected
 Alternatively, any data sent to UART RX pin will be passed over CDC-ACM, and any
 data sent over USB will be sent over UART TX pin with some data modifications.
 
+UART baudrate can be set using `BAUDRATE` *Makefile* variable.
+
 ## UART Configuration
 
 See the README for serial-loopback example. `../serial-loopback/README.md`.

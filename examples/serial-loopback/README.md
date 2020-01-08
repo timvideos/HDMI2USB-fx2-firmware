@@ -11,6 +11,8 @@ The *Makefile* provided configures proper compilation flags.
 By default bitbanged UART implementation is used.
 To use hardware UART, run with `make` with `BITBANG=0`.
 
+UART baudrate can be set using `BAUDRATE` *Makefile* variable.
+
 ## UART Configuration
 
 UART implementation uses two statically allocated queues to store data,

@@ -48,7 +48,7 @@ int main() {
   SYNCDELAY; FIFORESET = 0;
 
   // configure and start bitbang uart
-  uart_init(9600, UART_MODE_RX_TX);
+  uart_init(BAUDRATE, UART_MODE_RX_TX);
 
   // Re-enumerate, to make sure our descriptors are picked up correctly.
   usb_init(/*disconnect=*/true);
