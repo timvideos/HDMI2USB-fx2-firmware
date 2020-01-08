@@ -8,13 +8,14 @@
 #define MSB(word) (((word) & 0xff00) >> 8)
 #define LSB(word) ((word) & 0xff)
 
-static void permute_data(uint8_t *data, uint16_t length);
-
 const char * const msg = "Hello world!\r\n";
 
 int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
+
+  // Use newest chip features
+  REVCTL = _ENH_PKT|_DYN_OUT;
 
   // Configure descriptors
   {
@@ -82,59 +83,10 @@ int main() {
     SYNCDELAY;
 
     delay_ms(100);
-  }
 
-  // {
-  //   uint16_t length = 0;
-  //   uint16_t uart_n_sent = 0;
-  //   uint16_t uart_n_rec = 0;
-  //
-  //   while (1) {
-  //     // check for data received from usb host
-  //     if (length == 0 && !(EP2CS & _EMPTY)) {
-  //       // copy received data to scratch buffer and save
-  //       length = (EP2BCH << 8) | EP2BCL;
-  //       xmemcpy(scratch, EP2FIFOBUF, length);
-  //
-  //       // signalize we are ready for new data
-  //       EP2BCL = 0;
-  //
-  //       // modify the data
-  //       permute_data(scratch, length);
-  //     }
-  //
-  //     // send bytes over uart until all have been sent
-  //     if (uart_n_sent < length) {
-  //       // we can fail if queue is full
-  //       bool tx_ok = uart_push(scratch[uart_n_sent]);
-  //       if (tx_ok) {
-  //         uart_n_sent++;
-  //       }
-  //     }
-  //
-  //     // receive data to EP6 buffer
-  //     if (uart_n_rec < length) {
-  //       // returns false when there is no data in rx queue
-  //       bool rx_ok = uart_pop(&EP6FIFOBUF[uart_n_rec]);
-  //       if (rx_ok) {
-  //         uart_n_rec++;
-  //       }
-  //     }
-  //
-  //     // when received everything over uart, send it over usb
-  //     if (length > 0 && uart_n_rec == length) {
-  //       // commit the packet
-  //       EP6BCH = MSB(length);
-  //       SYNCDELAY;
-  //       EP6BCL = LSB(length);
-  //       // reset counters
-  //       length = 0;
-  //       uart_n_sent = 0;
-  //       uart_n_rec = 0;
-  //     }
-  //
-  //   }
-  // }
+    // skip any data received over cdc-acm
+    OUTPKTEND = _SKIP|2;
+  }
 }
 
 /*** Reimplemented libfx2 USB handlers ****************************************/
@@ -144,15 +96,4 @@ void handle_usb_setup(__xdata struct usb_req_setup *req) {
   if (cdc_handle_usb_setup(req))
     return;
   STALL_EP0(); // not handled
-}
-
-
-void permute_data(uint8_t *data, uint16_t length) {
-  uint16_t i;
-  for (i = 0; i < length; ++i) {
-    // translate a-zA-Z by N characters
-    if ((data[i] >= 'a' && data[i] <= 'z') || (data[i] >= 'A' && data[i] <= 'Z')) {
-      data[i] += 1;
-    }
-  }
 }

@@ -13,6 +13,9 @@ int main() {
   // Run core at 48 MHz fCLK.
   CPUCS = _CLKSPD1;
 
+  // Use newest chip features
+  REVCTL = _ENH_PKT|_DYN_OUT;
+
   // Configure descriptors
   {
     __xdata struct cdc_configuration config = {
