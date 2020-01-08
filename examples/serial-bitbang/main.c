@@ -62,7 +62,6 @@ int main() {
       if (uart_push(*c)) {
         c++;
         n++;
-        delay_ms(1); // FIXME: bug, find out why it does not work without it
       }
     }
 

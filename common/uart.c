@@ -80,7 +80,6 @@ bool uart_push(uint8_t byte) {
     return false;
 
   QUEUE_PUT(uart_tx_queue, byte);
-  uart.tx.state = START_BIT;
 
   // if timer is not running, than we are in idle state so we have to start timer now
   if (!TR2) {
