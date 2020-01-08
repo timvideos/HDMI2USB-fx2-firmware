@@ -38,3 +38,6 @@ LIBFX2DIR ?= ../third_party/libfx2
 # variable required by libfx2 build system
 LIBFX2 = $(LIBFX2DIR)/firmware/library
 include $(LIBFX2)/fx2rules.mk
+
+# force proper dependecy to automatically build libfx2
+$(LIBFX2)/lib/$(MODEL)/fx2.lib: $(LIBFX2)/.stamp
