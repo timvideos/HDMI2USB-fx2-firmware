@@ -8,7 +8,7 @@ addons:
 
 install:
     - export BOARD="$B" && echo "BOARD='$BOARD'"
-    - export TARGETS="$T" && echo "TARGETS='$TARGETS'"
+    - export DIR="$D" && echo "DIR='$DIR'"
     - make conda
     - export PATH=$PWD/conda/bin:$PATH
     - which sdcc
@@ -22,30 +22,12 @@ jobs:
     fail_fast: true
     include:
         #-----------------------------------------
-        # Video targets
+        # video
         #-----------------------------------------
         - stage: Build
-          env: B=opsis T="firmware-fx2"
+          env: B=opsis D="examples/video"
         - stage: Build
-          env: B=atlys T="firmware-fx2"
-
-        #-----------------------------------------
-        # Audio targets
-        #-----------------------------------------
-        - stage: Build
-          env: B=opsis T="firmware-audio-fx2"
-        - stage: Build
-          env: B=atlys T="firmware-audio-fx2"
-        - stage: Build
-          env: B=fx2miniboard T="firmware-audio-fx2"
-
-        #-----------------------------------------
-        # Unconfigured targets
-        #-----------------------------------------
-        - stage: Build
-          env: B=opsis T="firmware-unconfigured"
-        - stage: Build
-          env: B=atlys T="firmware-unconfigured"
+          env: B=atlys D="examples/video"
 
         #-----------------------------------------
         # Build and deploy docs
