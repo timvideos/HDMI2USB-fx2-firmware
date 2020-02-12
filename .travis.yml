@@ -16,7 +16,7 @@ install:
     - ./.travis/setup.sh
 
 script:
-    - make $TARGETS
+    - make -C $DIR BOARD=$BOARD
 
 jobs:
     fail_fast: true
